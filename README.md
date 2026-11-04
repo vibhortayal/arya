@@ -31,37 +31,37 @@
 
 ## What is Arya
 
-**Groceries are a big part of life, one of the largest expenses in the budget,** and think about what it takes today.
+**Groceries are a big part of life and one of the largest costs in the budget.** Think about what it takes today.
 
-You have a “Trader Jill” list in your notes, your partner sends you items over text, and they have a list for the “Costcozy” store (the demo's stores have invented names) — and both lists don't talk to each other. So **both of you bought yogurt, and neither bought the toilet paper that ran out.**
+You have a "Trader Jill" list in your notes. Your partner sends you items over text, and they keep their own list for the "Costcozy" store (the demo's stores have invented names). The two lists do not talk to each other. So **both of you bought yogurt, and neither bought the toilet paper that ran out.**
 
-At the store, **the milk your kids need is out of stock,** and you walk every aisle to find the rest. The receipt goes in the trash, so **you never see where the money went,** or that the same item was cheaper at another store. Then **the spinach goes bad** before anyone uses it.
+At the store, **the milk your kids need is out of stock,** and you walk every aisle to find the rest. The receipt goes in the trash. So **you never see where the money went,** or that the same item was cheaper at another store. Then **the spinach goes bad** before anyone uses it.
 
 > *You hold all of it in your head, and it's still never quite right.*
 
-**Arya puts the whole chore in one place** — **shared lists**, **a guided route** so you get out of the store quicker, **visibility into your spend and usage patterns**, and **out-of-stock warnings from other shoppers** so your trip isn't wasted. I built Arya for this hackathon to make the whole grocery routine easier, so I don't have to manage it mentally.
+**Arya puts the whole chore in one place:** **shared lists**, **a guided route** so you get out of the store quicker, **a clear view of your spend and usage patterns**, and **out-of-stock warnings from other shoppers** so your trip is not wasted. I built Arya for this hackathon to make the grocery routine easier, so I do not have to keep it all in my head.
 
 ---
 
-**Arya learns from my receipts,** and it remembers what I share with it so I don't start from zero every week. The list is already made from what we buy.
+**Arya learns from my receipts.** It remembers what I share with it, so I do not start from zero every week. The list is already made from what we buy.
 
-**I add** by typing, by voice — **Muse Voice Transcribe** — or a photo of a paper list — **Muse Spark** converts it into a list.
+**I add items** by typing, by voice (**Muse Voice Transcribe**), or with a photo of a paper list (**Muse Spark** turns the photo into list items).
 
-**At the store,** if I can't find something, I tap **Can't find it**, then **Find it for me**, and point the camera at the shelf: **SAM 3.1** marks the possible spots, **Spark** checks them, and the match lights up. *This shelf is empty,* so I tap **The shelf is empty**. Once three shoppers have reported the same item at a store, other shoppers who have it on their list and shop there see an alert.
+**At the store,** if I cannot find something, I tap **Can't find it**, then **Find it for me**, and point the camera at the shelf. **SAM 3.1** marks the possible spots, **Spark** checks them, and the match lights up. If the shelf is empty, I tap **The shelf is empty**. Once three shoppers have reported the same item at a store, other shoppers who have it on their list and shop there see an alert.
 
-**At checkout** I snap the receipt. **Spark** reads it, Arya checks the math, and if anything is off, **Muse Wonder** takes a second look. *Next week's list is already learning.*
-
----
-
-**Back home,** the spinach is about to go bad, so Arya tells me to use it first. I finish the yogurt, I tell Arya we're out, and *it's on the list.*
+**At checkout** I snap the receipt. **Spark** reads it and Arya checks the math. If anything is off, **Muse Wonder** takes a second look. *Next week's list is already learning.*
 
 ---
 
-**Arya is live** — the demo is open to everyone, no sign-up; accounts are by invite from the waitlist for now for beta testers. *Honestly, it's early:* a week is not enough to build all of this, and it gets better as more of us use it.
+**Back home,** the spinach is about to go bad, so Arya tells me to use it first. I finish the yogurt and tell Arya we are out. *It is on the list.*
 
-**Arya is a hackathon product. With Meta's help, it could come to life and reach more people: a platform for a problem most of us face and never solve, because other things in life take priority. Arya frees up that time and mental space.**
+---
 
-**The potential is bigger.** The eyes that read a shelf today could run on **Meta glasses** tomorrow. Stores could partner too — only where it makes the community better. A [developer portal](https://arya.teamnightshift.org/developers) is live for API integration. AI agents like **Meta Muse** can already integrate over **MCP** and talk to Arya.
+**Arya is live.** The demo is open to everyone, with no sign-up. Accounts are by invite from the waitlist for now, for beta testers. *It is early.* A week is not enough to build all of this, and it gets better as more of us use it.
+
+**Arya is a hackathon product. With Meta's help, it could grow and reach more people. It is a platform for a problem most of us have and never solve, because other things in life come first. Arya gives that time and head space back.**
+
+**The potential is bigger.** The camera that reads a shelf today could run on **Meta glasses** tomorrow. Stores could partner too, but only where that makes things better for the community. A [developer portal](https://arya.teamnightshift.org/developers) is live for API integration. AI agents like **Meta Muse** can already connect over **MCP** and talk to Arya.
 
 > **The AI does the remembering. We do the shopping, and we help each other.**
 >
@@ -86,23 +86,23 @@ Size and other limits: [Known limits](README.md#what-are-the-known-limits).
 
 ## Why I built it this way
 
-**A PWA (progressive web app).** A PWA is a website you can add to your phone's Home Screen, so it opens like an app with nothing to install from an app store. One link works on any phone, with no app-store review. It opens from there, keeps your lists usable with no signal and can send reminders, and a judge can open it in one tap. A PWA was the fastest way to build and ship in a hackathon. After the hackathon I plan to build native iOS and Android apps.
+**A PWA (progressive web app).** A PWA is a website you can add to your phone's Home Screen. It opens like an app, with nothing to install from an app store. One link works on any phone, with no app-store review. It keeps your lists usable with no signal, it can send reminders, and a judge can open it in one tap. A PWA was the fastest way to build and ship in a hackathon. After the hackathon I plan to build native iOS and Android apps.
 
-**The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is JSON documents, mirrored to Supabase Postgres on the live site. JSON is easy to back up, read and export, so your receipts go with you if you leave. After judging, Postgres can become the master copy.
+**The stack.** React, TypeScript and Vite for a phone-first app I could change quickly, with three.js for the Quest store world. One Python (FastAPI) process serves the API and the app, so there is one thing to run and debug. Each account's data is a set of JSON documents, mirrored to Supabase Postgres on the live site. JSON is easy to back up, read and export, so your receipts go with you if you leave. After judging, Postgres can become the master copy.
 
-**The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects; setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
+**The hosting.** I run Arya on a free Oracle Cloud VM with Docker Compose and Caddy. I chose Oracle because it is Always Free and I already knew it. The VM already existed for other hobby projects. Setting up Arya on it began on Oct 27. Caddy gives HTTPS and security headers with almost no setup, and "Run it yourself" uses the same Compose files.
 
 **The coding model.** Muse Code wrote the first version of the engine and I built the rest of the app with Claude. Details under [Build tools](#how-this-was-built).
 
-**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only receipts the arithmetic flags, because it is more accurate but about nine times the cost and four times slower. SAM 3.1 finds items on a shelf and pixelates people. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
+**The Meta models.** Each model has one job, and the cheapest one that holds its score does it. Spark reads receipts first because it is fast and cheap. Wonder re-reads only the receipts the arithmetic check flags. It is more accurate, but it costs about nine times more and is four times slower. SAM 3.1 finds items on a shelf and pixelates people. Voice Transcribe turns speech into text for the list mic. Muse Image painted the celebration characters once. Spark Open gives a second opinion on the staple judge. Numbers are in [`MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md).
 
-**Muse can use Arya.** Arya has a standard MCP connector, and Muse is the reference client: ask the Muse agent to connect to Arya, paste the code into the secure credentials vault Muse opens (never the chat), and Muse can read your list, add items, check them off and file a receipt it read in chat, through six tools. I tested it on my own Muse on 2026-11-02. Setup: [the agent connector](assistant/docs/AGENT-CONNECTOR.md).
+**Muse can use Arya.** Arya has a standard MCP connector, and Muse is the reference client. Ask the Muse agent to connect to Arya, then paste the code into the secure credentials vault Muse opens (never into the chat). Muse can then read your list, add items, check them off, and file a receipt it read in chat, through six tools. I tested it on my own Muse on 2026-11-02. Setup: [the agent connector](assistant/docs/AGENT-CONNECTOR.md).
 
-**Rome wasn't built in a day.** A community can't be built inside one hackathon. What I finished is the foundation: the more shoppers use Arya, the better its store maps get, and later, if shoppers choose to share prices (not switched on yet), its prices too. The more people use it, the more it gives back to them.
+**A community takes time.** It cannot be built inside one hackathon. What I finished is the foundation. The more shoppers use Arya, the better its store maps get. Later, if shoppers choose to share prices (not switched on yet), its prices get better too. The more people use it, the more it gives back to them.
 
 ## Live demo
 
-https://arya.teamnightshift.org, no account: tap "Try it now" for a fictional household whose changes live in a sandbox for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Lists API and docs for developers: https://arya.teamnightshift.org/developers.
+https://arya.teamnightshift.org, no account needed. Tap "Try it now" for a fictional household. Its changes live in a sandbox for your visit only. Best on a phone. On a laptop, make the window about 390 px wide. Lists API and docs for developers: https://arya.teamnightshift.org/developers.
 
 ## Documentation map
 
@@ -153,7 +153,7 @@ The navigation tab (the row of buttons at the bottom) starts as Today, Spending,
 
 ## Verify it without signing in
 
-Everything below runs in the demo household, no account needed. "Live" means the demo calls the Meta Model API when you tap; the allowance is in [Known limits](#what-are-the-known-limits).
+Everything below runs in the demo household, with no account needed. "Live" means the demo calls the Meta Model API when you tap. The allowance is in [Known limits](#what-are-the-known-limits).
 
 | Feature | Tap | You see | Meta model | Code |
 |---|---|---|---|---|
@@ -168,13 +168,14 @@ Everything below runs in the demo household, no account needed. "Live" means the
 | Map my store | Quest tab, Map my store | A guided scan; people detected and pixelated before anything is kept | SAM 3.1 and Muse Spark (live, needs a camera) | `assistant/api/storescan.py`, `shelfscan.scrub_people` |
 | Celebration characters | Any grab | A painted character | Muse Image, painted once during the build and shipped as assets | `assistant/pwa/assets/characters/` |
 
-Every live call goes through `assistant/api/meta_client.py` and is booked
-in a cost ledger with model, tokens and cost; the Ops screen shows
-the day's spend. No store
-ships pre-mapped and the demo never reaches disk.
+Every live call goes through `assistant/api/meta_client.py`. Each call is
+booked in a cost ledger with the model, tokens and cost, and the Ops screen
+shows the day's spend. No store ships pre-mapped, and the demo never writes
+to disk.
 
-No camera or microphone on a laptop: use the sample buttons, or run the full
-loop on a phone. The window should be about 390 px wide.
+A laptop has no camera or microphone for these steps. Use the sample
+buttons, or run the full loop on a phone. The window should be about 390 px
+wide.
 
 ## What is in it
 
@@ -189,7 +190,7 @@ The full feature list, with why each matters, is the [dated build page](docs/WHA
   you run needs your own Google Places key.
 - **You decide.** Arya suggests; you decide what goes on the list.
 
-**Kroger aisle lookup.** At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger's own Products API where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored, and it falls back to the crowd map if Kroger does not answer. It needs your own Kroger developer keys if you run your own copy. The demo stores are invented, so you will not see it in the demo. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service (https://developer.kroger.com/terms). Arya is not affiliated with or endorsed by Kroger.
+**Kroger aisle lookup.** At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger's own Products API where an item sits. It shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored. If Kroger does not answer, Arya falls back to the crowd map. It needs your own Kroger developer keys if you run your own copy. The demo stores are invented, so you will not see it in the demo. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service (https://developer.kroger.com/terms). Arya is not affiliated with or endorsed by Kroger.
 
 ## Names for the help parts
 
@@ -212,9 +213,9 @@ tab and that file in the same PR.
 </p>
 
 A phone-first PWA (React and TypeScript, built with Vite) talks to one
-FastAPI process behind Caddy. Code does the money, timing and list logic, so
-those cost nothing per call. Meta models read photos, judge staples and
-answer questions, and every call goes through one module
+FastAPI process behind Caddy. Plain code does the money, timing and list
+logic, so those cost nothing per call. Meta models read photos, judge staples
+and answer questions. Every model call goes through one module
 (`assistant/api/meta_client.py`). State is JSON documents on a Docker volume,
 mirrored to Supabase Postgres on the live site. Details, feature flags and the VM runbook:
 [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md).
@@ -242,8 +243,8 @@ Details and the VM runbook are in
 
 ## Run it yourself
 
-With Docker and your own Meta key (optional, it turns the AI on). A shallow
-clone is small and fast; a normal `git clone` also works and brings the full
+You need Docker. A Meta key is optional; it turns the AI on. A shallow
+clone is small and fast. A normal `git clone` also works and brings the full
 history:
 
 ```bash
@@ -252,12 +253,13 @@ cp .env.local.example .env       # put your key on the MODEL_API_KEY line
 docker compose up --build
 ```
 
-Your key stays on your computer: `.env` is git-ignored, so it is never
-committed. Do not put a key in a file that is tracked. Open
+Your key stays on your computer. `.env` is git-ignored, so it is never
+committed. Do not put a key in a file that git tracks. Open
 http://localhost:8080. On the first visit, create your account (a username
-and password) to read your own receipts, or close the sheet and tap "Try it now"
-for the demo household. Without a key the app and the demo open, but anything that calls a
-Meta model says "This copy of Arya has no Meta key, so AI features are off". Making a key, settings, resetting, the no-Docker route
+and password) to read your own receipts. Or close the sheet and tap "Try it now"
+for the demo household. Without a key the app and the demo still open, but
+anything that calls a Meta model says "This copy of Arya has no Meta key, so AI
+features are off". Making a key, settings, resetting, the no-Docker route
 and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
 If you use an AI coding agent, there is a prompt that sets it up for you:
 [Let your AI agent set it up](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up).
@@ -274,20 +276,21 @@ Tests, from the repo root:
 ## Measured results
 
 - **Receipt photos, Muse Wonder 1.0 alone (now the backup reader).**
-  On the Gate 0 public set (9 receipts, 98 lines): 97 of 98 lines have the
-  right product and price after hand adjudication, with zero price errors
-  and arithmetic matching on 7 of 7 receipts. The automatic scorer gives
-  86 of 98 (87.8%), lower than Muse Spark on the same set: 92 of 98. Record:
+  On the Gate 0 public set (9 receipts, 98 lines), 97 of 98 lines have the
+  right product and price after hand adjudication. There were zero price
+  errors, and the arithmetic matched on 7 of 7 receipts. The automatic scorer
+  gives 86 of 98 (87.8%). That is lower than Muse Spark on the same set, which
+  scored 92 of 98. Record:
   `assistant/loops/2026-10-27-wonder-decode.md`.
 - **Gate 0, before Wonder (Muse Spark).** Public set 90 of 98 lines
   (91.84%), my subset 32 of 32, combined 122 of 130 (93.85%). One silent
   price rotation got through. It is recorded, and the review queue is the
-  mitigation.
+  safeguard.
 - **Open weights.** Muse Spark Open (hosted on Baseten) and hosted Spark labeled the same 32
-  grocery names: category and section agreement were both 100%. On the demo
-  account's judged staples the second seat agreed on 3 of 4. The one
-  disagreement (Greek Yogurt: staple by name, occasional by purchase facts)
-  is why names advise and purchase facts decide.
+  grocery names. They agreed on the category and the section 100% of the
+  time. On the demo account's judged staples, the second seat agreed on 3 of
+  4. The one disagreement (Greek Yogurt: a staple by name, occasional by
+  purchase facts) is why names advise and purchase facts decide.
   `assistant/loops/2026-10-28-open-weights.md`.
 - **Staple judge.** Precision 0.79 against a purchase-cadence proxy on my
   114 receipts.
@@ -300,23 +303,23 @@ The scored reports and the Gate 0 labels and results are in
 
 ## What are the known limits?
 
-Short answer: one server for a few dozen people at once, tested on 114 receipts from one household and one iPhone.
+Short answer: one server for a few dozen people at once, tested on 114 receipts from one household and on one iPhone.
 
 - **Testing data.** Arya was tested on one household's receipts (114 Costco
-  receipts) and a small public receipt set. Data was limited, so the results
-  in "Measured results" come from small samples.
+  receipts) and a small public receipt set. The data was limited, so the
+  results in "Measured results" come from small samples.
 - **Devices.** Real-device testing was done only on an iPhone 17 Pro. Other
   phone sizes were checked in a browser at 360x640, 390x844, 430x932 and
   390x568, not on those phones.
-- **Demo allowance.** Each demo visit can spend about $0.40 on live Meta calls, and the demo has a daily cap, so a busy judging day can run out. When that happens the app says so and the sample buttons still work.
-- **Location check.** Quest start and the Map my store live walk check your phone's location once against the store's address point, within about 300 m or the GPS accuracy if larger. Indoor GPS is often off, so the Quest check only adds a note and never blocks. The live walk needs a confirmed location; otherwise upload a video or photos. Stores with no stored address point (older or hand-added rows) cannot be checked: Quest starts as usual and the live walk is upload only. Not tested on real phones indoors.
-- **Markets.** Built and tested with US receipts, dollars and stores first; other markets not tested.
+- **Demo allowance.** Each demo visit can spend about $0.40 on live Meta calls, and the demo has a daily cap. A busy judging day can use it up. When that happens, the app says so, and the sample buttons still work.
+- **Location check.** Quest start and the Map my store live walk check your phone's location once against the store's address point, within about 300 m or the GPS accuracy if that is larger. Indoor GPS is often off, so the Quest check only adds a note and never blocks. The live walk needs a confirmed location. Without one, you upload a video or photos instead. Stores with no stored address point (older or hand-added rows) cannot be checked. For those, Quest starts as usual and the live walk is upload only. I have not tested this on real phones indoors.
+- **Markets.** Built and tested with US receipts, dollars and stores first. Other markets are not tested.
 - **One server, a few dozen people at once.** Arya runs as one server process
-  on one VM. A few dozen people at the same time is about what it handles;
-  beyond that it gets slower. On a development machine with a
+  on one VM. A few dozen people at the same time is about what it handles.
+  Beyond that it gets slower. On a development machine with a
   117-receipt account (not yet on the live server), opening Today took about
   1.1 s with 10 people at once and about 4 s with 30. Demo sessions live in
-  that process's memory and the data files have one writer, so it cannot yet
+  that process's memory, and the data files have one writer, so it cannot yet
   run as several processes. Saves are copied to Supabase inside the request,
   so a slow Supabase can slow a save. My plan after judging is to make
   Postgres the master copy, move session state out of memory, run several
@@ -325,10 +328,10 @@ Short answer: one server for a few dozen people at once, tested on 114 receipts 
 
 ## After the hackathon
 
-What ships now is a limited-scope MVP. These are ideas I am thinking
-about for where Arya could go; they are not commitments, and I need more time
-to figure them out. Nothing in this list is built, except two things that are
-built but switched off: **Use your own Meta key** (the code is in this repo and
+What ships now is a small first version. These are ideas for where Arya
+could go. They are not commitments, and I need more time to work them out.
+Nothing in this list is built, except two things that are built but switched
+off: **Use your own Meta key** (the code is in this repo and
 tested, but it is unfinished, I decided not to use it, and it is not part of the
 demo) and an **Alexa skill** that adds items to your list by voice (merged
 behind a flag that is off, paused until after the hackathon, not yet tried on a
@@ -344,11 +347,11 @@ real device, and with no sync to Alexa's own lists). The ideas, grouped in [`doc
 
 ## How this was built
 
-The first commit here is Oct 27, 15:13 ET, nothing in this repo is older, and
-1000+ commits followed. The idea search took about two days; its commits in a
-separate research repo start on Oct 26. The engine (decode, dictionary, ledger, patterns, the first phone app)
+The first commit here is Oct 27, 15:13 ET. Nothing in this repo is older, and
+1000+ commits followed. The idea search took about two days. Its commits are in a
+separate research repo and start on Oct 26. The engine (decode, dictionary, ledger, patterns, the first phone app)
 landed in four commits between 15:31 and 15:38. Muse Code, running Muse Wonder, wrote that
-engine with me (my account); git lists the commits under the author name "Spark". The dated table
+engine with me (on my account). Git lists those commits under the author name "Spark". The dated table
 is on the [build page](docs/WHAT-WE-BUILT.md).
 
 Other commits are named "Spark" too: 253 of the 1,333 in all, next to 556 named
@@ -357,7 +360,7 @@ my VM. It ran Muse Spark and used Muse Wonder through the agent, and it coded in
 parallel with Claude. The session logs in `assistant/loops/` record the rest.
 
 
-**Build tools.** I used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, running Muse Wonder, to write the first version of the engine on Oct 27. I then built the rest of the app with Claude, which I know well. Muse Code is not part of the shipped app.
+**Build tools.** I used [Muse Code](https://dev.meta.ai/lp/muse-code), Meta's coding agent, running Muse Wonder, to write the first version of the engine on Oct 27. Then I built the rest of the app with Claude, which I know well. Muse Code is not part of the shipped app.
 
 ## Characters
 
@@ -372,8 +375,8 @@ parallel with Claude. The session logs in `assistant/loops/` record the rest.
 
 ## Built with
 
-Open-source code, models and services Arya builds on keep their own
-licenses; the full list with every license is in [`NOTICE.md`](NOTICE.md).
+The open-source code, models and services Arya builds on keep their own
+licenses. The full list, with every license, is in [`NOTICE.md`](NOTICE.md).
 The Meta models come through the Meta Model API (no weights are in this
 repo). Store search uses the Google Places API. Muse Spark Open runs under the Muse Model License and its Usage Policy
 and is not copied here.
@@ -389,6 +392,6 @@ trademarks, used only to point at an install.
 ## License
 
 Arya's own code and documents are all rights reserved. The repository has no
-license file, and no license to reuse it is granted. It is public so judges can
+license file, and it grants no license to reuse it. It is public so judges can
 read, run and test it. Third-party code and asset
 notes are in `NOTICE.md`.

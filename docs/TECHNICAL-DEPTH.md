@@ -1,21 +1,21 @@
 # Design decisions, and what comes next
 
-I built Arya as one well-defended single-server app on purpose: the window was for the product, not a fleet. This page splits it into what is built and holds up for a few dozen people at once, what I know is weak, and the plan for growing past that. The dated choices are in the [decision log](DECISIONS.md), what was made and when is on the [build page](WHAT-WE-BUILT.md), and the unbuilt ideas are in the [roadmap](ROADMAP.md). What runs today is in [Architecture](../assistant/docs/ARCHITECTURE.md).
+I built Arya as one well-defended single-server app on purpose. The window was for the product, not for a fleet of servers. This page has three parts: what is built and holds up for a few dozen people at once, what I know is weak, and the plan to grow past that. The dated choices are in the [decision log](DECISIONS.md), what was made and when is on the [build page](WHAT-WE-BUILT.md), and the unbuilt ideas are in the [roadmap](ROADMAP.md). What runs today is in [Architecture](../assistant/docs/ARCHITECTURE.md).
 
 ## What is built?
 
-- **Code does money, timing and lists at no model cost.** The ledger, patterns and derived list are deterministic and recomputed from the receipts, so they cannot drift. Every model call goes through one module that enforces the personal-data rule. (Architecture 0.3, 0.4)
+- **Code does money, timing and lists at no model cost.** The ledger, patterns and derived list are computed again from the receipts each time, with no model involved, so they cannot drift. Every model call goes through one module that enforces the personal-data rule. (Architecture 0.3, 0.4)
 - **Safe writes on one box.** Atomic JSON writes, a per-file lock, a per-request memo, and a full Postgres copy of every account document on the live site. (Architecture 0.5)
 - **Layered spend control.** A daily ceiling for the app, a separate one for the demo, a per-visit share, per-account monthly and hourly limits, and an Ops switch to pause paid reads or change the photo reader without a deploy. Every call writes a ledger row. ([Model policy](../assistant/docs/MODEL-POLICY.md))
 - **Background work that survives a restart.** Receipt batches and store scans keep a pending list on disk and resume after a deploy.
 - **Live sync that already spans processes.** Shared-list changes use Postgres `LISTEN/NOTIFY`, one listener per process. (Architecture 0.8)
 - **A demo that cannot touch real data.** Each visit writes to an in-memory sandbox with a size cap.
 - **Security basics.** Hashed session and token secrets, a strict script CSP, upload caps at the proxy, throttled sign-in, and people pixelated out of shelf photos before anything is stored.
-- **Measured.** A [scale simulator](../assistant/docs/SCALE-SIM.md) and a read-only performance pass on 2026-11-02: the Today screen takes about 65 ms alone, about 1.1 s with 10 people at once and about 4 s with 30, on a development machine, not the live server.
+- **Measured.** A [scale simulator](../assistant/docs/SCALE-SIM.md) and a read-only performance pass on 2026-11-02. The Today screen takes about 65 ms alone, about 1.1 s with 10 people at once and about 4 s with 30. That was on a development machine, not the live server.
 
 ## What do I know is weak?
 
-From my own architecture audit of 2026-11-01, the findings that still hold, each tied to a phase of the [scalability design](SCALABILITY-DESIGN.md). Two audit items are already closed: `/health` reports the running commit, and the photo reader is Spark first (see the [model map](../JUDGES.md#which-model-does-which-job)), which took the cost pressure off receipt batches.
+These are the findings from my own architecture audit of 2026-11-01 that still hold. Each is tied to a phase of the [scalability design](SCALABILITY-DESIGN.md). Two audit items are already closed: `/health` reports the running commit, and the photo reader is Spark first (see the [model map](../JUDGES.md#which-model-does-which-job)). That second change took the cost pressure off receipt batches.
 
 | What | Why it matters | Fixed in |
 |---|---|---|
@@ -34,7 +34,7 @@ From my own architecture audit of 2026-11-01, the findings that still hold, each
 
 ## What is the plan to grow it?
 
-[Scalability design](SCALABILITY-DESIGN.md) has nine phases (0 to 8, the numbers the table above uses), each switched on by settings, each with a rollback and a number to measure:
+[Scalability design](SCALABILITY-DESIGN.md) has nine phases (0 to 8, the numbers the table above uses). Each phase is switched on by settings. Each has a rollback and a number to measure:
 
 0. Baseline: request timing, a metrics endpoint and a live load test.
 1. Hot cache: a short-lived cache, and the Postgres mirror off the request path.

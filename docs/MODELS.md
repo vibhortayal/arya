@@ -1,9 +1,9 @@
 # Meta models: available, used, and future ideas
 
 A one-time look (2026-11-02) at every model Meta offered me, what Arya uses
-today, and what it could use later. Used models are described in detail in
+today, and what it could use later. The models in use are described in
 [`assistant/docs/MODEL-POLICY.md`](../assistant/docs/MODEL-POLICY.md) and
-[`docs/quest/META-PRODUCTS.md`](quest/META-PRODUCTS.md); this page adds the
+[`docs/quest/META-PRODUCTS.md`](quest/META-PRODUCTS.md). This page adds the
 models I did **not** use. The model list comes from Meta's models page
 (dev.meta.ai/docs/models) as read on 2026-11-02, and the code from
 `assistant/api/meta_client.py`. Where I could not confirm something, it says
@@ -23,20 +23,20 @@ The models in use, with ids and jobs: [For judges, Meta model map](../JUDGES.md#
 | **Muse Wonder Full** | Higher Wonder variant | Muse Code plans only, not on the Model API, so unavailable to the app | n/a |
 
 Smaller API features I have not used: web-search grounding ($2.50 per 1,000
-searches; could ground "is this a good price" but would send queries out,
-so it conflicts with the personal-data rule), computer use (no fit), and the
-Files API with background responses (a possible fit for very long scan videos).
-Image generation is only used offline for the characters; a live "dinner
-render" idea sits in MODEL-POLICY and is not built.
+searches; it could ground "is this a good price", but it would send queries
+out, which conflicts with the personal-data rule), computer use (no fit), and
+the Files API with background responses (a possible fit for very long scan
+videos). Image generation is only used offline for the characters. A live
+"dinner render" idea sits in MODEL-POLICY and is not built.
 
 ## Why can I not use store video and photos?
 
 The best raw material for better store maps and shelf help already exists
 online: walkthrough videos and in-store photos on YouTube, TikTok and similar
 sites. Arya cannot use them. They belong to their creators and the platforms,
-the platform terms forbid bulk collection, and Arya's own rule is that no
-store map is built from footage I do not have the right to use (the
-Trader Joe's walkthrough experiment was removed for exactly this reason; see
+and the platform terms forbid bulk collection. Arya's own rule is that no
+store map is built from footage I do not have the right to use. The
+Trader Joe's walkthrough experiment was removed for exactly this reason (see
 `docs/quest/META-PRODUCTS.md`). Today every store map comes from a shopper
 walking their own store with the guided scan.
 

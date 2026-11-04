@@ -1,8 +1,8 @@
 # Demo runbook — Arya
 
-Two paths. Path A is the live presentation on my account (real
+There are two paths. Path A is the live presentation on my account (real
 data, 114 trips). Path B is the judge self-serve path (demo household).
-The video follows Path A beats; the narration is Path B safe.
+The video follows the Path A beats. The narration is safe for Path B too.
 
 ## Beats (fixed order; follows the locked video script of 2026-11-04)
 
@@ -41,7 +41,7 @@ verbatim). The timings are from the finished cut, which runs under three minutes
    trip."
 7. **Back home** (2:02 to 2:12). Today shows Use soon: the milk. Ask Arya:
    "I just finished the yogurt." The reply marks it out and puts it on the
-   list. Show the Ask reply only; do not cut to a list that does not show
+   list. Show the Ask reply only. Do not cut to a list that does not show
    yogurt.
 8. **Where it stands** (2:12 to 2:49). "Arya is soft launched": the demo is
    open to everyone, accounts are invite-only for beta testers. Muse, the
@@ -66,9 +66,9 @@ real account. The step-by-step version is
 
 ## Failure fallbacks
 
-- Live decode is slow: the network path adds seconds. Keep one receipt
-  already decoded; cut to it and keep talking.
-- The demo household needs no network path to the model: it always opens.
+- Live decode is slow, because the network path adds seconds. Keep one
+  receipt already decoded. Cut to it and keep talking.
+- The demo household needs no network path to the model, so it always opens.
 - A deploy ends every open demo (demo sessions live in server memory).
   The open app goes back to the start page and says "Arya was updated.
   Start the demo again." Do not deploy while judges use the demo.
@@ -77,15 +77,15 @@ real account. The step-by-step version is
 
 - Pitch: "the grocery memory that gets smarter every trip."
 - Say "Arya shoppers" for community data. Community prices are opt-in and
-  not live; do not show them as working.
+  not live. Do not show them as working.
 - Say "open platform" for the API only after it is deployed.
-- Show only what is on the VM. `/health` shows the running commit; check it
+- Show only what is on the VM. `/health` shows the running commit. Check it
   against `STATUS.md` before recording.
 - The ask beat is stronger with a how-to question ("How do I add a
-  receipt?") or a photo; household sharing is the swap if a beat must go.
+  receipt?") or a photo. Household sharing is the swap if a beat must go.
 - My switches in `assistant/deploy/.env` that change what the demo can
   show: `ARYA_DEMO_TOWN`, `ARYA_KROGER_AISLES`, `ARYA_OWNER_USERNAME`,
   `ARYA_WAITLIST_ADMINS`, `ARYA_SUPABASE_AUTH`. Details are in `STATUS.md`
   (Feature flags) and `assistant/docs/OPS.md`.
-- Ideas not built are tracked as GitHub issues (#155, #157 to #170); none
-  belong in the video.
+- Ideas not built are tracked as GitHub issues (#155, #157 to #170). None
+  of them belong in the video.

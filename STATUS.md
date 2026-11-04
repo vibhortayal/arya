@@ -1,12 +1,11 @@
 # STATUS — where Arya stands (2026-11-03)
 
 Live: https://arya.teamnightshift.org. Deadline: Nov 4, 2026, 9:00 PM ET.
-The build record per session lives in `assistant/loops/`; decisions
+The build record per session lives in `assistant/loops/`. Decisions
 live in `docs/DECISIONS.md` (the early design discussion is
-`docs/quest/DISCUSSION.md`); every document is listed in `docs/README.md`.
-This page says only what is true now
-on `main`. A merge is not a deploy: the live site changes only after
-`git pull` and a rebuild on the VM.
+`docs/quest/DISCUSSION.md`). Every document is listed in `docs/README.md`.
+This page says only what is true now on `main`. A merge is not a deploy.
+The live site changes only after `git pull` and a rebuild on the VM.
 
 - **Live commit:** not listed here (me, 2026-11-01). `/health` shows the running commit (#359); deploy and rollback steps are in `assistant/docs/OPS.md`.
 - **Not here reports shared across shoppers (#542, merged and live, app b7d54438):** other shoppers see a store and item only once 3 different accounts (`ARYA_REPORT_QUORUM`, default 3) have a fresh report; only for items on their own list and at stores they use (My stores or a store named on one of their lists); one report per account per store and item, at most 30 a day; a report expires after 3 days or clears for everyone when the item is found or checked off; taking a report back removes only your own. Today shows one folded alert ("N shoppers say not here") for 12 hours, in the feed only, with no push or email. The server stores an 8-character account hash, never a name or handle. The demo writes to its sandbox. `assistant/loops/2026-11-03-shared-not-here.md`.
