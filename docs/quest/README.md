@@ -4,10 +4,10 @@ Quest is the optional game layer of Arya, a grocery app that learns how you
 shop from your receipts and helps shoppers help each other (see the root `README.md`). Team Nightshift,
 Indie track, submission Nov 4, 2026, 9:00 PM ET.
 
-Quest turns your grocery list into a treasure hunt in your real store. Pick the store; Arya sorts your list by where you usually buy
-each thing. Walk the hunt through real photos of the aisles, grab each
-item (points only go up, no clock), and let **Find it for me** point
-the camera at the shelf. Snap the receipt at checkout: it banks your
+Quest turns your grocery list into a treasure hunt in your real store. Pick the store. Arya sorts your list by where you usually buy
+each thing. Walk the hunt through real photos of the aisles and grab each
+item (points only go up, no clock). **Find it for me** points
+the camera at the shelf. Snap the receipt at checkout. It banks your
 points and teaches Arya your household, so next week's list writes
 itself.
 
@@ -19,15 +19,15 @@ camera scan maps it for every shopper after you.
 **Plan → Find → Grab → Receipt.**
 
 1. **Plan.** The list arrives in any form (photo, paste, typing, voice,
-   Muse chat). Pick the store; the list is sorted for it from your
+   Muse chat). Pick the store. The list is sorted for it from your
    receipts.
 2. **Find.** Shoppers' photos where a store section is mapped (people
-   pixelated by SAM 3.1), a labelled typical layout elsewhere. Find it for me: SAM 3.1 boxes candidates,
-   Muse Spark verifies.
+   pixelated by SAM 3.1), and a labelled typical layout elsewhere. Find it for me: SAM 3.1 boxes candidates,
+   and Muse Spark verifies them.
 3. **Grab.** +10 per grab, milestones, a full-haul bonus. Shortage
    reports and sightings feed a live store map.
 4. **Receipt.** Muse Spark reads it (Spark first; see the model map in
-   `JUDGES.md`), code checks the arithmetic, and it
+   `JUDGES.md`). Code checks the arithmetic. The receipt then
    feeds patterns, spend and returns.
 
 ## Documents

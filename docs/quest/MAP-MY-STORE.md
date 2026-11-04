@@ -1,4 +1,4 @@
-# Map my store ("Teach Arya your store") — design
+# Map my store ("Teach Arya your store"): design
 
 Me, 2026-10-28: replace "take a photo or record a video" with a guided
 mapper. Map only the aisles you use, over many visits. Many partial maps
@@ -51,7 +51,7 @@ friction." So the shopper opens a live camera and the app does the work:
   snaps the best frame after 1.5 s steady, or the best seen by 6 s.
 - **Walk:** the sharpest frame of every 2 s is kept; no video upload.
 - The server never refuses a shot. A weak one is kept as a **partial**
-  (`weak: true`): the segment stays "aging", the next better capture
+  (`weak: true`). The segment stays "aging", the next better capture
   replaces it, and the engine asks again on a later visit.
 - If the people scrub fails, nothing is kept and the app says "No need
   to redo it." It never asks for a retake.
@@ -63,7 +63,7 @@ The walk's length decides: about 8 s of walking per section, 1 to 6
 sections. The app calls `POST /api/storemap/split` and spreads the
 walk's frames over the sections in time order (front / middle / back,
 or first half / second half). Parts keep the zone key, so sightings and
-"not found" reports still find them. A split is idempotent: a second
+"not found" reports still find them. A split is idempotent, so a second
 shopper walking the same aisle fills the same sections. Old whole-aisle
 captures are dropped on split; the walk that caused it fills the parts.
 

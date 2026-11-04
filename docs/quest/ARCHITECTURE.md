@@ -1,4 +1,4 @@
-# Architecture — Arya Quest
+# Arya Quest architecture
 
 Perception at the edge, reasoning in the platform, the game on the
 phone. Two data planes never mix:
@@ -31,14 +31,14 @@ be two real products. Deterministic first; Spark only where code
 cannot settle. A clean list skips the screen.
 
 ### 4. The hunt (client PWA)
-Installable. Signed-in accounts keep a cached copy and queue grabs offline, which sync later; receipts and Ask need a connection. One store view per
+Installable. Signed-in accounts keep a cached copy and queue grabs offline, which sync later. Receipts and Ask need a connection. One store view per
 store: photos or shelf cards. Any stop can be grabbed in any order.
 Shelf Scan and Find it for me
 send a frame to `POST /api/quest/scan-shelf` (`?item=` aims at one
 item): SAM 3.1 proposes boxes, Spark verifies each crop. Verified pops
 are stored as sightings (item, store, shelf, time). A frame is kept as
 a fresh shelf photo only after SAM finds the people it detects and pixelates
-them; if that step fails, nothing is kept.
+them. If that step fails, nothing is kept.
 
 ### 5. Settle (account)
 `receipt photo → Muse Spark → arithmetic check (flagged: Muse Wonder re-reads) → ledger, patterns`
@@ -49,7 +49,7 @@ kept in the account.
 
 ## Cost rules
 The binding rules, prices and current caps are in
-[`assistant/docs/MODEL-POLICY.md`](../../assistant/docs/MODEL-POLICY.md); this is the Quest summary.
+[`assistant/docs/MODEL-POLICY.md`](../../assistant/docs/MODEL-POLICY.md); this page is the Quest summary.
 - Math, routing, planning and patterns are code, $0.
 - Spark (Standard mode) for volume judgment.
 - Engine spend caps: $10/day for the app, $2/day for the demo bucket by default; the live site's compose sets $20.
