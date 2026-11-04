@@ -196,7 +196,7 @@ Also built, but switched off: an Alexa skill that sends misheard adds to Spark i
 - Live, no sign-up: https://arya.teamnightshift.org. Tap "Try it now" for a
   fictional household with no account. Each visitor's changes stay in a
   sandbox for that visit only. Sign-up is invite only during judging. Judge
-  path (about 8 minutes): `docs/quest/JUDGE-PLAYBOOK.md`, with sample
+  path (about 8 minutes): https://vibhortayal.github.io/arya/docs/quest/judge-playbook/ with sample
   receipt and shelf photos for the camera steps. App walkthrough video:
   [WALKTHROUGH VIDEO LINK, add once uploaded]
 - Repo: https://github.com/vibhortayal/arya
