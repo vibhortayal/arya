@@ -575,6 +575,11 @@ def apply_actions(actions, added=None, choices=None):
             fl["list"] = target["id"]
         if t in ("add_to_list", "ran_out", "mark_expired"):
             _untick(fl, target)
+        if t in ("ran_out", "mark_expired"):
+            # The household's own word brings back a row it removed this
+            # cycle; else the reply says "it's on the list" and it is not
+            # (owner bug 2026-11-03, yogurt).
+            fl["dismissed_on"] = None
         if t == "add_to_list" and _already_on(dict(state.flags().get(item_id, {})), target, qty, unit):
             skipped.append(_cap(_t("already_on", "{name} is already on {list}.", name=nm, list=target["name"])))
             continue
