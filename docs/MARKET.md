@@ -45,7 +45,9 @@ Sources for the examples are in section 2.
 
 ## 2. Competitors, by category
 
-All entries are as of the linked pages, read on 2026-11-02.
+All entries are as of the linked pages, read on 2026-11-02. The earlier
+Quest-era table (Fetch, Shopkick, Aisle411 and others, checked 2026-10-27) is in
+[`docs/quest/BUSINESS.md`](quest/BUSINESS.md).
 
 ### Shared list apps (closest to what the user sees first)
 

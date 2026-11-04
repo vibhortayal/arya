@@ -19,6 +19,8 @@ This GitHub repo. In order: `assistant/docs/SPEC.md` (what/why) >
 5. `docs/DECISIONS.md` — what the owner has already decided. Check it before you
    build or mock up anything, and add a line there when the owner decides something
    new. Do not re-open a decision on it without the owner's word.
+6. `docs/README.md` — every document, grouped by reader, and which page is the
+   home of each fact. Edit a fact at its home and link to it from elsewhere.
 
 ## Layout (IMPLEMENTATION §2.1)
 `assistant/api/` one module per spec component; ALL Meta API calls go

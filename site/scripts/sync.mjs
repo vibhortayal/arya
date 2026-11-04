@@ -22,10 +22,11 @@ const questPages = () => fs.readdirSync(path.join(ROOT, 'docs/quest'))
 // [source path in repo, route inside the docs site, sidebar label]
 const quest = (name) => questPages().find(([s]) => s === `docs/quest/${name}.md`);
 const SECTIONS = {
+  // Judge path first: the judges page, the demo walk, then what Arya is.
   'Start here': [
-    ['README.md#what-is-arya', 'intro', 'What is Arya'],
     ['JUDGES.md', 'judges', 'For judges'],
     ['docs/quest/JUDGE-PLAYBOOK.md', 'quest/judge-playbook', '8-minute demo path'],
+    ['README.md#what-is-arya', 'intro', 'What is Arya'],
     ['docs/WHAT-WE-BUILT.md', 'what-we-built', 'Built in the hackathon window'],
     ['docs/PRINCIPLES.md', 'principles', 'Why Arya exists'],
   ],
@@ -43,6 +44,8 @@ const SECTIONS = {
     ['assistant/docs/ARCHITECTURE.md', 'architecture/overview', 'Architecture'],
     ['docs/SCALABILITY-DESIGN.md', 'architecture/scalability', 'Scalability design'],
     ['assistant/docs/MODEL-POLICY.md', 'architecture/model-policy', 'Model policy'],
+    [...quest('META-PRODUCTS').slice(0, 2), 'Meta products in the code'],
+    ['docs/MODELS.md', 'architecture/models', 'Meta models used and not used'],
     ['docs/ENGINEERING-PROCESS.md', 'internal/index', 'How we built it'],
   ],
   'Evidence': [
@@ -172,6 +175,8 @@ const DESC = {
   'architecture/overview': 'How the app runs: the one-page map, storage, models, sync, security, and the design record.',
   'architecture/scalability': 'A nine-phase plan for growing beyond one process, with rollback and a measure for each phase.',
   'architecture/model-policy': 'Which model runs each job, how the cheapest model that passes its test is chosen, and the spend limits.',
+  'quest/meta-products': 'Each Meta product Arya uses, its job, and where it sits in the code.',
+  'architecture/models': 'Every Meta model on offer: the ones Arya uses, the ones it does not, and why.',
   'internal/index': 'How Arya was built by one person working with a team of AI agents, each with one job.',
   'evals/index': 'Index of the measured results, with the files behind each number.',
   'evals/gate-0': 'The first test of Muse Spark reading receipt photos, with settings and results.',

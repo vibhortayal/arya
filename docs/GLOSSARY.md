@@ -30,6 +30,8 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 
 ## The Meta models
 
+Model ids, jobs and measured numbers live in [the model map on the judges page](../JUDGES.md#which-model-does-which-job); this list only says the words.
+
 - **Muse Spark**: reads receipt photos first, and also runs the staple judge, the Curator, Ask Arya and photo reading. Arya uses the Standard tier.
 - **Muse Wonder**: re-reads a receipt only when the arithmetic checks flag it, or when Spark fails.
 - **SAM 3.1**: finds shelves and signs in a store scan, boxes items for Find it for me and pixelates the people it detects.

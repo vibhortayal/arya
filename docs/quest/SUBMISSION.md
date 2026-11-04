@@ -10,6 +10,8 @@ Moved to [`/JUDGES.md`](../../JUDGES.md), the single judge-facing page (rubric b
 
 ## Demo video beats (3 minutes, list first)
 
+> Planning table from before the script was written. The narration being recorded is [`docs/demo-video/SCRIPT.md`](../demo-video/SCRIPT.md); the runbook with the presentation beats and fallbacks is [`assistant/docs/DEMO.md`](../../assistant/docs/DEMO.md). Edit those, not this table.
+
 The demo household (fictional, no personal data) carries the video; one
 real receipt is read on camera. Keep one receipt already read as the
 fallback if the live read is slow.

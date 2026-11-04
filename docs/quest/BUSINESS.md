@@ -29,6 +29,9 @@ Two rules keep that trustworthy:
 
 ## Competitive landscape (checked 2026-10-27)
 
+This table is the Quest-era view. The fuller desk research of 2026-11-02, with
+every outside claim linked or marked unverified, is [`docs/MARKET.md`](../MARKET.md).
+
 Every piece of Arya Quest exists somewhere. The combination exists nowhere.
 
 | Player | What they have | What they lack |

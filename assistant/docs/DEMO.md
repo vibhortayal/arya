@@ -6,6 +6,8 @@ The video follows Path A beats; the narration is Path B safe.
 
 ## Beats (fixed order; matches video script v4)
 
+The narration itself is `docs/demo-video/SCRIPT.md` (the owner's working copy).
+
 1. **Why and bridge** (presenter, about 1:04). Groceries, scattered notes, no
    shared memory. Say: "I built Arya during this hackathon. I downloaded 114
    receipts from the Costco app, three years of my own shopping."

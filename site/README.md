@@ -2,7 +2,7 @@
 
 A small static docs site (Docusaurus 3) built from the Markdown already in this repo. Nothing is copied into git: `scripts/sync.mjs` reads the files at build time, so the site cannot drift from the repo.
 
-It publishes: `README.md`, `JUDGES.md`, `docs/TRY-THE-FEATURES.md`, `assistant/docs/USER-JOURNEYS.md`, `docs/API.md`, and an interactive reference for the Lists API (`static/openapi.json`). It deliberately leaves out OPS, STATUS and the internal docs. To add a page, add one line to `SECTIONS` in `scripts/sync.mjs`. Any reader-facing page needs an Editor PASS first.
+The list of published pages, their order and their sidebar sections is `SECTIONS` in `scripts/sync.mjs` (the one place to edit), plus an interactive reference for the Lists API (`static/openapi.json`). It deliberately leaves out OPS, STATUS and the internal docs; pages that link to those get a GitHub link instead. The repository's own index of every document is `docs/README.md`. To add a page, add one line to `SECTIONS`. Any reader-facing page needs an Editor PASS first.
 
 Styling is Arya's own tokens (colours, font stack, 14 px radius) copied into `src/custom.css`, light mode only, desktop web. If the app's tokens in `assistant/web/src/styles/styles.css` change, update that file.
 

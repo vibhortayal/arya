@@ -2,7 +2,7 @@
 
 Spoken pitch, plain language. About 330 words, about 2 minutes. List first;
 Quest is the optional fun part. Screen beats in brackets. The 3-minute
-video follows the same order (beats in `SUBMISSION.md`).
+video's narration is in [`docs/demo-video/SCRIPT.md`](../demo-video/SCRIPT.md).
 
 ## Hook
 
