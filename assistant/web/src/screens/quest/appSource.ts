@@ -23,6 +23,7 @@
 import { ApiError, api, get, post, put } from "../../lib/api";
 import { startCapture, transcribeBlob, voiceSupported } from "../../lib/recorder";
 import { charFor, loadCharacters } from "../../lib/characters";
+import { countOf, isCountUnit, qtyFmt } from "../../lib/format";
 import { artFor, type Box, type FieldReport, type FindResult, type QuestSource, type SavedMap, type SnapResult } from "../../game/core/source";
 import { buildLayout, sectionFor, SECTIONS } from "../../game/core/template";
 import { TEMPLATE, type StoreGraph } from "../../game/map/graph";
@@ -30,7 +31,7 @@ import { knownZone } from "../../game/map/classify";
 import type { Answers } from "../../game/map/answers";
 import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/core/types";
 
-type PlanRow = { name: string; qty?: number; note?: string; list?: string | null; also?: string[]; on_list?: boolean };
+type PlanRow = { name: string; qty?: number; unit?: string; note?: string; list?: string | null; also?: string[]; on_list?: boolean };
 type NamedList = { id: string; name: string; stores?: string[] };
 type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string; lat?: number | null; lng?: number | null };
 type Coverage = { kind: MapKind; seen: string[]; typical?: string };
@@ -142,8 +143,16 @@ export class AppSource implements QuestSource {
       get<{ lists: NamedList[] }>("/api/lists").catch(() => ({ lists: [] as NamedList[] })),
     ]);
     // Quantity and note ride along to the trip ("Eggs ×2" stays 2; Quest review P1).
-    const item = (r: PlanRow) => ({ name: r.name, art: charFor(r.name) || artFor(r.name),
-      ...(r.qty && r.qty > 1 ? { qty: r.qty } : {}), ...(r.note ? { note: r.note } : {}) });
+    // A package size is not a count: "Hummus 10 oz" is one tub, so the
+    // size rides as the note and the trip takes 1 (not "Hummus ×10").
+    const item = (r: PlanRow) => {
+      const n = countOf(r);
+      const size = !isCountUnit(r.unit) && r.qty ? `${qtyFmt(r.qty)} ${String(r.unit).trim()}` : "";
+      const sq = (x: string) => x.toLowerCase().replace(/[^a-z0-9.]/g, "");
+      const note = r.note || (size && !sq(r.name).includes(sq(size)) ? size : "");
+      return { name: r.name, art: charFor(r.name) || artFor(r.name),
+        ...(n > 1 ? { qty: n } : {}), ...(note ? { note } : {}) };
+    };
     // Only what is on a list (suggestions are not shopping), and an item on two lists counts on both, as on Lists.
     const rows = (plan.list || []).filter(r => r.name && r.on_list !== false);
     const out: ShoppingList[] = [];

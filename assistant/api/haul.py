@@ -20,7 +20,7 @@ the dictionary.
 import hashlib, json, math, os, re, secrets
 from datetime import datetime
 
-from api import quest, state
+from api import itemmeta, quest, state
 
 HAULS_FILE = "hauls.json"
 QUEUED_FILE = "queued.json"
@@ -220,11 +220,11 @@ def match(sess, lines, fixes=None):
     matched, swapped, recv, grab = [], [], [], []
     for i, it in enumerate(items):
         if i in pair:
-            ent = _entry(key_of(it["name"]), it["name"], _qty(it.get("qty", 1)))
+            ent = _entry(key_of(it["name"]), it["name"], _qty(itemmeta.count_of(it)))
             if i in took:
                 # "Oat milk · Instead of Milk", as a hunt swap reads.
                 sub = it["instead"].strip()
-                ent = _entry(key_of(sub), sub, _qty(it.get("qty", 1)))
+                ent = _entry(key_of(sub), sub, _qty(itemmeta.count_of(it)))
                 ent.update(suggested=False, **{"from": it["name"]})
                 swapped.append(ent)
             elif it.get("swapped_from"):
@@ -249,13 +249,13 @@ def match(sess, lines, fixes=None):
         decision = fixes.get("s:" + key)
         if hit and decision != "swap_no":
             used_lines.add(hit[0])
-            swapped.append(_entry(key, it["name"], _qty(it.get("qty", 1)),
+            swapped.append(_entry(key, it["name"], _qty(itemmeta.count_of(it)),
                                   decision if decision == "swap_ok" else None,
                                   suggested=True,
                                   **{"from": hit[1]["_name"],
                                      "from_key": key_of(hit[1]["_name"])}))
             continue
-        grab.append(_entry(key, it["name"], _qty(it.get("qty", 1)),
+        grab.append(_entry(key, it["name"], _qty(itemmeta.count_of(it)),
                            _fix_for("g", key, fixes)))
     seen = {}
     for j, ln in l_left:
@@ -445,7 +445,7 @@ def build(sess, rec=None, private=True):
         for it in sess.get("items") or []:
             if it.get("checked"):
                 add(_entry(key_of(it["name"]), it["name"],
-                           _qty(it.get("qty", 1))), "grabbed")
+                           _qty(itemmeta.count_of(it))), "grabbed")
     # Items follow the hunt's order, then the extras.
     order = {key_of(i["name"]): n for n, i in enumerate(sess.get("items") or [])}
     out_items.sort(key=lambda e: order.get(e["key"], len(order)))
@@ -613,7 +613,7 @@ def private_block(sess, rec=None):
                       if gm.get(iid, iid) == it.get("group")), None)
         if p is None:
             continue
-        est += p * _qty(it.get("qty", 1))
+        est += p * _qty(itemmeta.count_of(it))
         known += 1
     by_id = {r["receipt_id"]: r for r in state.receipts()}
     totals = [by_id[i].get("total") for i in ids

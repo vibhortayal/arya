@@ -34,3 +34,16 @@ test("keepUnit joins a number to its unit with a no-break space (audit L5)", () 
   expect(keepUnit("7 Grain Bread")).toBe("7 Grain Bread");
   expect(keepUnit("Basil")).toBe("Basil");
 });
+
+describe("countOf: a package size is not a count", () => {
+  it("counts pieces, and takes one of a sized package", async () => {
+    const { countOf } = await import("./format");
+    expect(countOf({ qty: 10, unit: "oz" })).toBe(1);
+    expect(countOf({ qty: 32, unit: "oz" })).toBe(1);
+    expect(countOf({ qty: 0.5, unit: "gal" })).toBe(1);
+    expect(countOf({ qty: 2, unit: "ct" })).toBe(2);
+    expect(countOf({ qty: 3 })).toBe(3);
+    expect(countOf({ qty: 6, unit: "pack" })).toBe(6);
+    expect(countOf({})).toBe(1);
+  });
+});

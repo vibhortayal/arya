@@ -47,6 +47,19 @@ export function qtyTag(it?: { qty?: number; unit?: string } | null): string {
   return it && (it.qty || 0) > 1 ? `x${qtyFmt(it.qty)}` : "";
 }
 
+/* How many a trip takes: the qty when the unit counts pieces (or there
+ * is none), else 1. "Hummus 10 oz" is one tub, not ten (owner,
+ * 2026-11-04). The same rule as api/itemmeta.count_of. */
+const COUNT_UNITS = new Set(["", "ct", "count", "each", "ea", "pc", "pcs", "piece", "pieces", "pack", "packs", "pk", "x"]);
+export function isCountUnit(unit?: string | null): boolean {
+  return COUNT_UNITS.has(String(unit || "").trim().toLowerCase().replace(/\.$/, ""));
+}
+export function countOf(it?: { qty?: number | string | null; unit?: string | null } | null): number {
+  const n = Number(it && it.qty) || 1;
+  if (n <= 0 || !isCountUnit(it && it.unit)) return 1;
+  return n;
+}
+
 /* Asset URLs come from the current PWA's static mount, shared by both apps. */
 /* "Paper Towels 6 ct" never breaks between "6" and "ct" (audit L5):
  * a no-break space joins a number to the unit after it. */
