@@ -18,7 +18,9 @@ microphone and chat call the Meta API live, within a small per-visit allowance. 
 
 **What you need.** A grocery receipt photo for step 6. Without one, use
 [the sample receipt photo](../images/sample-receipt.jpg) (a real receipt of
-mine), tap **Use a sample receipt**, or **Skip**.
+mine), tap **Use a sample receipt**, or **Skip**. For the shelf step (4),
+have [the sample shelf photo](../images/sample-shelf.jpg) open on a second
+screen or a computer.
 
 ---
 
@@ -38,7 +40,8 @@ holds Lists, Receipts, Stores, Help and Settings.
 Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's list
 (the town's stores have fictional names). Due staples show under
 **Suggested for** the store where they are usually bought; tap one to
-see why. A **Muse Spark 1.3**
+see why. **Before you shop (step 4), add "Tomato soup"** to the Trader Jill's
+list: type it in the add row. You will look for it with the shelf camera. A **Muse Spark 1.3**
 staple judge decides which items may be suggested (precision 0.79
 against a purchase-cadence proxy on my receipts).
 
@@ -53,19 +56,27 @@ vision) reads a photo of a handwritten note. Adds apply at once, with
 Undo. On a laptop with no camera, type the items instead; the photo read is shown on a phone.
 
 ### 4. Start a quest
-On Today, tap **Start shopping** on the next trip, then **Let's go**.
-(From a list, **Start shopping** asks how you want to shop; pick
-**Start a Quest**.) The quest opens at that list's store.
+To reach Tomato soup, start from the Trader Jill's list: **More**, **Lists**,
+open it, tap **Start shopping**, then pick **Start a Quest**. (On Today,
+**Start shopping** on the next trip also works, if that trip is Trader Jill's.)
+The quest opens at that list's store.
 
 - An unmapped store plays as a labelled typical layout ("A guess, not a
   pin").
 - Tap **Got it**: +10 points (the Golden item is worth double). The
   celebration characters were painted with **Muse Image**. There is no
   clock and no way to lose.
-- **Can't find it** offers **Find it for me**: the camera aims at the
+- **I can't find it** offers **Find it for me**: the camera aims at the
   item, **SAM 3.1** boxes candidates and **Muse Spark** checks each crop.
-  Point it at any shelf photo on a second screen if you are not in a
-  store. From the same place you can tell other Arya shoppers it is gone.
+  Not in a store? When you reach **Tomato soup**, open
+  [the sample shelf photo](../images/sample-shelf.jpg) (a Trader Joe's soup
+  and broth shelf, a frame from my own video) on a second screen or a computer, tap
+  **I can't find it**, then **Find it for me**, and point the phone camera at
+  that screen. Look for the highlight on a soup carton; if it
+  lands elsewhere, try again closer to the screen. For a clean read, turn the screen to full brightness
+  and fill the camera view with the image, to avoid glare. Any other shelf
+  photo works too.
+  From the same place you can tell other Arya shoppers it is gone.
 - **Map my store** (on the Quest tab) opens the guided scan: pan along
   the shelves, SAM 3.1 pixelates the people it detects, and Muse Spark reads sections,
   aisle signs and prices.
