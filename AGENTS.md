@@ -1,6 +1,7 @@
 # AGENTS.md — read this first. Any coding agent can pick up work from here.
 
-**Project: Arya** — a grocery assistant that keeps a living model of one
+**Project: Arya** — a grocery app that learns how you shop from your receipts
+and helps shoppers help each other. It keeps a living model of one
 household's purchases (receipts, returns, patterns) so the shopping list
 can suggest what is due. Meta Global AI Developer Hackathon 2026, Team Nightshift,
 Indie track. **Submission deadline: Nov 4, 2026, 9:00 PM ET.**

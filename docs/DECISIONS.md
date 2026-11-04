@@ -16,6 +16,8 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
+| 2026-11-04 | No judging rubric percentages in any doc or on the docs site; the rubric areas are named without a weight. Removed from JUDGES.md and the judge playbook headings; the rule is written in docs/README.md. | this PR | Owner via coordinator |
+| 2026-11-04 | "What is Arya" reads the same everywhere: "Arya is a grocery app that learns how you shop from your receipts and helps shoppers help each other." (plus the one-place sentence where there is room). The home is the README, What is Arya; JUDGES, the docs site home, AGENTS, the Quest pack and the glossary copy it. | this PR | Owner via coordinator |
 | 2026-11-04 | Quest List sheet: Put back on Got it and shelf empty / somewhere else rows (clears the mark, takes points back); copy says "Tap List". | this PR | Quest builder |
 | 2026-11-03 | Ask can set a Use soon date itself: "milk use by Nov 4" or "milk expires tomorrow" tracks it (same save as Add a date, never joins a shopping list), and the reply says what really happened. Without a date it asks "What date is on the pack?". Borderline feature, taken as a bug fix because Ask told the shopper to go tap through five screens. | this PR | Ask thread |
 | 2026-11-03 | Freeze dates. Code and UI freeze at noon PT on Nov 3 (20:00 UTC): bug fixes only after. Deploy freeze from Nov 4, 6PM ET until I lift it. Submission Nov 4, 9PM ET. The demo video is recorded after the code freeze. Supersedes the "no freeze dates" row of ~2026-10-31. | none | Coordinator |

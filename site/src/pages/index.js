@@ -15,7 +15,7 @@ export default function Home() {
   const today = useBaseUrl('repo/docs/images/today.png');
   const lists = useBaseUrl('repo/docs/images/lists.png');
   return (
-    <Layout title="Arya docs" description="Documentation for Arya: a grocery app that learns from your receipts, shares lists, and uses Meta models. What it is, how to try it, how it is built, and the evidence.">
+    <Layout title="Arya docs" description="Documentation for Arya, a grocery app that learns how you shop from your receipts and helps shoppers help each other. What it is, how to try it, how it is built, and the evidence.">
       <main style={{padding: '4rem 1rem', maxWidth: 960, margin: '0 auto'}}>
         <h1 style={{fontSize: '2.6rem'}}>Arya docs</h1>
         <p style={{fontSize: '1.2rem'}}>Arya, in three parts.</p>
@@ -25,7 +25,7 @@ export default function Home() {
         </div>
         <div className="home-columns">
         <ul style={{fontSize: '1.05rem'}}>
-          <li><strong>What is Arya.</strong> A grocery app that learns from your receipts. <Link to="/docs/intro">Read the idea</Link></li>
+          <li><strong>What is Arya.</strong> A grocery app that learns how you shop from your receipts and helps shoppers help each other. <Link to="/docs/intro">Read the idea</Link></li>
           <li><strong>Why I built it.</strong> I had this problem: carrying the list in my head, forgetting what was running out, not knowing where the money went. Arya frees up that time and mental space. It is for shoppers, and not for money: households and groups share lists and help each other. <Link to="/docs/principles">Principles</Link></li>
           <li><strong>What it uses.</strong> Meta's models: Muse Spark, Muse Wonder, SAM 3.1, Muse Voice Transcribe, Muse Image and Muse Spark Open, each with one job. <Link to="/docs/judges">Model map</Link></li>
         </ul>

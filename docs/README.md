@@ -2,6 +2,8 @@
 
 Every document in this repository, grouped by who reads it. Each fact has one home, and other pages link to it. The docs site (https://vibhortayal.github.io/arya/) is built from the same files, so nothing here is copied.
 
+One rule for every page: do not write the judging rubric's percentage weights in any doc or on the docs site. Name the rubric area (Demo, Impact, Meta AI tooling, Technical depth) without a number. The one-line description of Arya lives in the README, "What is Arya"; copy it, do not reword it.
+
 ## Judging? Read these, in this order
 
 | Read | What it holds | Time |
@@ -21,6 +23,7 @@ When two pages seem to say the same thing, the page in this table is the one to 
 
 | Fact | Home |
 |---|---|
+| What Arya is, in two sentences (every other page copies it word for word) | [`README.md`, "What is Arya"](../README.md#what-is-arya) |
 | Which Meta model does which job, with ids | [`JUDGES.md`, "Which model does which job?"](../JUDGES.md#which-model-does-which-job) |
 | Where each Meta product sits in the code | [`docs/quest/META-PRODUCTS.md`](quest/META-PRODUCTS.md) |
 | Model prices, the reader rule, spend caps | [`assistant/docs/MODEL-POLICY.md`](../assistant/docs/MODEL-POLICY.md) |

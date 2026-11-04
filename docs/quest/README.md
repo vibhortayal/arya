@@ -1,7 +1,7 @@
 # Arya Quest: doc pack
 
-Quest is the optional game layer of Arya, a grocery list that learns
-("Waze for grocery shopping"; see the root `README.md`). Team Nightshift,
+Quest is the optional game layer of Arya, a grocery app that learns how you
+shop from your receipts and helps shoppers help each other (see the root `README.md`). Team Nightshift,
 Indie track, submission Nov 4, 2026, 9:00 PM ET.
 
 Quest turns your grocery list into a treasure hunt in your real store. Pick the store; Arya sorts your list by where you usually buy
