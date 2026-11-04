@@ -16,6 +16,7 @@ line and mark the old one "superseded by" the new date.
 
 | Date | Decision | PR or issue | Thread |
 |---|---|---|---|
+| 2026-11-03 | Ask can set a Use soon date itself: "milk use by Nov 4" or "milk expires tomorrow" tracks it (same save as Add a date, never joins a shopping list), and the reply says what really happened. Without a date it asks "What date is on the pack?". Borderline feature, taken as a bug fix because Ask told the shopper to go tap through five screens. | this PR | Ask thread |
 | 2026-11-03 | Freeze dates. Code and UI freeze at noon PT on Nov 3 (20:00 UTC): bug fixes only after. Deploy freeze from Nov 4, 6PM ET until I lift it. Submission Nov 4, 9PM ET. The demo video is recorded after the code freeze. Supersedes the "no freeze dates" row of ~2026-10-31. | none | Coordinator |
 | 2026-11-03 | The `LICENSE` file is removed at the owner's request. The repo has no license file and stays public, all rights reserved by default; no replacement licence is added. Supersedes the custom source-available LICENSE line above (#404). Never call it open source. | #547 | Me |
 | 2026-11-03 | The repo uses a custom source-available LICENSE: all rights reserved; judges and anyone may view and run it locally to evaluate it; nothing limits the Organizers' rights under the Official Rules. Never call it open source. I chose custom over PolyForm. MIT is considered after submission. Supersedes the 2026-11-02 "licence stays parked" line. Superseded by 2026-11-03 (#547). | #404 | Coordinator |

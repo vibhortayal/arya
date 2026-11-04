@@ -472,6 +472,10 @@ def apply_actions(actions, added=None, choices=None):
             ok, why = _remove(a, target)
             (applied if ok else skipped).append(ok or why)
             continue
+        if a.get("type") == "track_date":
+            ok, why = _track_date(a)
+            (applied if ok else skipped).append(ok or why)
+            continue
         qty, unit, said, known = 1, "", a.get("item"), None
         if a.get("type") in ("add_to_list", "ran_out"):
             # An add reads the quantity out of the words ("two lemons" ->
@@ -606,6 +610,38 @@ def apply_actions(actions, added=None, choices=None):
 
 def _cap(line):
     return line[:1].upper() + line[1:]
+
+
+def _track_date(a):
+    """Ask sets a Use soon date itself (owner, 2026-11-03): the date the
+    shopper said, the same save as Add a date, and it does not join any
+    list. Returns (done line, "") or ("", why not)."""
+    from api import expiry, state
+    from api.deps import _d_today
+    from api.list.intake import item_slug
+    name = " ".join(str(a.get("item") or "").split())[:80]
+    today = _d_today()
+    d = expiry.parse_iso(str(a.get("date") or ""))
+    if not name:
+        return "", _t("track_no_item", "Which item is the date for?")
+    if d is None or not expiry.sane_date(d, today):
+        return "", _t("track_no_date", "I need a real date for {name}, like \"Nov 4\" or \"tomorrow\".", name=name)
+    if d < today:
+        return "", _t("track_past", "{date} has already passed. Say it expired and I will mark {name}.",
+                      date=f"{d:%b} {d.day}", name=name)
+    iid = expiry.match_item(name, state.dictionary()["entries"], state.flags())
+    if not iid:
+        iid = "manual-" + item_slug(name)
+        if iid == "manual-":
+            return "", _t("track_no_item", "Which item is the date for?")
+    fl = dict(state.flags().get(iid, {}))
+    if not fl.get("name") and iid.startswith("manual-"):
+        fl["name"] = name
+    fl.update(expiry.track_fields(d, a.get("kind"), today))
+    state.set_flag(iid, fl)
+    shown = fl.get("name") or state.names().get(iid) or name
+    return _t("tracked", "Tracking {name} until {date}. It will show under Use soon.",
+              name=shown, date=f"{d:%b} {d.day}"), ""
 
 
 def _already_on(fl, target, qty=1, unit=""):
@@ -815,7 +851,7 @@ def chat(history, client, surface=None, context=None, image=None, bar=None):
     # mix their options, so then the user types (the typed path stays).
     asks = sum(1 for k in skipped if k.endswith("?"))
     reply = _scrub_labels(dec.get("reply", ""))
-    if not applied and skipped and any(a.get("type") in ("add_to_list", "ran_out") for a in now):
+    if not applied and skipped and any(a.get("type") in ("add_to_list", "ran_out", "track_date") for a in now):
         # The model writes its reply before the add runs: "I'll add it"
         # must not stand when nothing was added (owner bug 2026-11-03).
         # What happened (a which-list question, "already on") is the reply.
