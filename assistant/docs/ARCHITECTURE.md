@@ -342,7 +342,7 @@ Each agent has a narrow job and a named limit.
   against high-confidence phrases only (an override with a target, a prompt
   leak, secrets, other accounts). A hit gets a fixed refusal with no model
   call, and counts a strike. Three strikes in 24 hours pause Ask: a demo visit
-  for 24 hours, a real account until the owner unlocks it in Ops. The owner is
+  for 24 hours, a real account until the owner unlocks it in Ops (the message says to email support). The owner is
   never locked. A reply that quotes the system prompt, holds something shaped
   like a key or links off Arya is swapped for the refusal, with no strike.
   Stored text (item and list names, the screen, a photo) never strikes. Each
