@@ -74,8 +74,7 @@ Everything here is built and in the code. Ideas that are not built are on the
   reader). Plain code then checks every line
   against the printed total before anything posts. *Why:* a wrong price never
   goes in silently. [`assistant/docs/MODEL-POLICY.md`](../assistant/docs/MODEL-POLICY.md), [`docs/evals/`](evals/)
-- **Returns net out** against purchases, and items bought for someone else are
-  tracked but never suggested.
+- **Returns net out** against purchases.
 - **"To check"** marks lines Arya is unsure about. **Fix this line** edits the
   name, quantity and price, with Undo. The printed total never changes.
   The original photo is kept. *Why:* you stay in control of your record.
@@ -92,7 +91,7 @@ Everything here is built and in the code. Ideas that are not built are on the
   decide. [`assistant/docs/ARCHITECTURE.md`](../assistant/docs/ARCHITECTURE.md)
 - **The Curator** proposes product merges and splits with reasons; nothing
   changes until you apply it.
-- **Your own lists, and every item sits on one:** you make a list for each store, such as Trader Jill's or Costco. When you add an item, it goes to the list you say,
+- **Your own lists, and every item sits on one:** you make your own lists, for example one for each store, such as Trader Jill's or Costcozy. When you add an item, it goes to the list you say,
   or to your only list, or Arya asks "Which list?".
 - **Works offline (signed-in accounts):** lists and other screens show as last saved, and list edits
   queue until you are back online. Receipts, Ask, photos, voice and sharing need a connection. Signed-in accounts keep a cached copy. The demo saves offline list changes for that visit only.
