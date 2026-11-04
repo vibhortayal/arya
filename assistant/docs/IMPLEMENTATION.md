@@ -212,8 +212,8 @@ prompt or contract change re-runs the affected sets.
 | golden/voice | About 40 recorded commands, clean audio and store-noise mixes, with expected intent and slots | Stage 5 voice check |
 
 ## 7. Demo
-The judge path is `docs/quest/JUDGE-PLAYBOOK.md`. The video beats are
-in `docs/quest/SUBMISSION.md`. Day minus 1 (Nov 3): final dry
+The judge path is `docs/quest/JUDGE-PLAYBOOK.md`. The video narration is
+`docs/demo-video/SCRIPT.md`; the runbook with the beats is `assistant/docs/DEMO.md`. Day minus 1 (Nov 3): final dry
 run, restore test of the nightly sync. Steps only I can do: the API key on
 the VM, the hostname, the final submission (explicit approval).
 Submission target 6:00 PM ET; the deadline is 9:00 PM ET.

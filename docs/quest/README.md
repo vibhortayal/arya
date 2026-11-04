@@ -46,4 +46,5 @@ camera scan maps it for every shopper after you.
 | [BUILD-PLAN.md](BUILD-PLAN.md), [SUBMISSION.md](SUBMISSION.md) | Road to Nov 4, checklist |
 | [DISCUSSION.md](DISCUSSION.md) | My steering, in order |
 
-Current state: `STATUS.md` at the repo root.
+Current state: `STATUS.md` at the repo root. Every document in the
+repository, grouped by reader: [`docs/README.md`](../README.md).

@@ -2,7 +2,9 @@
 
 Live: https://arya.teamnightshift.org. Deadline: Nov 4, 2026, 9:00 PM ET.
 The build record per session lives in `assistant/loops/`; decisions
-live in `docs/quest/DISCUSSION.md`. This page says only what is true now
+live in `docs/DECISIONS.md` (the early design discussion is
+`docs/quest/DISCUSSION.md`); every document is listed in `docs/README.md`.
+This page says only what is true now
 on `main`. A merge is not a deploy: the live site changes only after
 `git pull` and a rebuild on the VM.
 
@@ -254,6 +256,9 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
 - **Kroger aisle hints (documented 2026-11-02, me):** at Kroger-family stores Arya asks Kroger's Products API where an item sits and shows "Kroger: Aisle 2 · left side · bay 10" in a quest. Live on the demo site (`ARYA_KROGER_AISLES` on, keys set); optional for anyone running their own copy; nothing from Kroger is stored. Now in the README, the Help Shopping and Quest topic and Ask knowledge; README no longer says "nothing is fetched from APIs", only that no prices are. `assistant/api/kroger.py`.
 
 ## Feature flags
+The full table of every setting, its default in compose and what it does
+is `assistant/docs/ARCHITECTURE.md` section 0.11; the notes below add the
+operator steps that table does not carry.
 - **Email code and Google sign-in** (Supabase Auth): `ARYA_SUPABASE_AUTH=1`
   plus `SUPABASE_URL` and `SUPABASE_ANON_KEY`; dashboard steps in
   `2026-10-29-supabase-signin.md`. Live: on (checked with Ops, Nov 2); new sign-up is closed by the Ops flag, which wins over the env.
@@ -293,13 +298,11 @@ section 0. `assistant/loops/2026-10-29-react-at-root.md`.
    reload --config /etc/caddy/Caddyfile`.
 
 ## Measured results
-- Gate 0 photo decode: PASS. Public 91.84% (90/98 lines), my subset
-  32/32, combined 93.85%, arithmetic 7/7. One silent price rotation
-  recorded; the review queue is the mitigation.
-- Photo decode is `auto`: Spark reads first, and Wonder (90 s bound)
-  re-reads only receipts the checks flag, allowed through Nov 9 under the
-  hackathon amendment. The live auto path is not yet scored on photos.
-  Wonder read alone: proof run 97/98 after adjudication, $1.12.
+The numbers live in one place: `docs/evals/README.md` lists each claim with
+the file behind it, and the README's "Measured results" is the judge-facing
+summary. The reader rule (`auto`: Spark first, Wonder re-reads a flagged
+receipt, allowed through Nov 9) and its history are in
+`assistant/docs/MODEL-POLICY.md`.
 
 ## Remaining for submission
 - The final submission package (my go-ahead). The demo video is done: https://youtu.be/PeWF66ss3oI.

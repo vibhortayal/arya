@@ -3,7 +3,7 @@
 A standalone tool that shows what Arya looks like at 200, 1,000, 2,000, up to 5,000,000 users.
 All data is simulated. The tool never reads or writes real user data and never calls a model.
 
-Open `docs/scale-sim/index.html` in a browser. Pick a user count with the stage buttons or the slider.
+Open `assistant/docs/scale-sim/index.html` in a browser. Pick a user count with the stage buttons or the slider.
 Pick how many users share one neighbourhood (200, 1,000, 5,000). The page shows two views:
 
 - **What shoppers see:** store maps filling in from fog (week by week), community price compare,
@@ -31,7 +31,7 @@ Arya Shoppers and community prices are NOT built in the app; the simulator model
 python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt
 cd assistant
 ../.venv/bin/python -m harness.scalesim.measure --users 1000 --out harness/scalesim/calibration.json
-../.venv/bin/python -m harness.scalesim.build        # writes docs/scale-sim/index.html
+../.venv/bin/python -m harness.scalesim.build        # writes assistant/docs/scale-sim/index.html
 ```
 
 `measure` writes households into a throw-away temp folder and refuses to use the live data folder.

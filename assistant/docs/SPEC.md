@@ -7,7 +7,7 @@ This document uses ASD-STE100 style. Sentences are short. Each sentence has one 
 
 Name: **Arya**; the hackathon entry is **Arya Quest**. Body text says
 "the assistant". Structure as built: ARCHITECTURE.md. Decisions:
-`docs/quest/DISCUSSION.md`.
+`docs/DECISIONS.md` (the early design discussion is `docs/quest/DISCUSSION.md`).
 
 > **Superseded in places (2026-11-03).** This spec was written before the build and
 > is kept as written. Where it disagrees with the app, `STATUS.md`,
