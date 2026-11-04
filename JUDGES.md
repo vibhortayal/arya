@@ -7,7 +7,7 @@ Indie track, solo, built in the hackathon window (Oct 27 to Nov 4, 2026) for the
 ## Start here
 
 - **Demo video (3 min):** [youtu.be/PeWF66ss3oI](https://youtu.be/PeWF66ss3oI). The live demo and the guided path work without it.
-- **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone. The guided path through the app (8 minutes) is [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md), with a [sample receipt photo](docs/images/sample-receipt.jpg) and a [sample shelf photo](docs/images/sample-shelf.jpg) to try the camera steps, and an app walkthrough video (link coming).
+- **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a fictional household in a sandbox that exists for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Camera steps need a phone. The guided path through the app (8 minutes) is [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md), with a [sample receipt photo](docs/images/sample-receipt.jpg) and a [sample shelf photo](docs/images/sample-shelf.jpg), and an app walkthrough video (link coming).
 - **Everything else:** the [README](README.md) (what it is, why I built it this way, measured results, known limits) and the [docs site](https://vibhortayal.github.io/arya/).
 
 ## How do I try it? (Demo, 25%)
