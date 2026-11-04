@@ -2475,3 +2475,7 @@ body.hunting #offlinebar { display: none !important; }
 .hiderow { display: flex; align-items: center; }
 .hiderow > .hubrow, .hiderow > .gamerow { flex: 1; min-width: 0; }
 .hiderow > .rowx { margin: 0 -4px 0 0; }
+/* Spending rows open Receipts filtered to that month or store (owner, 2026-11-04). */
+.month-row.tap, .row.tap { cursor: pointer; }
+.month-row.tap:active, .row.tap:active { background: var(--fill); }
+.rcfilter .rcstore { width: 100%; margin-top: 8px; min-height: 44px; font-size: 15px; font-weight: 600; padding: 9px 12px; }

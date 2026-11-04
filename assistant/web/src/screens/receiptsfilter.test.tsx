@@ -1,5 +1,5 @@
 import { expect, test } from "vitest";
-import { filterReceipts } from "./Receipts";
+import { filterReceipts, presetFromParams } from "./Receipts";
 
 const R = [
   { receipt_id: "a", merchant: "Costco Sunnyvale", purchased_at: "2026-10-31", total: 212.4, items: 24 },
@@ -28,4 +28,19 @@ test("date presets and custom range", () => {
   expect(f({ date: "year" })).toBe("abc");
   expect(f({ date: "custom", from: "2026-10-06", to: "2026-10-28" })).toBe("bc");
   expect(f({ date: "custom", from: "2026-10-29" })).toBe("a");
+});
+
+/* Spending opens Receipts on one month or one store (owner, 2026-11-04). */
+test("store filter matches the exact store name Spending uses", () => {
+  expect(f({ store: "Costco Sunnyvale" })).toBe("a");
+  expect(f({ store: "Costco" })).toBe("");
+  expect(f({ store: "" })).toBe("abcd");
+});
+test("a month from Spending becomes a custom range over that month", () => {
+  const p = presetFromParams({ month: "2026-10" });
+  expect(p).toEqual({ date: "custom", from: "2026-10-01", to: "2026-10-31", store: "" });
+  expect(f(p)).toBe("abc");
+  expect(f(presetFromParams({ month: "2026-10", store: "Costco Cypress" }))).toBe("c");
+  expect(presetFromParams({})).toEqual({ date: "all", from: "", to: "", store: "" });
+  expect(presetFromParams({ month: "Oct" }).date).toBe("all");
 });

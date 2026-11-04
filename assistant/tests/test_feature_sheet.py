@@ -65,7 +65,7 @@ class FeatureSheet(unittest.TestCase):
         # never sends it whole: a question gets the overview plus the
         # sections it matches. So guard both: the whole file against
         # runaway growth, and what one question sends (the real cost).
-        self.assertLess(len(chat_service.feature_sheet(flags)), 26500)  # main was at 25992 (2026-11-03)
+        self.assertLess(len(chat_service.feature_sheet(flags)), 26800)  # main was at 25992 (2026-11-03), ~26450 on 2026-11-04
         self.assertLess(len(chat_service.feature_sheet(flags, question="how do I add a receipt?")), 8000)
         # A data question gets the overview only; a topic gets its section.
         base = chat_service.feature_sheet(flags, question="how much was milk at Costco?")

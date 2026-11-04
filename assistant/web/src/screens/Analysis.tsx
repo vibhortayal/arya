@@ -154,7 +154,9 @@ export function Analysis() {
         <Section title={t("analysis.spendByMonth")} />
         <div id="an-months" className="group pad">
           {d && (months.length ? months.map(([m, v]) =>
-            <div className="month-row" key={m}><span>{monthName(m)}</span><div className="track"><div className="bar" style={{ width: `${Math.round(v / max * 100)}%` }} /></div><span className="money">{money(v)}</span></div>)
+            <div className="month-row tap" key={m} role="button" tabIndex={0} aria-label={t("analysis.openMonthReceipts", { month: monthName(m), money: money(v) })}
+              onClick={() => nav.show("receipts", { from: "analysis", month: m })}
+              onKeyDown={e => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); nav.show("receipts", { from: "analysis", month: m }); } }}><span>{monthName(m)}</span><div className="track"><div className="bar" style={{ width: `${Math.round(v / max * 100)}%` }} /></div><span className="money">{money(v)}</span></div>)
             : <Empty>{t("analysis.noTripsYet")}</Empty>)}
         </div>
       </>
@@ -164,7 +166,7 @@ export function Analysis() {
         <Section title={t("analysis.spendByStore")} />
         <div id="an-stores" className="group">
           {d && (Object.keys(d.spend_by_store).length
-            ? Object.entries(d.spend_by_store).sort((a, c) => c[1] - a[1]).map(([st, v]) => <Row key={st} name={st} sub={d.store_notes?.[st]} right={money(v)} />)
+            ? Object.entries(d.spend_by_store).sort((a, c) => c[1] - a[1]).map(([st, v]) => <Row key={st} className="tap" name={st} sub={d.store_notes?.[st]} right={money(v)} onClick={() => nav.show("receipts", { from: "analysis", store: st })} />)
             : <Empty>{t("analysis.noTripsYet")}</Empty>)}
         </div>
       </>
