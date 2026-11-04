@@ -28,6 +28,8 @@ export interface QuestSource {
   addItem?(name: string): void;
   /* "How was the route?" notes; false when they could not be sent. */
   sendRoute?(store: string, notes: string[]): Promise<boolean>;
+  /** Take back this trip's own shelf report for an item (Revisit again). */
+  unreport?(item: string): void;
   finish?(e: { got: string[]; points: number }): Promise<void>;
   /* End the trip without finishing it (Leave › End quest): the host
    * closes its record; grabs already sent stay checked off. */

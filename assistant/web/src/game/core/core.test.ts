@@ -94,6 +94,26 @@ describe("trip rules", () => {
     expect(t.points).toBe(SCORE.report);
     expect(t.reports).toHaveLength(1);
   });
+  it("put back clears a shelf report so the item can be grabbed again", async () => {
+    let t = await practiceTrip();
+    const k = key(t, "Olive oil");
+    t = reduce(t, { type: "report", key: k, kind: "empty" });
+    t = reduce(t, { type: "unreport", key: k });
+    expect(t.reports).toHaveLength(0);
+    expect(reduce(t, { type: "unreport", key: k })).toBe(t);
+    t = reduce(t, { type: "grab", key: k });
+    expect(t.got).toContain(k);
+  });
+  it("put back on a report takes back the clear bonus it earned", async () => {
+    let t = await practiceTrip();
+    const sec = t.items.map(i => i.section).find(x => t.items.filter(i => i.section === x).length > 1)!;
+    const [first, ...rest] = t.items.filter(i => i.section === sec);
+    t = reduce(t, { type: "grab", key: first.key });
+    for (const i of rest) t = reduce(t, { type: "report", key: i.key, kind: "empty" });
+    expect(t.cleared).toContain(sec);
+    t = reduce(t, { type: "unreport", key: rest[0].key });
+    expect(t.cleared).not.toContain(sec);
+  });
   it("undo takes back the item and its clear bonus, nothing else", async () => {
     let t = await practiceTrip();
     t = reduce(t, { type: "grab", key: key(t, "Bananas") });

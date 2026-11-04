@@ -191,6 +191,10 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       const it = nxt.items.find(i => i.key === a.key);
       if (it) source.progress?.({ kind: a.type === "ungrab" ? "ungrab" : "grab", item: it.name, instead: a.type === "grab" ? nxt.subs[a.key] : undefined });
     }
+    if (!nxt.practice && a.type === "unreport") {
+      const it = prev.items.find(i => i.key === a.key);
+      if (it) source.unreport?.(it.name);
+    }
     if (a.type === "grab" || a.type === "scout") {
       const it = nxt.items.find(i => i.key === a.key)!;
       // Once per section, on a real trip whose host takes shelf photos.
@@ -204,7 +208,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
       clearTimeout(undoTimer.current);
       undoTimer.current = window.setTimeout(() => setUndo(u => (u?.key === a.key ? null : u)), 5000);
     }
-    if (a.type !== "ungrab") {
+    if (a.type !== "ungrab" && a.type !== "unreport") {
       setAt(null); setPage("main"); setFocus(null);
       // Got it walks you on to the next item (one panel: no Next to find).
       later(() => {
@@ -434,7 +438,7 @@ export function Play({ trip, source, avatar, onTrip, onFinish, onQuit, onEnd, on
 
       {/* ---- sheets ---- */}
       <Sheet open={sheet === "list"} onClose={() => setSheet(null)} title={`Your list · ${got} of ${total}`} tall>
-        <ListSheet trip={trip} dispatch={a => onTrip(reduce(tripRef.current, a))} onAdd={trip.practice ? undefined : source.addItem?.bind(source)} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
+        <ListSheet trip={trip} dispatch={a => (a.type === "ungrab" || a.type === "unreport" ? act(a) : onTrip(reduce(tripRef.current, a)))} onAdd={trip.practice ? undefined : source.addItem?.bind(source)} onGo={id => { setSheet(null); const k = leftIn(tripRef.current, id)[0]?.key; if (k) walkTo({ kind: "item", key: k }); }} />
       </Sheet>
       <Sheet open={sheet === "map"} onClose={() => setSheet(null)} title="Map my store?">
         <p className="qg-p">Arya is guessing this layout. Pan your camera along the aisles and it maps them for every shopper. People are pixelated first.</p>
@@ -503,7 +507,8 @@ function ListSheet({ trip, dispatch, onGo, onAdd }: { trip: Trip; dispatch: (a: 
                 return (
                   <div key={i.key} className={"qg-list-i" + (g ? " got" : "")}>
                     <img src={charArt(i.art)} alt="" /><span>{i.name}</span>
-                    <small>{g ? "✓ got it" : r ? (r.kind === "empty" ? "shelf empty" : "somewhere else") : p ? "later" : ""}</small>
+                    <small>{g ? (trip.subs[i.key] ? `✓ took ${trip.subs[i.key]} instead` : "✓ got it") : r ? (r.kind === "empty" ? "shelf empty" : "somewhere else") : p ? "later" : ""}</small>
+                    {(g || r) && <button className="qg-putback" onClick={() => dispatch({ type: g ? "ungrab" : "unreport", key: i.key })} aria-label={`${g ? "Put back" : "Revisit"} ${i.name}`}>{g ? "Put back" : "Revisit again"}</button>}
                   </div>
                 );
               })}
@@ -564,6 +569,7 @@ function RouteEdit({ trip, dispatch, onDone }: { trip: Trip; dispatch: (a: Actio
 export function HowTo() {
   const steps: [string, string, string][] = [
     ["compass.webp", "Follow the dots", "Your list becomes the shortest walk through the store. Your shopper walks to the next item by itself; tap any picture in your list to go there instead."],
+    ["pantry.webp", "See every item", "Tap List to see every item. Marked one by mistake? Tap Put back, or Revisit again on a shelf empty item."],
     ["basket.webp", "Look first, then choose", "At the shelf, tap Got it, Can't find it or Later. Only Got it earns points; Later and Can't find it never cost anything."],
     ["binoculars.webp", "Clear the fog", "Grey cloudy sections are not mapped yet. Find something there and tap Found it here: you just mapped it for everyone."],
     ["egg.webp", "Golden item", "Each trip, one item from your own list is picked at random and worth double. Arya never adds items or shows ads. No timer, no lives."],

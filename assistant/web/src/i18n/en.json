@@ -3401,7 +3401,7 @@
         "body": "Quest turns your list into a game. You get points, a level and badges. There are no timers and no lives.",
         "s1": "Open the Quest tab. Tap Start a quest.",
         "s2": "Choose Everything, or one store.",
-        "s3": "Can't find an item? Tap Can't find it, then Find it for me.",
+        "s3": "Can't find an item? Tap Can't find it, then Find it for me. Marked one by mistake? Tap List, then Put back or Revisit again.",
         "s4": "Open Quest progress to see badges and mapped stores."
       },
       "friends": {
@@ -3894,6 +3894,7 @@
         "s1": "Tap Start shopping on Today, or open a list and tap it there.",
         "s2": "Or tap \"Or just check items off as I shop\" for no game.",
         "s3": "In a Quest, Arya walks you to each item. Can't find one? Tap Can't find it, then Find it for me.",
+        "s4": "Marked an item by mistake? Tap List, then Put back (Got it) or Revisit again (shelf empty).",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
         "n3": "At Kroger-family stores, Arya also asks Kroger where an item sits and shows a line like \"Kroger: Aisle 2 · left side · bay 10\" on the quest. Nothing from Kroger is stored. Kroger's aisle data is used under Kroger's developer terms; Arya is not affiliated with Kroger.",

@@ -415,6 +415,15 @@ export class AppSource implements QuestSource {
     catch (err) { return err instanceof ApiError && err.status === 400; } // 400: the same note went already
   }
 
+  unreport(item: string) {
+    if (!this.sess && !this.pending) return;
+    this.queue = this.queue.then(async () => {
+      const s = this.sess || await this.creating;
+      if (!s) return;
+      await post(`/api/quest/sessions/${s.id}/withdraw-report`, { item }).catch(() => {});
+    });
+  }
+
   async end(): Promise<void> {
     this.pending = null;
     await this.queue;
