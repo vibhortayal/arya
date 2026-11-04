@@ -59,7 +59,7 @@ Start shopping: open a list and tap Start shopping. Settings, Preferences, "When
 Or tap "Or just check items off as I shop" for no game. That also makes Just my list your choice for Start shopping.
 Quest is a game: a map of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
 Find it for me: in the Quest game's Can't find it sheet. Point the camera at the shelf; SAM 3.1 marks possible spots and Arya highlights the item only when Muse Spark agrees. A miss does not mean it is not there. People in kept photos are pixelated first; if that fails, nothing is kept.
-In a Quest, tap List: Put back undoes Got it, Revisit again undoes shelf empty.
+In a Quest, tap List: Put back undoes Got it, Revisit again undoes shelf empty. "It's somewhere else here" counts as a grab, never an out-of-stock report.
 Quest progress (Quest tab) shows quests, badges and mapped stores; Your trips and receipts shows trips and friends.
 At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored; if it does not answer, Arya uses the crowd map. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service. Arya is not affiliated with or endorsed by Kroger.
 When you tap Done shopping on a list, Arya asks for the receipt. In the demo, tap Use a sample receipt. A receipt dated before the trip does not count in a real account; the demo takes it with a "Demo only" notice.
@@ -71,7 +71,7 @@ No signal? Frames save and send later. Arya then walks you to each item in aisle
 Build (Quest tab) shapes a store in the game. The Quest tab Edit button hides what you do not use.
 ## news | news store news alert alerts out of stock report neighbors shoppers busy quiet heads-up
 Store news: Today tab, card "Near you today", and a heads-up atop a list. It shows Arya shoppers' reports: out of stock, back in stock, quiet times.
-Report an empty shelf: in a Quest tap Can't find it, then The shelf is empty. Others see it once 3 shoppers report it. "It's somewhere else here" counts as a grab, never an out-of-stock report.
+Report an empty shelf: in a Quest tap Can't find it, then The shelf is empty. Others see it once 3 shoppers report it.
 In a Quest, Later keeps an item on the list. A trip with no receipt does not change Spending or Use soon; add the receipt after the trip.
 Others' "Not here?" shows once 3 shoppers report an item on your list at your store (that branch), never your own. ✕ hides it while open. Demo news is simulated.
 ## ask | ask chat talk voice photo fridge question speak answer language spanish hindi

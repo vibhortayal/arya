@@ -107,6 +107,13 @@ class FeatureSheet(unittest.TestCase):
              {"role": "user", "content": "and then?"}]
         self.assertIn("receipt", chat_service._asked(h))
 
+    def test_somewhere_else_reaches_a_quest_question(self):
+        # Tester on #615: the line sat in news, which a Quest question
+        # does not pick; it lives in the shopping section now.
+        flags = {k: True for k in KNOWN_FLAGS}
+        q = chat_service.feature_sheet(flags, question="What does 'It's somewhere else here' do in a Quest?")
+        self.assertIn("It's somewhere else here\" counts as a grab", q)
+
     def test_every_section_has_keywords(self):
         _h, secs = chat_service._sections(raw())
         self.assertGreaterEqual(len(secs), 10)
