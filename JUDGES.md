@@ -70,4 +70,4 @@ The eval numbers come from one small set (9 public receipts, 98 lines). Scores c
 - **Scale.** Arya runs as one server process on one VM. A few dozen people at once is about the limit ([details](README.md#what-are-the-known-limits)). Scaling it out is a plan for after judging. It is not built.
 - **Demo allowance.** Each demo visit can spend about $2 on live Meta calls. The demo also has a daily cap. When either runs out, the app says so. Lists and everything that needs no live read keep working. **Use a sample receipt** still works.
 - **Accounts.** Sign-up is invite only. It is for a few beta testers and hackathon judges ([how to get in](#how-do-i-try-it-demo)). The demo needs no account.
-- **Licence.** Arya's own code is all rights reserved. The repository has no license file.
+- **Licence.** Arya's own code is MIT licensed ([`LICENSE`](LICENSE)). The Meta models and third-party code keep their own terms ([`NOTICE.md`](NOTICE.md)).

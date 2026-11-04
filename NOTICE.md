@@ -1,7 +1,7 @@
 # Third-party notices and asset provenance
 
-Arya's own code and documents are all rights reserved (the repository has no license file).
-The items below are not covered by that grant, or need attribution.
+Arya's own code and documentation are under the MIT License (see `LICENSE`).
+The items below are not covered by it, or need attribution.
 
 ## Code
 - **three.js** (npm `three`, bundled by the web build) — MIT License,
