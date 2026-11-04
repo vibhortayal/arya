@@ -113,7 +113,7 @@ When two pages seem to say the same thing, the page in this table is the one to 
 
 ## Historical (kept as written, superseded in places)
 
-These record how Arya got its shape. Each carries a note saying what replaced it. Read the pages above for what is true now.
+These record how Arya got its shape. Most carry a note saying what replaced it. Read the pages above for what is true now.
 
 | Read | What it holds |
 |---|---|
