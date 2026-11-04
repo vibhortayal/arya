@@ -1,6 +1,6 @@
 # Arya architecture (as built)
 
-Status: living document, revised 2026-10-29. Section 0 is the one-page map with the diagram. Sections 1 to 13 are the design record. SPEC.md states the product rules. This document states
+Status: living document, revised 2026-11-04. Section 0 is the one-page map with the diagram. Sections 1 to 13 are the design record. SPEC.md states the product rules. This document states
 how the built system is put together. Where the two disagree, SPEC.md
 wins for behavior and this document wins for structure.
 
@@ -10,7 +10,8 @@ wins for behavior and this document wins for structure.
 
 *The diagram is `assistant/docs/architecture.svg` (plain SVG, light and dark),
 redrawn and checked against `main` on 2026-11-04. The sections below say what
-each box does. Their facts are checked against `main` on 2026-10-29.*
+each box does. Their facts are checked against `main` on 2026-11-04, except the
+live-site values in §0.11 and §10, which come from the Ops screen.*
 
 **In one paragraph.** A phone-first PWA (React, built with Vite) talks
 to one FastAPI process, which also serves the built app at `/`. Caddy fronts it with TLS. Code does the
@@ -59,26 +60,32 @@ on a Docker volume, in Supabase Postgres, or both.
 
 ### 0.2 API (`assistant/api/`)
 
-`api/main.py` is about 55 lines: the app, the `require_login` middleware,
+`api/main.py` is a short file: the app, the `require_login` middleware,
 a handler that turns a model failure (`RuntimeError`) into a 502 with a
-plain sentence, `/health`, one ordered router list, and the static mount
-for the PWA. Routes live in `api/routes/`, one router per area:
+plain sentence, `/health`, one ordered router list, the Lists API mounted
+at `/api/v1`, and the static mount for the PWA. Routes live in `api/routes/`, one router per area:
 
 | Router | What it serves |
 |---|---|
-| `auth`, `account` | sign-in, registration (closed unless `ARYA_REGISTRATION_OPEN=1`; the Ops flag overrides the env, and sign-up is closed on the live site), email code and Google (flagged), connector token, settings, export, feedback, push opt-in |
-| `intake`, `review` | receipt photo, PDF, text, order text, structured JSON, Costco JSON, voice transcribe, Curator, review queue |
+| `auth`, `account` | sign-in, registration (closed unless `ARYA_REGISTRATION_OPEN=1`; the Ops flag overrides the env, and sign-up is closed on the live site), email code (Supabase) and Google (Arya's own sign-in, flagged), connector and Lists API token, settings, export, feedback, push opt-in |
+| `intake`, `review`, `receiptjobs` | receipt photo, PDF, text, order text, structured JSON, Costco JSON, voice transcribe, Curator, review queue; receipt batches that keep reading while the app is closed |
 | `lists`, `items`, `expiry` | named lists, add by text or photo, check, move, judge runs, item pages and flags, expiry dates |
 | `home`, `chat` | the Today payload, Ask Arya and its apply step |
 | `prices` | own-receipt prices, Analysis insights, Arya's powers |
 | `groups` | shared home: create, invite, join, leave, live stream |
-| `quest`, `receipts`, `shelf`, `storemap`, `stores`, `avatar`, `friends` | hunts, receipts with originals, shelf scan, Map my store, store directory, avatar, friends |
+| `quest`, `questmap`, `receipts`, `shelf`, `storemap`, `stores`, `eyes`, `avatar`, `friends` | hunts, filing items into a store's zones, receipts with originals, shelf scan, Map my store, store directory, pantry and shelf photos kept as sightings, avatar, friends |
 | `mcp_connector` | `/api/mcp`, the tool surface for a Muse agent |
+| `lists_v1` (mounted at `/api/v1`) | the Open Lists API: read and write your own lists from another app, bearer token only, its own error format |
+| `ops` | the owner's Ops screen: models, limits, accounts, freezes, Ask locks (owner only) |
+| `town` | Demo Town routes; the demo account only, and only when `ARYA_DEMO_TOWN=1` |
 
 Older siblings stay beside the package: `album_routes`, `hunt_routes`,
 `haul_routes`, `pack`. Shared plumbing is in `api/deps.py` (cost ledger,
-budget guard, `new_client()`, rate-limit buckets, JSON helpers) and
-`api/demo_guard.py` (login middleware, demo sandbox, door caps).
+budget guard, `new_client()`, rate-limit buckets, JSON helpers),
+`api/demo_guard.py` (login middleware, demo sandbox, door caps, the list of
+routes a token cannot reach), `api/ask_guard.py` (the Ask input and output
+guard and its three-strike lock, §6) and `api/settings.py` with
+`api/site_flags.py` (a value set in Ops, then the env var, then the default).
 
 ### 0.3 Engines in code ($0)
 
@@ -119,10 +126,13 @@ every mode. A receipt's original photo or PDF is kept per account.
 
 Password accounts (PBKDF2 hashes, throttled sign-in, cookie sessions
 whose tokens are stored as SHA-256 hashes). Account names allow only
-letters, digits and `. _ % + - @`. Supabase Auth (email code and Google)
-only proves an email address; Arya keeps its own account and cookie
-(`api/supabase_auth.py`, flag `ARYA_SUPABASE_AUTH`). The Muse connector
-uses a bearer token whose hash is stored.
+letters, digits and `. _ % + - @`. Email-code sign-in goes through Supabase
+Auth and Google sign-in is Arya's own (`api/google_oauth.py`, used when
+`GOOGLE_OAUTH_CLIENT_ID` and `GOOGLE_OAUTH_CLIENT_SECRET` are set; otherwise
+Google goes through Supabase). Either way the provider only proves an email
+address; Arya keeps its own account and cookie (`api/supabase_auth.py`, flag
+`ARYA_SUPABASE_AUTH`). The Muse connector and the Lists API use a bearer
+token whose hash is stored.
 
 ### 0.7 Price intelligence
 
@@ -170,7 +180,9 @@ handle the nightly backup. CI is manual only
 
 ### 0.11 Feature flags and settings
 
-The table gives the default in compose. The live site (checked with Ops on
+Most limits and switches can also be set in the owner's Ops screen (Settings,
+then Ops and health). A value set in Ops wins over the env var, which wins over
+the code default. The table gives the default in compose. The live site (checked with Ops on
 Nov 2) differs in these places: `ARYA_STORE=dual`; push reminders on (daily
 cron at 13:00 UTC); Supabase Auth and email sign-in on; Demo Town on; the
 Kroger aisle lookup on; own-key sign-up off; photo reader `auto`; Spark tier
@@ -201,7 +213,9 @@ Per-account limits are $3 heads-up, $20 monthly pause and $10 hourly freeze.
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
 | `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export, Kroger aisle hints); `off` lifts the list |
 | `ARYA_DEMO_TOWN` | `0` | demo household shops at simulated stores in a simulated neighborhood (`DEMO-TOWN.md`) |
-| `ARYA_OWNER_USERNAME` | empty | the account that can flip registration in Settings |
+| `ARYA_OWNER_USERNAME` | empty | the owner account: it runs Ops and health (models, limits, accounts, freezes, Ask locks, registration). The owner can hand the role to another account in Ops; the old owner keeps owner rights for 24 hours so a wrong pick can be undone |
+| `ARYA_OPS_EMAIL`, `ARYA_ALERT_EMAIL`, `RESEND_API_KEY` | empty | email through Resend: delete-account codes, waitlist and feedback notes, and one alert per Ask lock (at most 20 a day); off until the key is set |
+| `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | empty | Arya's own Google sign-in; without both, Google goes through Supabase |
 | `ARYA_SCAN_DAILY_FRAMES` | `120` | Map my store frames per account per day |
 | `ARYA_KROGER_AISLES`, `KROGER_CLIENT_ID`, `KROGER_CLIENT_SECRET`, `ARYA_KROGER_DAILY_CALLS` | `0`, empty, empty, `800` | live Kroger aisle hint (api/kroger.py); never stored |
 | `MODEL_API_KEY`, `BASETEN_API_KEY`, `ARYA_OPEN_MODEL`, `GOOGLE_PLACES_API_KEY` | empty | model keys and the store picker |
@@ -212,7 +226,8 @@ Every model call writes a row to the cost ledger. The app, the demo
 household and each demo visit spend from separate buckets (§10). Live
 doors, batch judge runs and hunt creation pass the guard first; the
 demo's live doors also have per-IP caps. Deterministic code never calls a
-model.
+model. An Ask message the guard refuses costs $0 (no model call), and
+`max_tokens` bounds each Ask reply (§6).
 
 ## 1. The shape: two layers
 
@@ -316,11 +331,22 @@ Each agent has a narrow job and a named limit.
   snapshot carries receipt facts (count, last, biggest, trips per
   store), spend per store per month, pack dates as words, and the
   cheapest store per item. Numbers come from the data, never from the
-  model. On the
-  Ask tab actions apply at once; from a list or a hunt, adds apply with
-  Undo and the riskier actions (out, expired, never, snooze) wait for a
-  yes (`/api/chat/apply`). Demo sessions can chat; it is a live door
-  under the demo's per-IP and per-visit caps (§10).
+  model. At most 10 actions
+  run in a turn. More than 3 removes in one turn wait for a yes (Yes, do these
+  or Not now) on every screen. On the Ask tab the other actions apply at
+  once; from a list or a hunt, adds apply with Undo and the riskier actions
+  (out, expired, never, snooze) wait for a yes (`/api/chat/apply`). Demo
+  sessions can chat; it is a live door under the demo's per-IP and per-visit
+  caps (§10).
+- **Ask guard** (`api/ask_guard.py`). The person's latest message is checked
+  against high-confidence phrases only (an override with a target, a prompt
+  leak, secrets, other accounts). A hit gets a fixed refusal with no model
+  call, and counts a strike. Three strikes in 24 hours pause Ask: a demo visit
+  for 24 hours, a real account until the owner unlocks it in Ops (the message says to email support). The owner is
+  never locked. A reply that quotes the system prompt, holds something shaped
+  like a key or links off Arya is swapped for the refusal, with no strike.
+  Stored text (item and list names, the screen, a photo) never strikes. Each
+  Ask reply is capped at 1,500 tokens.
 
 ## 7. Money rules (summary; SPEC.md owns the detail)
 
@@ -345,14 +371,19 @@ Each agent has a narrow job and a named limit.
   digits and `. _ % + - @` (`auth.valid_name`). Passwords are PBKDF2
   hashes; sign-in is throttled; sessions are cookies, and session
   tokens are stored as SHA-256 hashes.
-- Email code and Google sign-in (Supabase Auth) are built behind
-  `ARYA_SUPABASE_AUTH=1`, off by default and on in the live site. Supabase only proves the
-  email; Arya keeps its own account (named by the email, no password)
-  and its own cookie (`api/supabase_auth.py`).
+- Email code sign-in (Supabase Auth) is built behind
+  `ARYA_SUPABASE_AUTH=1`, off by default and on in the live site. Google
+  sign-in is Arya's own (`api/google_oauth.py`) when its client id and secret
+  are set, with the Supabase Google provider as the fallback. The provider only
+  proves the email; Arya keeps its own account (named by the email, no
+  password) and its own cookie (`api/supabase_auth.py`).
 - A connector token is `arya_` plus a random secret. **Only its SHA-256
   hash is stored.** It is shown once at mint. Minting a new one replaces
   the old, and it can be revoked at any time. Bearer tokens are accepted
-  alongside session cookies. Demo accounts cannot mint.
+  alongside session cookies, and the same token works for the Lists API
+  (`/api/v1`). A token cannot reach paid bulk reads, Ops, groups, push,
+  export or the Kroger lookup (`demo_guard._TOKEN_BLOCKED`). Demo accounts
+  cannot mint.
 - The Muse connector (custom.arya) carries its own instruction doc:
   operations, when to file, the verification rules, the Resolver
   procedure, filing hygiene. **The doc is the standing prompt.** The
