@@ -957,7 +957,7 @@ def store_reports(store_name):
     if groups:
         names = _my_list_names()
         for g in groups:
-            mine = names.get(g["item_key"])
+            mine = _list_name_for(names, g["item_key"])
             if mine:
                 open_reps.append({"store": store_name, "item": mine, "kind": g["kind"],
                                   "state": "reported", "reported_at": g["latest"],
@@ -1044,6 +1044,24 @@ def _my_list_names():
     return out
 
 
+def _list_name_for(names, item_key):
+    """The household's own name for a shared report's item: the same
+    key first, else a list item with the same core words as the report
+    (owner, 2026-11-04: "Large eggs" and "Eggs 12 ct" are eggs). Equal
+    core words only, never the looser receipt Jaccard: "Egg noodles"
+    and "Almond milk" never take an eggs or milk alert."""
+    hit = names.get(item_key)
+    if hit:
+        return hit
+    want = _core_tokens(item_key)
+    if not want:
+        return None
+    for name in names.values():
+        if _core_tokens(name) == want:
+            return name
+    return None
+
+
 def _my_store_names():
     """Stores this household uses: My stores plus the stores named on
     its lists."""
@@ -1089,7 +1107,7 @@ def store_news(limit=20):
     with state.file_lock(NEWS_HIDDEN):
         hidden = _news_hidden(groups)
     for g in groups:
-        item = wanted.get(g["item_key"])
+        item = _list_name_for(wanted, g["item_key"])
         store = my_stores.get(g["store_key"])
         key = g["store_key"] + "|" + g["item_key"]
         if item and store and key not in hidden:
