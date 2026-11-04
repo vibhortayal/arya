@@ -31,6 +31,8 @@
 
 ## What is Arya
 
+Arya is a grocery app that learns how you shop from your receipts and helps shoppers help each other. It puts the whole grocery chore in one place: shared lists, a guided route through the store, a clear view of your spend and usage, and out-of-stock warnings from other shoppers.
+
 **Groceries are a big part of life and one of the largest costs in the budget.** Think about what it takes today.
 
 You have a "Trader Jill" list in your notes. Your partner sends you items over text, and they keep their own list for the "Costcozy" store (the demo's stores have invented names). The two lists do not talk to each other. So **both of you bought yogurt, and neither bought the toilet paper that ran out.**
@@ -39,7 +41,7 @@ At the store, **the milk your kids need is out of stock,** and you walk every ai
 
 > *You hold all of it in your head, and it's still never quite right.*
 
-**Arya puts the whole chore in one place:** **shared lists**, **a guided route** so you get out of the store quicker, **a clear view of your spend and usage patterns**, and **out-of-stock warnings from other shoppers** so your trip is not wasted. I built Arya for this hackathon to make the grocery routine easier, so I do not have to keep it all in my head.
+I built Arya for this hackathon to make the grocery routine easier, so I do not have to keep it all in my head.
 
 ---
 

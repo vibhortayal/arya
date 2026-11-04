@@ -59,11 +59,11 @@ Tap **Finish demo** (top right) to leave feedback, replay the tour or see the co
 
 ---
 
-## Does it matter to real people? (Impact, 30%)
+## Does it matter to real people? (Impact)
 
-The four rubric questions are answered on [the judges page, Impact](../../JUDGES.md#does-it-matter-to-real-people-impact-30).
+The four rubric questions are answered on [the judges page, Impact](../../JUDGES.md#does-it-matter-to-real-people-impact).
 
-## How is it built? (Technical depth, 20%)
+## How is it built? (Technical depth)
 
 | Claim | Where to verify |
 | --- | --- |

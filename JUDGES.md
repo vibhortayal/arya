@@ -1,6 +1,6 @@
 # For judges
 
-Arya is a grocery app. It reads your receipts to learn how you shop. It keeps the household list for you. It guides you through the store. Shoppers can warn each other when a shelf is empty. Every step that needs AI uses a Meta model. The money, timing and list logic is plain code.
+Arya is a grocery app that learns how you shop from your receipts and helps shoppers help each other. It puts the whole grocery chore in one place: shared lists, a guided route through the store, a clear view of your spend and usage, and out-of-stock warnings from other shoppers. Every step that needs AI uses a Meta model. The money, timing and list logic is plain code.
 
 This is an Indie track entry. I built it alone in the hackathon window (Oct 27 to Nov 4, 2026). The problem statement is **Build for Your World**: a tool for everyday life that uses Meta's models to read receipts, labels, voice and shelves.
 
@@ -10,7 +10,7 @@ This is an Indie track entry. I built it alone in the hackathon window (Oct 27 t
 - **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a made-up household in a sandbox. The sandbox exists only for your visit. Use a phone if you can. On a laptop, make the window about 390 px wide. Camera steps need a phone. The guided path through the app takes 8 minutes. It is [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md). It comes with a [sample receipt photo](docs/images/sample-receipt.jpg), a [sample shelf photo](docs/images/sample-shelf.jpg), and an app walkthrough video (link coming).
 - **Everything else:** the [README](README.md) (what it is, why I built it this way, measured results, and known limits) and the [docs site](https://vibhortayal.github.io/arya/).
 
-## How do I try it? (Demo, 25%)
+## How do I try it? (Demo)
 
 - You can play the same loop as the video: Today, Ask ("We finished the Greek yogurt"), Start shopping, and Lists under More. [`README.md`](README.md#try-it-in-one-minute)
 - These steps need a phone camera or mic: voice add, photo of a note, Find it for me, Map my store, and receipt snap. Everything else works on a laptop.
@@ -18,7 +18,7 @@ This is an Indie track entry. I built it alone in the hackathon window (Oct 27 t
 - **Run it yourself** with your own key: see [Run it yourself](docs/RUN-IT-YOURSELF.md). It has a prompt that lets [an AI agent set it up for you](docs/RUN-IT-YOURSELF.md#let-your-ai-agent-set-it-up). The [setup in the README](README.md#run-it-yourself) also works.
 - **Want an account?** Sign-up is invite only while I harden the cost guard rails. Tap "Join the waitlist" on the [landing page](https://arya.teamnightshift.org) and contact me ([support@teamnightshift.org](mailto:support@teamnightshift.org) or [LinkedIn](https://www.linkedin.com/in/vibhortayal)); judges can be approved.
 
-## Does it matter to real people? (Impact, 30%)
+## Does it matter to real people? (Impact)
 
 **What is the real-world potential?** Everyone who shops for a household does the same weekly work. They remember the list. They try not to rebuy what is in the cupboard. They wonder where the money went. A receipt has all of that, and nobody reads it. Arya reads it. It checks every line against the printed total. Then it turns the receipt into a list with reasons ([how it works](README.md#what-is-arya)). On my own 114 receipts (1,226 lines), every one passed the arithmetic check. About 4 in 5 of the staple judge's suggestions matched my own purchase rhythm (precision 0.79 against a purchase-cadence proxy; [measured results](README.md#measured-results)).
 
@@ -28,7 +28,7 @@ This is an Indie track entry. I built it alone in the hackathon window (Oct 27 t
 
 **Why this is built for our world:** it is a shopping problem I had myself ([why Arya exists](docs/PRINCIPLES.md)), and it is free to use. What existed before Oct 27, and a dated table of what I made in the window, are in [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md).
 
-## Which Meta models does it use, and for what? (Meta AI tooling, 25%)
+## Which Meta models does it use, and for what? (Meta AI tooling)
 
 Arya uses six Meta products plus the Meta Model API. Each has one job. Every call goes through one module, [`assistant/api/meta_client.py`](assistant/api/meta_client.py). The full table, with where each one is in the code, is in [`docs/quest/META-PRODUCTS.md`](docs/quest/META-PRODUCTS.md).
 
@@ -54,9 +54,9 @@ Spark and Wonder run in Meta's Standard mode. The live reader is `auto` (the cod
 
 The eval numbers come from one small set (9 public receipts, 98 lines). Scores change from run to run. So quote the gap between the models, not one number alone. The runs, the scorer and the hand adjudication are in [`docs/evals/`](docs/evals/).
 
-## How is it built, and how well? (Technical depth, 20%)
+## How is it built, and how well? (Technical depth)
 
-- The model proposes and the code checks. Arithmetic reconciliation, returns, cadence and prices are plain code, so a rerun gives the same answer. There is a cost ledger and there are daily spend caps. The full list of claims, and where to check each one, is in the [judge playbook](docs/quest/JUDGE-PLAYBOOK.md#how-is-it-built-technical-depth-20).
+- The model proposes and the code checks. Arithmetic reconciliation, returns, cadence and prices are plain code, so a rerun gives the same answer. There is a cost ledger and there are daily spend caps. The full list of claims, and where to check each one, is in the [judge playbook](docs/quest/JUDGE-PLAYBOOK.md#how-is-it-built-technical-depth).
 - Why I made these choices (the idea, a PWA, the stack, hosting, the coding model and each Meta model): [README, "Why I built it this way"](README.md#why-i-built-it-this-way).
 - Tests and decisions: about 1,900 Python tests and 550 web tests (as of Nov 3), and a dated [decision log](docs/DECISIONS.md).
 - Read more: design decisions, what I could finish in the window and what is pending, and where it stops scaling, in [`docs/TECHNICAL-DEPTH.md`](docs/TECHNICAL-DEPTH.md).
@@ -69,5 +69,5 @@ The eval numbers come from one small set (9 public receipts, 98 lines). Scores c
 - **Store maps.** No store comes pre-mapped. A store's map comes only from shoppers' guided scans.
 - **Scale.** Arya runs as one server process on one VM. A few dozen people at once is about the limit ([details](README.md#what-are-the-known-limits)). Scaling it out is a plan for after judging. It is not built.
 - **Demo allowance.** Each demo visit can spend about $0.40 on live Meta calls. The demo also has a daily cap. When either runs out, the app says so. Lists and everything that needs no live read keep working. **Use a sample receipt** still works.
-- **Accounts.** Sign-up is invite only. It is for a few beta testers and hackathon judges ([how to get in](#how-do-i-try-it-demo-25)). The demo needs no account.
+- **Accounts.** Sign-up is invite only. It is for a few beta testers and hackathon judges ([how to get in](#how-do-i-try-it-demo)). The demo needs no account.
 - **Licence.** Arya's own code is all rights reserved. The repository has no license file.

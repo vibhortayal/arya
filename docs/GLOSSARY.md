@@ -12,6 +12,7 @@ The words Arya uses, in plain terms. Names in quotes are the exact words on scre
 - **Use soon**: food you bought that should be eaten soon. "Used it" moves an item back to Suggestions.
 - **Ask Arya**: the chat, on the tab named "Ask". Ask how to do something in Arya, or about your lists and spending.
 - **Help tab**: the ask box, first steps, a how-to topic for each feature, and links to the Arya guide, Arya's powers, the Tour and Send feedback.
+- **Arya**: a grocery app that learns how you shop from your receipts and helps shoppers help each other.
 - **Arya guide**: the swipeable cards that explain each feature.
 - **Tour**: the first-run walk-through, shown as bubbles over a dark screen.
 - **Quest**: the optional game. It turns a shopping trip into a hunt through a model of your store and ends on a photo of your receipt. It has no clock and no way to lose.
