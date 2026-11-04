@@ -36,7 +36,7 @@ disagreement goes to the review queue.
 
 ### Budgets and modes
 - Meta API dollars: the $150 credit, metered from the first call.
-  Engine caps: $10/day for the app. The demo bucket defaults to $2/day in code and is set to $20/day on the live server (see MODEL-POLICY.md).
+  Engine caps: $10/day for the app. The demo bucket defaults to $2/day in code and is set to $100/day (and $2 per visit) on the live server (see MODEL-POLICY.md).
 - Standard mode: Spark (the default, confirmed live 2026-11-01), Wonder,
   gates and eval scoring. Contributor is an operator setting only
   (`ARYA_SPARK_TIER=contributor` or the Ops switch), off; a user opt-in

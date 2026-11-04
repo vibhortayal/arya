@@ -63,11 +63,12 @@ services:
       ARYA_WAITLIST_IP_RATE: ${ARYA_WAITLIST_IP_RATE:-5}
       ARYA_WAITLIST_MAX: ${ARYA_WAITLIST_MAX:-5000}
       ARYA_DAILY_BUDGET_USD: ${ARYA_DAILY_BUDGET_USD:-10}
-      # $20 a day for the judging window (about 50 full demo visits at
-      # the $0.40 per-visit cap), paid from the hackathon credits. The
-      # app's own default stays $2; put 2 in deploy/.env to go back.
-      ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-20}
-      ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-0.40}
+      # $100 a day for the judging window (about 50 full demo visits at
+      # the $2 per-visit cap; owner, 2026-11-04), paid from the hackathon
+      # credits. $100 is the top of the Ops range. The app's own defaults
+      # stay $2 a day and $0.40 a visit; put those in deploy/.env to go back.
+      ARYA_DEMO_DAILY_BUDGET_USD: ${ARYA_DEMO_DAILY_BUDGET_USD:-100}
+      ARYA_DEMO_SESSION_BUDGET_USD: ${ARYA_DEMO_SESSION_BUDGET_USD:-2.00}
       ARYA_FEEDBACK_DAILY_CAP: ${ARYA_FEEDBACK_DAILY_CAP:-5}
       ARYA_FEEDBACK_MAIL_CAP: ${ARYA_FEEDBACK_MAIL_CAP:-20}
       # Keeping Arya running: per real account, a month's AI spend that
