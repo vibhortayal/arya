@@ -597,18 +597,74 @@ def sos_count(store_name, item_name):
     return {"store": store_name, "item": item_name, "trips": len(sessions)}
 
 
-def _name_match(a, b):
-    """Receipt-line / sighting vs hunt item: token Jaccard >= 0.5.
-    'Greek Yogurt' matches 'Greek Yogurt 32 oz' (size tokens drop
-    out); 'Oat Milk Chocolate' does NOT match 'Milk' — a longer
-    product name that merely contains the word is a different
-    product, and calling it the hunt item would hide a wild find."""
+# Words that say HOW a product is sold, not WHAT it is. Dropping them
+# lets 'MILK ORGANIC HALF GALLON' meet 'Milk - 2%'. Conservative: a word
+# that could change the food (oat, almond, juice, sauce) is never here.
+_NOISE = {"org", "organic", "orgnc", "each", "ea", "half", "gallon", "gal",
+          "oz", "lb", "lbs", "ct", "pk", "pack", "fl", "fresh", "large",
+          "small", "medium", "lg", "sm", "md", "the", "and", "of", "per",
+          "value", "family", "size", "natural", "non", "gmo", "kirkland",
+          "signature", "ks"}
+# Receipt shorthand seen on real receipts -> the full word.
+_ABBR = {"bnna": "banana", "bnn": "banana", "bnnas": "banana",
+         "chkn": "chicken", "strwbry": "strawberry", "blkbry": "blackberry",
+         "blubry": "blueberry", "tom": "tomato", "brocc": "broccoli"}
+# Apple varieties: dropped only when the name also says 'apple'.
+_APPLE_KINDS = {"cosmic", "crisp", "fuji", "gala", "honeycrisp", "granny",
+                "smith", "pink", "lady", "envy", "ambrosia", "braeburn",
+                "jazz", "red", "golden", "delicious", "mcintosh", "opal"}
+# A name that differs by one of these is a different product
+# ('Apple Juice' is not 'Apple'; 'Peanut Butter' is not 'Peanut').
+_FORMS = {"juice", "sauce", "butter", "milk", "oil", "vinegar", "chips",
+          "bar", "bars", "cake", "pie", "cereal", "soda", "jam", "paste",
+          "powder", "cheese", "yogurt", "cream", "bread", "candy", "snack",
+          "almond", "oat", "soy", "coconut", "rice", "cashew", "chocolate",
+          "peanut", "vanilla", "goat", "pizza", "salad", "soup",
+          "snacks", "cookie", "cookies", "dried", "frozen", "canned"}
+
+
+def _singular(w):
+    if len(w) <= 3:
+        return w
+    if w.endswith("ies"):
+        return w[:-3] + "y"
+    if w.endswith(("oes", "ches", "shes", "xes")):
+        return w[:-2]
+    if w.endswith("s") and not w.endswith(("ss", "us", "is")):
+        return w[:-1]
+    return w
+
+
+def _core_tokens(name):
+    """What a product name is, with plural, organic, size, unit, price
+    and apple-variety noise removed. 'APPLES COSMIC CRISP 2 @ $1.19
+    x2' -> {'apple'}; 'Milk - 2%' -> {'milk'}."""
     import re as _re
-    def toks(n):
-        return {t for t in _re.split(r"[^a-z0-9]+", (n or "").lower())
-                if len(t) > 2}
-    ta, tb = toks(a), toks(b)
+    out = set()
+    for t in _re.split(r"[^a-z0-9]+", (name or "").lower()):
+        t = _ABBR.get(t, t)
+        if len(t) <= 2 or any(c.isdigit() for c in t) or t in _NOISE:
+            continue
+        out.add(_singular(t))
+    if "apple" in out:
+        out -= _APPLE_KINDS
+    return out
+
+
+def _name_match(a, b):
+    """Receipt-line / sighting vs hunt item. Same product once plurals,
+    organic, size and price noise are gone ('banana' = 'BANANA ORG EACH
+    2 @ $0.29'), else token Jaccard >= 0.5 on those core words.
+    'Greek Yogurt' matches 'Greek Yogurt 32 oz'; 'Oat Milk Chocolate'
+    does NOT match 'Milk', and 'Apple Juice' does not match 'Apple': a
+    longer product name that merely contains the word is a different
+    product, and calling it the hunt item would hide a wild find."""
+    ta, tb = _core_tokens(a), _core_tokens(b)
     if not ta or not tb or not (ta & tb):
+        return False
+    if ta == tb:
+        return True
+    if (ta ^ tb) & _FORMS:
         return False
     return len(ta & tb) / len(ta | tb) >= 0.5
 

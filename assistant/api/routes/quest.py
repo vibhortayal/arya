@@ -172,6 +172,15 @@ def _tick_list_row(name, checked):
         if i["item_id"] == key or state._norm_name(i.get("name")) == norm:
             _merge_flag(i["item_id"], {"checked_on": state.cycle() if checked else None})
             return i["item_id"]
+    # No exact row: a row whose core words are the same ('Bananas' for
+    # 'Banana - Organic'). Equal sets only; never a partial overlap.
+    core = quest._core_tokens(name)
+    if core:
+        hits = [i for i in state.derived()["smart_list"]["items"]
+                if i.get("on_list") and quest._core_tokens(i.get("name")) == core]
+        if len(hits) == 1:
+            _merge_flag(hits[0]["item_id"], {"checked_on": state.cycle() if checked else None})
+            return hits[0]["item_id"]
     return None
 
 
@@ -185,6 +194,17 @@ async def quest_set_state(session_id: str, req: Request):
         raise HTTPException(400, str(e))
     if sess is None:
         raise HTTPException(404, "no such session")
+    # Finishing the haul is the shopper's word that they bought what is
+    # in the basket, receipt or not: make sure every grabbed item is
+    # ticked on the list (a grab tick can be missed, e.g. 'Bananas' vs
+    # 'Banana - Organic'). Idempotent; never un-ticks; never fails.
+    if body.get("state") in ("finished", "done"):
+        for it in sess.get("items") or []:
+            if it.get("checked"):
+                try:
+                    _tick_list_row(it["name"], True)
+                except Exception:
+                    pass
     return sess
 
 
