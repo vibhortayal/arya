@@ -1,4 +1,4 @@
-# The pitch — Arya (Team Nightshift, Indie track)
+# The pitch: Arya (Team Nightshift, Indie track)
 
 Spoken pitch, plain language. About 330 words, about 2 minutes. List first;
 Quest is the optional fun part. Screen beats in brackets. The 3-minute
@@ -36,7 +36,7 @@ video's narration is in [`docs/demo-video/SCRIPT.md`](../demo-video/SCRIPT.md).
 
 "Next: open sign-ups, prices shared by Arya shoppers, and whole-store maps.
 
-Arya isn't finished. Rome wasn't built in a day. It gets better with every shopper who uses it, and it gives back to them.
+Arya isn't finished. A community takes time. It gets better with every shopper who uses it, and it gives back to them.
 
 We're Team Nightshift. This is Arya, the grocery list that learns. Try it now at arya.teamnightshift.org."
 
@@ -44,6 +44,6 @@ We're Team Nightshift. This is Arya, the grocery list that learns. Try it now at
 
 ## Delivery notes
 
-- Use the demo household on a phone (fictional, no account). For the receipt beat, use one real receipt, and keep one receipt already read as the fallback; a Spark read takes about 10 seconds, and a Wonder re-read up to 90 seconds; the app says so while it works.
+- Use the demo household on a phone (fictional, no account). For the receipt beat, use one real receipt, and keep one receipt already read as the fallback. A Spark read takes about 10 seconds, and a Wonder re-read up to 90 seconds. The app says so while it works.
 - No store ships pre-mapped, so the quest plays a labelled typical layout. Show Find it for me on a real shelf or a shelf photo.
-- Numbers, if asked: 114 real receipts behind the brain; the staple judge's precision is 0.79 (41 of 52) against a purchase-cadence proxy on those 114 receipts, and it moves with the proxy; receipt photo decode scores 98.98% identity+price (Wonder alone, Gate 0 public set) against Spark's 93.88%; the Spark-first reader with Wonder as backup is not yet measured.
+- Numbers, if asked: 114 real receipts behind the brain. The staple judge's precision is 0.79 (41 of 52) against a purchase-cadence proxy on those 114 receipts, and it moves with the proxy. Receipt photo decode scores 98.98% identity+price (Wonder alone, Gate 0 public set) against Spark's 93.88%. The Spark-first reader with Wonder as backup is not yet measured.

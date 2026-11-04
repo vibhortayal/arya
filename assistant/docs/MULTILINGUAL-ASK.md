@@ -14,8 +14,8 @@ language behaviour (after the verification in §4).
 
 **Out (explicitly):** translating the app's buttons and labels
 (full PWA i18n is a separate strings-table project); translating
-product names, store names, or receipt text — those are data and
-stay exactly as printed; receipt decoding (already reads what is
+product names, store names, or receipt text (those are data and
+stay exactly as printed); receipt decoding (already reads what is
 printed); other model surfaces (identity proposals, staple judge)
 beyond §2's reply surface.
 
@@ -52,7 +52,7 @@ tried against the live API with a real clip.
   mirroring the CURRENT SCREEN pattern, when the account's
   language setting is not `auto`:
 
-  `REPLY LANGUAGE: <name> (<code>)` — e.g. `Spanish (es)`.
+  `REPLY LANGUAGE: <name> (<code>)`, for example `Spanish (es)`.
 
   With `auto`, no line is sent and the model mirrors the user's
   language per message.
@@ -62,8 +62,8 @@ tried against the live API with a real clip.
   precedent). Profile gains a Language row beside Currency with
   options: Auto, English, Español, हिन्दी. The chat route reads it
   the same way other settings are read; demo accounts ignore it
-  (demo replies stay English unless the visitor writes otherwise —
-  `auto` semantics).
+  (demo replies stay English unless the visitor writes otherwise,
+  the `auto` semantics).
 
 ## 2. Actions parity
 
@@ -88,7 +88,7 @@ misfire through it.
 - In the `#add-submit` flow (`web/src/screens/Lists.tsx`): if the input contains
   non-Latin script, or the account language setting is a non-English
   fixed language, skip the code fast-path and route the text to
-  Ask (one Spark call, the same class as any Ask question — the
+  Ask (one Spark call, the same class as any Ask question; the
   model files it via `add_to_list`). English input on `auto` keeps
   the $0 path exactly as today.
 - The receipt of the action is identical either way: the item
@@ -96,7 +96,7 @@ misfire through it.
   (the model emits the user's own words for a new item, snapshot
   names for known ones).
 
-## 4. Voice — verify before building
+## 4. Voice: verify before building
 
 `POST /api/transcribe` passes no language today. Before writing
 code, read the Meta API docs for muse-voice-transcribe-1.0 and
@@ -118,7 +118,7 @@ Do not guess this in code.
 - Unit: `_risky_text` returns the Spanish template under `es`,
   English under `auto`.
 - Live eval (lane-run, logged in `assistant/loops/`): the demo
-  household, ten canonical questions × {en, es, hi} — what is
+  household, ten canonical questions × {en, es, hi}: what is
   running low, what did I spend in October, add milk, we finished
   the eggs, is bread cheaper at Costco, snooze the almonds, what
   expires soon, add naan to the Indian Store list, how much was
@@ -136,5 +136,5 @@ Standard, personal data as today.
 
 The Nov 3 demo script gets one exchange: "¿Qué se está
 acabando?" answered in Spanish from the same snapshot. It is a
-feature of the shipped build, not a staged trick — it must run on
+feature of the shipped build, not a staged trick. It must run on
 the live demo household.
