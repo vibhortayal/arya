@@ -87,7 +87,7 @@ When two pages seem to say the same thing, the page in this table is the one to 
 
 | Read | What it holds |
 |---|---|
-| [`docs/RUN-IT-YOURSELF.md`](RUN-IT-YOURSELF.md) | Run Arya with Docker and your own Meta key |
+| [`docs/RUN-IT-YOURSELF.md`](RUN-IT-YOURSELF.md) | Run Arya with Docker, your own Meta key and a Google Places key to add stores |
 | [`docs/API.md`](API.md) | Lists API v1 |
 | https://arya.teamnightshift.org/developers | The developer portal and interactive reference |
 | [`NOTICE.md`](../NOTICE.md) | Third-party licences and asset provenance |

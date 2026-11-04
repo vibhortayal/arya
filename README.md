@@ -246,21 +246,31 @@ Details and the VM runbook are in
 
 ## Run it yourself
 
-You need Docker. A Meta key is optional; it turns the AI on. A shallow
-clone is small and fast. A normal `git clone` also works and brings the full
-history:
+What you need:
+
+- **Docker.** Nothing else: no Python, no Node.
+- **A Meta Model API key** for the AI parts: receipts, Ask, photos and voice.
+  Lists, the demo household and Quest run without it.
+- **A Google Places API key** to add stores on your own account. Put it on a
+  `GOOGLE_PLACES_API_KEY=` line in `.env`. The demo household has its own
+  stores and needs no Google key.
+- Everything else is optional. Details, and how to make the keys, are in
+  [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
+
+A shallow clone is small and fast. A normal `git clone` also works and brings
+the full history:
 
 ```bash
 git clone --depth 1 https://github.com/vibhortayal/arya.git && cd arya
-cp .env.local.example .env       # put your key on the MODEL_API_KEY line
+cp .env.local.example .env       # Meta key on the MODEL_API_KEY line; add GOOGLE_PLACES_API_KEY= for stores
 docker compose up --build
 ```
 
-Your key stays on your computer. `.env` is git-ignored, so it is never
+Your keys stay on your computer. `.env` is git-ignored, so it is never
 committed. Do not put a key in a file that git tracks. Open
 http://localhost:8080. On the first visit, create your account (a username
 and password) to read your own receipts. Or close the sheet and tap "Try it now"
-for the demo household. Without a key the app and the demo still open, but
+for the demo household. Without a Meta key the app and the demo still open, but
 anything that calls a Meta model says "This copy of Arya has no Meta key, so AI
 features are off". Making a key, settings, resetting, the no-Docker route
 and troubleshooting are in [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md).
