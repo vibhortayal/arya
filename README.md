@@ -104,6 +104,7 @@ https://arya.teamnightshift.org, no account needed. Tap "Try it now" for a ficti
 
 | If you want to know... | Read |
 |---|---|
+| Demo: the 3-minute demo video | [youtu.be/PeWF66ss3oI](https://youtu.be/PeWF66ss3oI) |
 | Every document, grouped by who it is for, with the judge path first | [`docs/README.md`](docs/README.md) |
 | What was made and when, then every feature with why it matters | [`docs/WHAT-WE-BUILT.md`](docs/WHAT-WE-BUILT.md) |
 | The rubric, model map and proof | [`JUDGES.md`](JUDGES.md) |
