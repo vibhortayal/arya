@@ -56,9 +56,9 @@ The eval numbers come from one small set (9 public receipts, 98 lines). Scores c
 
 ## How is it built, and how well? (Technical depth, 20%)
 
-- The model proposes and the code checks. Arithmetic reconciliation, returns, cadence and prices are plain code, so the same input always gives the same answer. There is a cost ledger and there are daily spend caps. The full list of claims, and where to check each one, is in the [judge playbook](docs/quest/JUDGE-PLAYBOOK.md#how-is-it-built-technical-depth-20).
+- The model proposes and the code checks. Arithmetic reconciliation, returns, cadence and prices are plain code, so a rerun gives the same answer. There is a cost ledger and there are daily spend caps. The full list of claims, and where to check each one, is in the [judge playbook](docs/quest/JUDGE-PLAYBOOK.md#how-is-it-built-technical-depth-20).
 - Why I made these choices (the idea, a PWA, the stack, hosting, the coding model and each Meta model): [README, "Why I built it this way"](README.md#why-i-built-it-this-way).
-- Tests: about 1,900 Python tests and 550 web tests (as of Nov 3), and a dated [decision log](docs/DECISIONS.md).
+- Tests and decisions: about 1,900 Python tests and 550 web tests (as of Nov 3), and a dated [decision log](docs/DECISIONS.md).
 - Read more: design decisions, what I could finish in the window and what is pending, and where it stops scaling, in [`docs/TECHNICAL-DEPTH.md`](docs/TECHNICAL-DEPTH.md).
 
 ## What does it not do yet?

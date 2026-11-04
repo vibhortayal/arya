@@ -4,7 +4,7 @@ I built Arya as one well-defended single-server app on purpose. The window was f
 
 ## What is built?
 
-- **Code does money, timing and lists at no model cost.** The ledger, patterns and derived list are computed again from the receipts each time, with no model involved, so they cannot drift. Every model call goes through one module that enforces the personal-data rule. (Architecture 0.3, 0.4)
+- **Code does money, timing and lists at no model cost.** The ledger, patterns and derived list are rebuilt from the receipts, with no model involved, so they cannot drift. Every model call goes through one module that enforces the personal-data rule. (Architecture 0.3, 0.4)
 - **Safe writes on one box.** Atomic JSON writes, a per-file lock, a per-request memo, and a full Postgres copy of every account document on the live site. (Architecture 0.5)
 - **Layered spend control.** A daily ceiling for the app, a separate one for the demo, a per-visit share, per-account monthly and hourly limits, and an Ops switch to pause paid reads or change the photo reader without a deploy. Every call writes a ledger row. ([Model policy](../assistant/docs/MODEL-POLICY.md))
 - **Background work that survives a restart.** Receipt batches and store scans keep a pending list on disk and resume after a deploy.
