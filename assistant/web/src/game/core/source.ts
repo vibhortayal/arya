@@ -23,6 +23,8 @@ export interface QuestSource {
   /* Optional trip hooks for a host that keeps its own records (the
    * Arya app: the hunt session). Practice never calls them. */
   progress?(e: { kind: "grab" | "ungrab"; item: string; instead?: string }): void;
+  /** Take back this trip's own shelf report for an item (Revisit again). */
+  unreport?(item: string): void;
   finish?(e: { got: string[]; points: number }): Promise<void>;
   /* End the trip without finishing it (Leave › End quest): the host
    * closes its record; grabs already sent stay checked off. */

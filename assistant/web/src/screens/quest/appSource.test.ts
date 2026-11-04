@@ -103,6 +103,25 @@ describe("AppSource", () => {
   });
 });
 
+describe("AppSource put back", () => {
+  it("a put-back unticks the list row and Revisit again withdraws the shelf report", async () => {
+    replies["/api/stores/mine"] = { stores: [{ id: "s1", name: "Safeway" }] };
+    replies["/api/storemap"] = { segments: [] };
+    replies["/api/quest/sessions"] = { id: "q9", store: "Safeway", store_id: "s1", state: "not_started", mode: "quest", items: [{ name: "Milk" }, { name: "Chips" }] };
+    const src = new AppSource();
+    await src.nearbyStores();
+    await src.open("s1", { id: "l1", name: "L", items: [{ name: "Milk" }, { name: "Chips" }] });
+    src.progress({ kind: "grab", item: "Milk" });
+    src.progress({ kind: "ungrab", item: "Milk" });
+    await src.report({ kind: "empty", item: "Chips", section: "aisle1", store: "s1" } as any);
+    src.unreport("Chips");
+    await src.finish();
+    const checks = calls.filter(c => c.url === "/api/quest/sessions/q9/check").map(c => c.body.checked);
+    expect(checks).toEqual([true, false]);
+    expect(calls.find(c => c.url === "/api/quest/sessions/q9/withdraw-report")?.body).toEqual({ item: "Chips" });
+  });
+});
+
 describe("AppSource per-location maps", () => {
   it("asks for this location's map, and a found section goes on it", async () => {
     replies["/api/stores/mine"] = { stores: [{ id: "s1", name: "Safeway" }] };
