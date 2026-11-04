@@ -33,7 +33,7 @@
 
 **Groceries are a big part of life, one of the largest expenses in the budget,** and think about what it takes today.
 
-You have a “Trader Jill” list in your notes, your partner sends you items over text, and they have a list for the “Costcozy” store — and both lists don't talk to each other. So **both of you bought yogurt, and neither bought the toilet paper that ran out.**
+You have a “Trader Jill” list in your notes, your partner sends you items over text, and they have a list for the “Costcozy” store (the demo's stores have invented names) — and both lists don't talk to each other. So **both of you bought yogurt, and neither bought the toilet paper that ran out.**
 
 At the store, **the milk your kids need is out of stock,** and you walk every aisle to find the rest. The receipt goes in the trash, so **you never see where the money went,** or that the same item was cheaper at another store. Then **the spinach goes bad** before anyone uses it.
 
@@ -102,13 +102,7 @@ Size and other limits: [Known limits](README.md#what-are-the-known-limits).
 
 ## Live demo
 
-**Live demo:** https://arya.teamnightshift.org. The demo opens a fictional
-household with no account. Your changes live in a sandbox for your visit only;
-nothing reaches disk or another visitor. It is best on a phone; on a laptop,
-make the window about 390 px wide. Open Lists API and docs for developers:
-https://arya.teamnightshift.org/developers.
-
-Submission deadline: Nov 4, 2026, 9:00 PM ET.
+https://arya.teamnightshift.org, no account: tap "Try it now" for a fictional household whose changes live in a sandbox for your visit only. Best on a phone; on a laptop, make the window about 390 px wide. Lists API and docs for developers: https://arya.teamnightshift.org/developers.
 
 ## Documentation map
 
