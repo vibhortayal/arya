@@ -46,15 +46,8 @@ Six Meta products plus the Meta Model API, each with a job (the model map is bel
 
 ## How is it built, and how well? (Technical depth, 20%)
 
-- Design decisions, what I could finish in the window and what is pending, and where it stops scaling: [`docs/TECHNICAL-DEPTH.md`](docs/TECHNICAL-DEPTH.md)
-- Model proposes, code checks: arithmetic reconciliation, returns, cadence and prices are deterministic. [`assistant/docs/ARCHITECTURE.md`](assistant/docs/ARCHITECTURE.md)
-- Cheapest model that holds the score, with a ledger, a rate gate and daily spend caps. [`assistant/docs/MODEL-POLICY.md`](assistant/docs/MODEL-POLICY.md)
-- Measured results with the files behind them: [`docs/evals/`](docs/evals/). Small samples, stated in [Known limits](README.md#what-are-the-known-limits).
-- Open API and docs: https://arya.teamnightshift.org/developers
-- Outside services: the Google Places API finds stores for the store picker; Supabase, Resend and Baseten are listed in the [README](README.md#built-with).
-- Tests: commands in the [README](README.md#run-it-yourself); known failures in [`STATUS.md`](STATUS.md). CI is manual-only (`.github/workflows/tests.yml`).
-- How the build was run (roles, hard rules, review and test gates): [`AGENTS.md`](AGENTS.md).
-- Build diary, one log per work session: [`assistant/loops/`](assistant/loops/). How the early commits arrived fast: [README, "How this was built"](README.md#how-this-was-built).
+- Model proposes, code checks: arithmetic reconciliation, returns, cadence and prices are deterministic, with a cost ledger and daily spend caps. The full list of claims and where to verify each is in the [judge playbook](docs/quest/JUDGE-PLAYBOOK.md#how-is-it-built-technical-depth-20).
+- Read more: design decisions, what I could finish in the window and what is pending, and where it stops scaling, in [`docs/TECHNICAL-DEPTH.md`](docs/TECHNICAL-DEPTH.md).
 
 ## How do I try it? (Demo, 25%)
 

@@ -121,9 +121,16 @@ The four rubric questions are answered on [the judges page, Impact](../../JUDGES
 | Receipts verified by arithmetic | [`test_receipt_math.py`](../../assistant/tests/test_receipt_math.py) |
 | Demo writes never reach disk | `state.set_overlay` in [`state.py`](../../assistant/api/state.py); sandbox tests |
 | People are pixelated before a frame is kept | `shelfscan.scrub_people` in [`shelfscan.py`](../../assistant/api/shelfscan.py) (fails closed) |
-| Cost policy | `assistant/docs/MODEL-POLICY.md` |
-| Measured results | `README.md`, "Measured results" |
-| Tests | `cd assistant && python -m unittest discover -s tests` |
+| Model proposes, code checks: arithmetic reconciliation, returns, cadence and prices are deterministic | [`ARCHITECTURE.md`](../../assistant/docs/ARCHITECTURE.md) |
+| Cheapest model that holds the score, with a ledger, a rate gate and daily spend caps | [`MODEL-POLICY.md`](../../assistant/docs/MODEL-POLICY.md) |
+| Measured results, small samples, stated in Known limits | [`docs/evals/`](../evals/), [README, Known limits](../../README.md#what-are-the-known-limits) |
+| Open API and docs | https://arya.teamnightshift.org/developers |
+| Outside services: the Google Places API finds stores for the store picker; Supabase, Resend and Baseten | [README, Built with](../../README.md#built-with) |
+| Tests | `cd assistant && python -m unittest discover -s tests`; known failures in [`STATUS.md`](../../STATUS.md). CI is manual-only (`.github/workflows/tests.yml`) |
+| How the build was run (roles, hard rules, review and test gates) | [`AGENTS.md`](../../AGENTS.md) |
+| Build diary, one log per work session | [`assistant/loops/`](../../assistant/loops/); how the early commits arrived fast: [README, "How this was built"](../../README.md#how-this-was-built) |
+
+Read more: design decisions, what I could finish in the window and what is pending, and where it stops scaling, in [`docs/TECHNICAL-DEPTH.md`](../TECHNICAL-DEPTH.md).
 
 ## What does it not do yet?
 
