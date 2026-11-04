@@ -1765,8 +1765,8 @@
       },
       "find": {
         "name": "Find it for me",
-        "sub": "Point your camera and Arya spots the next item on your list.",
-        "what": "The camera looks for the next item on your list."
+        "sub": "While you shop, point your camera at the shelf and Arya highlights the item you can't find.",
+        "what": "While you shop, tap Can't find it, then Find it for me; the camera looks for that item."
       },
       "alerts": {
         "name": "Store alerts",
@@ -3400,7 +3400,7 @@
         "body": "Quest turns your list into a game. You get points, a level and badges. There are no timers and no lives.",
         "s1": "Open the Quest tab. Tap Start a quest.",
         "s2": "Choose Everything, or one store.",
-        "s3": "Tap Find it for me to use the camera on a shelf.",
+        "s3": "Can't find an item? Tap Can't find it, then Find it for me.",
         "s4": "Open Quest progress to see badges and mapped stores."
       },
       "friends": {
@@ -3892,7 +3892,7 @@
         "body": "Start shopping when you are at the store. Choose to play a Quest or just check items off.",
         "s1": "Tap Start shopping on Today, or open a list and tap it there.",
         "s2": "Or tap \"Or just check items off as I shop\" for no game.",
-        "s3": "In a Quest, Arya walks you to each item. Tap Find it for me to use the camera.",
+        "s3": "In a Quest, Arya walks you to each item. Can't find one? Tap Can't find it, then Find it for me.",
         "n1": "Settings, then Preferences, then \"When I start shopping\", sets what opens.",
         "n2": "Quest has no timers and no lives.",
         "n3": "At Kroger-family stores, Arya also asks Kroger where an item sits and shows a line like \"Kroger: Aisle 2 · left side · bay 10\" on the quest. Nothing from Kroger is stored. Kroger's aisle data is used under Kroger's developer terms; Arya is not affiliated with Kroger.",

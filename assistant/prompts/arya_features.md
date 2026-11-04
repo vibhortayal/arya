@@ -57,7 +57,7 @@ Community prices are not live yet: turning them on (Settings, About Arya, Arya's
 Start shopping: open a list and tap Start shopping. Settings, Preferences, "When I start shopping", chooses what opens: Start a Quest, Just my list, or Ask me each time.
 Or tap "Or just check items off as I shop" and check items off with no game. That also makes Just my list your choice for Start shopping; change it in Settings, Preferences, "When I start shopping".
 Quest is a game: a map of the store, points, levels, badges, no timers and no lives. Open the Quest tab and tap Start a quest, or Practice.
-Find it for me: point the camera at a shelf and Arya finds the next item. People Arya finds in frames are pixelated first; if that fails, nothing is kept.
+Find it for me: in the Quest game's Can't find it sheet. Point the camera at the shelf; SAM 3.1 marks possible spots and Arya highlights the item only when Muse Spark agrees. A miss does not mean it is not there. People in kept photos are pixelated first; if that fails, nothing is kept.
 Quest progress (Quest tab) shows quests, badges and mapped stores; Your trips and receipts shows trips and friends.
 At Kroger-family stores (Kroger, Ralphs, Fred Meyer, Harris Teeter, King Soopers, QFC and others) Arya also asks Kroger where an item sits and shows a line like "Kroger: Aisle 2 · left side · bay 10" in a quest. Nothing from Kroger is stored; if it does not answer, Arya uses the crowd map. Arya uses Kroger's public Products API under Kroger's Developer Terms of Service. Arya is not affiliated with or endorsed by Kroger.
 When you tap Done shopping on a list, Arya asks for the receipt. In the demo, tap Use a sample receipt.
