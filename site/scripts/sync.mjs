@@ -137,7 +137,7 @@ function copyAsset(rel, withBase = true) {
 }
 
 // Always-on assets: the home page screenshots, the social card and the icons.
-for (const rel of ['docs/images/today.png', 'docs/images/lists.png', 'docs/images/social-preview.png',
+for (const rel of ['docs/images/today.png', 'docs/images/lists.png', 'docs/images/social-preview.png', 'docs/images/arya-character.webp',
   'assistant/pwa/icons/favicon-48.png', 'assistant/pwa/icons/icon-192.png']) copyAsset(rel);
 
 function rewrite(target, fromSrc, withBase = true) {
