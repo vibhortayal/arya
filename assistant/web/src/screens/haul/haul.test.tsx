@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
+import { act, cleanup, fireEvent, render, screen, waitFor } from "@testing-library/react";
 import { NavProvider, useNav } from "../../app/nav";
 import { ToastProvider } from "../../ui/Toast";
 import { decode } from "../../ui/AddReceiptSheet";
@@ -202,3 +202,31 @@ function SetFinish({ sess }: { sess: any }) {
   if (!n.params.session) { n.replace("finish", { session: sess }); return null; }
   return <Finish />;
 }
+
+describe("Finish: a slow receipt read looks busy, not failed", () => {
+  test("shows the reading block, locks the buttons, and says 'still reading' after 45 s", async () => {
+    vi.useFakeTimers();
+    let answer!: (r: Response) => void;
+    vi.stubGlobal("fetch", vi.fn((url: string) => url === "/decode/photo"
+      ? new Promise<Response>(res => { answer = res; })
+      : Promise.resolve(new Response("{}", { status: 200, headers: { "Content-Type": "application/json" } }))));
+    (Q as any).current = { id: "s1", store: "Trader Joe's", mode: "quest", state: "playing", items: [{ name: "Milk", qty: 1, checked: true }] };
+    render(<ToastProvider><NavProvider initial="finish"><Finish /></NavProvider></ToastProvider>);
+    fireEvent.change(document.getElementById("fin-photo")!, { target: { files: [new File(["png"], "r.png", { type: "image/png" })] } });
+    await act(async () => {});
+    const block = document.getElementById("fin-reading")!;
+    expect(block.textContent).toMatch(/Reading the receipt…/);
+    expect(block.textContent).toMatch(/Usually 10 to 30 seconds/);
+    const snap = document.querySelector('label[for="fin-photo"]')!;
+    expect(snap.textContent).toBe("Reading…");
+    expect(snap.getAttribute("aria-disabled")).toBe("true");
+    expect((document.getElementById("fin-photo") as HTMLInputElement).disabled).toBe(true);
+    await act(async () => { vi.advanceTimersByTime(46_000); });
+    expect(document.getElementById("fin-reading")!.textContent).toMatch(/Still reading/);
+    await act(async () => { answer(new Response(JSON.stringify({ detail: "blurry" }), { status: 422, headers: { "Content-Type": "application/json" } })); });
+    await act(async () => {});
+    expect(document.getElementById("fin-reading")).toBeNull();
+    expect((document.getElementById("fin-photo") as HTMLInputElement).disabled).toBe(false);
+    vi.useRealTimers();
+  });
+});

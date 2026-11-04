@@ -383,7 +383,7 @@ class TestReviewReopen(unittest.TestCase):
     def test_pdf_choice_is_hidden_in_the_demo(self):
         fin = finish_section()
         self.assertIn('className="nomargin real-only"', fin)
-        self.assertIn("hidden={demo}", fin.split("real-only")[1].split(">")[0])
+        self.assertIn("hidden={demo || reading}", fin.split("real-only")[1].split(">")[0])  # and while a read runs (#572)
 
     def test_hide_and_same_haul_report_the_truth(self):
         card = src("screens/haul/HaulCard.tsx")

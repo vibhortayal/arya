@@ -72,7 +72,7 @@ class TestHuntV2Screens(unittest.TestCase):
             js = src(rel)
             tag = js.split(f'id="{el}"')[0].rsplit("<p", 1)[1]
             self.assertIn("demo-only", tag, el)
-            self.assertIn("hidden={!demo}", tag, el)
+            self.assertIn("hidden={!demo || reading}", tag, el)  # and while a read runs (#572)
             self.assertIn("/sample-receipt", js, rel)
 
     def test_back_is_a_stack(self):

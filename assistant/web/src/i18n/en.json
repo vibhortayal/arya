@@ -2182,6 +2182,7 @@
   "receiptRead": {
     "readingOne": "Reading the receipt…",
     "readingOneSub": "Usually 10 to 30 seconds, up to a minute.",
+    "stillReading": "Still reading. Some receipts take up to 2 minutes, so Arya hasn't stopped.",
     "readingN": "Reading receipt {{i}} of {{n}}",
     "readingNSub": "{{name}} · {{filed}} filed so far.",
     "stay": "Stay on this screen.",
