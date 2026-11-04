@@ -6,8 +6,8 @@ Indie track, submission Nov 4, 2026, 9:00 PM ET.
 
 Quest turns your grocery list into a treasure hunt in your real store. Pick the store. Arya sorts your list by where you usually buy
 each thing. Walk the hunt through real photos of the aisles and grab each
-item (points only go up, no clock). **Find it for me** points
-the camera at the shelf. Snap the receipt at checkout. It banks your
+item (points only go up, no clock). With **Find it for me**, you point
+the camera at the shelf and the item lights up. Snap the receipt at checkout. It banks your
 points and teaches Arya your household, so next week's list writes
 itself.
 
