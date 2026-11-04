@@ -159,7 +159,7 @@ Everything below runs in the demo household, with no account needed. "Live" mean
 
 | Feature | Tap | You see | Meta model | Code |
 |---|---|---|---|---|
-| Receipt read and arithmetic check | More, Receipts, Add receipt, Snap (or "Use a sample receipt") | The lines read and the total, then **Looks right** | Muse Spark 1.3 reads first; Muse Wonder 1.0 re-reads a flagged read (live); the sample is code-built, no model | `assistant/api/decode/service.py`, `decode/checks.py` |
+| Receipt read and arithmetic check | More, Receipts, Add receipt, Snap (or "Use a sample receipt") | The lines and the total, then **Looks right**; "Total checks out" on the filed receipt under Receipts; a model name only when a read is re-checked | Muse Spark 1.3 reads first; Muse Wonder 1.0 re-reads a flagged read (live); the sample is code-built, no model | `assistant/api/decode/service.py`, `decode/checks.py` |
 | Add by voice | A list, the mic | Items added, with Undo | Muse Voice Transcribe (live) | `assistant/api/voice/service.py` |
 | Add from a photo of a note | A list, the camera | The items Arya read, "Add N items?" | Muse Spark vision (live) | `assistant/api/list/intake.py` |
 | Running low and the staple judge | Today, Running low; a suggestion's "why" | Cadence, last buy, the judge's verdict | Judged before the demo was built: Muse Spark judge, Muse Spark Open second seat (no live call) | `assistant/api/judge.py`, `assistant/api/patterns/` |
