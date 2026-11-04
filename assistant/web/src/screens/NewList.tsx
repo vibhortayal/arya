@@ -7,7 +7,7 @@ import { get, post } from "../lib/api";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListeningCard } from "../ui/Listening";
 import { clearOnSignOut, useSession } from "../app/session";
-import { asset, money, type Currency } from "../lib/format";
+import { asset, countOf, money, type Currency } from "../lib/format";
 import { faceFor, loadCharacters } from "../lib/characters";
 import { t, useTranslation } from "../i18n";
 import { pickerProps } from "../ui/picker";
@@ -289,7 +289,7 @@ export function buildDeck(o: { plan: Plan; store: string; pick: Record<string, P
     if (key in pick) continue;
     if (cards.some(c => squashName(c.name) === squashName(r.name))) continue;
     seen.delete(squashName(r.name));
-    add({ id: cardId("added", key), key, name: r.name, qty: Math.max(1, Number(r.qty) || 1),
+    add({ id: cardId("added", key), key, name: r.name, qty: Math.max(1, Number(r.qty) || 1), ...(r.unit ? { unit: r.unit } : {}),
       kind: "added", src: "added", by: r.added_by, itemId: r.item_id, chip: t("newList.src.addedBy", { name: r.added_by }) });
   }
   if (plan.has_history) {
@@ -340,7 +340,7 @@ function planItemFor(plan: Plan | undefined, row: { name: string; itemId?: strin
   const sq = squashName(row.name);
   return items.find(i => squashName(i.name) === sq) || null;
 }
-export function estimate(rows: { name: string; qty: number; itemId?: string }[], plan: Plan | undefined, store: string) {
+export function estimate(rows: { name: string; qty: number; unit?: string; itemId?: string }[], plan: Plan | undefined, store: string) {
   let total = 0, priced = 0;
   for (const r of rows || []) {
     const it = planItemFor(plan, r);
@@ -349,7 +349,7 @@ export function estimate(rows: { name: string; qty: number; itemId?: string }[],
     for (const [s, p] of Object.entries(it.prices || {})) if (sameStore(s, store) && p > 0) unit = p;
     if (unit == null && (it.price || 0) > 0) unit = it.price!;
     if (unit == null) continue;
-    total += unit * Math.max(1, Number(r.qty) || 1);
+    total += unit * countOf(r);
     priced += 1;
   }
   return { total: Math.round(total * 100) / 100, priced, count: (rows || []).length };

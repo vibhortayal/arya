@@ -43,3 +43,23 @@ def apply_extras(line, raw):
         if not line.get(k):
             line[k] = v
     return line
+
+
+# Units that count pieces. Any other unit is a package size ("10 oz",
+# "0.5 gal"): the row is one of that package, not ten of something
+# (owner, 2026-11-04: "Hummus x10" came from a 10 oz tub).
+COUNT_UNITS = ("", "ct", "count", "each", "ea", "pc", "pcs", "piece",
+               "pieces", "pack", "packs", "pk", "x")
+
+
+def count_of(it):
+    """How many of the item a trip takes: its qty when the unit counts
+    pieces (or there is no unit), else 1."""
+    unit = str((it or {}).get("unit") or "").strip().lower().rstrip(".")
+    try:
+        n = float((it or {}).get("qty") or 1)
+    except (TypeError, ValueError):
+        return 1
+    if unit not in COUNT_UNITS or n <= 0:
+        return 1
+    return int(n) if n == int(n) else round(n, 1)

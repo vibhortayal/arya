@@ -57,6 +57,22 @@ describe("store map labels", () => {
 });
 
 describe("AppSource", () => {
+  it("a package size is not a count: Hummus 10 oz is one tub, Bananas 2 ct is two", async () => {
+    replies["/api/quest/plan"] = { list: [
+      { name: "Hummus", qty: 10, unit: "oz", list: "l1" },
+      { name: "Greek Yogurt 32 oz", qty: 32, unit: "oz", list: "l1" },
+      { name: "Organic Milk", qty: 0.5, unit: "gal", list: "l1" },
+      { name: "Bananas", qty: 2, unit: "ct", list: "l1" },
+      { name: "Eggs", qty: 2, list: "l1" },
+      { name: "Salsa", qty: 16, unit: "oz", note: "mild", list: "l1" },
+    ] };
+    replies["/api/lists"] = { lists: [{ id: "l1", name: "Trader Joe's" }] };
+    const [tj] = await new AppSource().lists();
+    expect(tj.items.map(i => [i.name, i.qty ?? 1, i.note ?? ""])).toEqual([
+      ["Hummus", 1, "10 oz"], ["Greek Yogurt 32 oz", 1, ""], ["Organic Milk", 1, "0.5 gal"],
+      ["Bananas", 2, ""], ["Eggs", 2, ""], ["Salsa", 1, "mild"],
+    ]);
+  });
   it("offers each named list with open items, never a made-up Everything list", async () => {
     replies["/api/quest/plan"] = { list: [{ name: "Milk", list: "l1" }, { name: "Eggs", list: "l2" }] };
     replies["/api/lists"] = { lists: [{ id: "l1", name: "Costco" }, { id: "l2", name: "Indian Store" }, { id: "l3", name: "Empty" }] };

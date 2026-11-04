@@ -497,7 +497,7 @@ def sample_receipt(session_id):
             # No price history: a $0.00 line would let a free trip
             # settle a hunt and bank its points (QA 2026-10-28).
             price = SAMPLE_PRICE
-        qty = it.get("qty", 1)
+        qty = itemmeta.count_of(it)
         lines.append({"decoded_name": it["name"], "qty": qty,
                       "unit_price": price,
                       "line_total": round(price * qty, 2),
