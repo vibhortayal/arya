@@ -1,6 +1,6 @@
-# AGENTS.md — read this first. Any coding agent can pick up work from here.
+# AGENTS.md: read this first. Any coding agent can pick up work from here.
 
-**Project: Arya** — a grocery app that learns how you shop from your receipts
+**Project: Arya.** A grocery app that learns how you shop from your receipts
 and helps shoppers help each other. It keeps a living model of one
 household's purchases (receipts, returns, patterns) so the shopping list
 can suggest what is due. Meta Global AI Developer Hackathon 2026, Team Nightshift,
@@ -13,14 +13,14 @@ This GitHub repo. In order: `assistant/docs/SPEC.md` (what/why) >
 (`vibhortayal/meta-hackathon-research`) is the frozen evidence record.
 
 ## Read before working
-1. `STATUS.md` — current stage, done/next, blockers.
+1. `STATUS.md`: current stage, done and next, blockers.
 2. The stage section of `assistant/docs/IMPLEMENTATION.md` for your task.
-3. `assistant/docs/MODEL-POLICY.md` — cost rules (binding).
-4. The GitHub issue for your stage — acceptance lives there.
-5. `docs/DECISIONS.md` — what the owner has already decided. Check it before you
+3. `assistant/docs/MODEL-POLICY.md`: cost rules (binding).
+4. The GitHub issue for your stage: acceptance lives there.
+5. `docs/DECISIONS.md`: what the owner has already decided. Check it before you
    build or mock up anything, and add a line there when the owner decides something
    new. Do not re-open a decision on it without the owner's word.
-6. `docs/README.md` — every document, grouped by reader, and which page is the
+6. `docs/README.md`: every document, grouped by reader, and which page is the
    home of each fact. Edit a fact at its home and link to it from elsewhere.
 
 ## Layout (IMPLEMENTATION §2.1)
@@ -93,7 +93,7 @@ If a guideline conflicts with these, these win:
   because no model is needed). Model spend is allowed from hackathon credits
   (see `assistant/docs/MODEL-POLICY.md`).
 - **Scope:** grocery only.
-- **Prices** come only from the user's own receipts and lists — no scraping,
+- **Prices** come only from the user's own receipts and lists. No scraping,
   no retailer APIs, no web search (SPEC FR-11.1). Community price comparison
   is opt-in and not live (SPEC FR-11.7).
 - **README badges:** the README opens with three badges. The Doc maintainer
@@ -112,13 +112,13 @@ If a guideline conflicts with these, these win:
   (`assistant/docs/USER-JOURNEYS.md`, `assistant/docs/DEMO.md`) belong to the
   Doc maintainer, who updates them and audits Help, the guide cards and Ask
   after each merged batch.
-- **Spec beats code:** if SPEC.md and the code disagree, the spec wins — fix
+- **Spec beats code:** if SPEC.md and the code disagree, the spec wins. Fix
   the code, or flag it and let the owner decide.
 
 ## Working agreement
 - No commits to `main`. Every change goes through a PR based on `main`; commit messages are descriptive.
 - While iterating, run the tests for the area you touched. The Tester runs the
-  full suite before merge — `cd assistant && ../.venv/bin/python -m unittest discover -s tests` —
+  full suite before merge (`cd assistant && ../.venv/bin/python -m unittest discover -s tests`),
   and it must show no new failures versus `main` (a full run on 2026-11-02 passed, 1 skipped). Add tests with new logic. Create the venv once:
   `python3 -m venv .venv && .venv/bin/pip install -r assistant/api/requirements.txt`.
   On the VM no setup is needed: the deploy container already has the
@@ -137,14 +137,14 @@ If a guideline conflicts with these, these win:
 - Impeccable v4.8.0 is vendored at `.claude/skills/impeccable/` (installed
   2026-10-27 at the owner's direction; the npx installer's bundle download
   is blocked on this network, so it was copied from the pbakaus/impeccable
-  repo's plugin build — same files). Run its `context` once per design
-  session and follow its playbooks. Visual language: the wireframe theme —
+  repo's plugin build, the same files). Run its `context` once per design
+  session and follow its playbooks. Visual language: the wireframe theme,
   greyscale structure with one orange accent (#E4572E), light mode only,
   grouped lists, 44 pt targets.
 - The staple judge (api/judge.py) gates list admission; the pattern engine
   reports facts only. Explicit user intent (manual add, ran-out, expired)
   always beats the judge. Unjudged or unresolved-name items stay off the
-  list — precision over recall, by the owner's word.
+  list. Precision over recall, by the owner's word.
 
 ## Team roles and handoffs (owner approved 2026-11-01; models as of 2026-11-01)
 Each role is a separate agent thread. The owner talks only to the coordinator.

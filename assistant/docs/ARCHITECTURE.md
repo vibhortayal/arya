@@ -1,6 +1,6 @@
-# Arya — Architecture (as built)
+# Arya architecture (as built)
 
-Status: living document, revised 2026-10-29. Section 0 is the one-page map with the diagram; sections 1 to 13 are the design record. SPEC.md states the product rules. This document states
+Status: living document, revised 2026-10-29. Section 0 is the one-page map with the diagram. Sections 1 to 13 are the design record. SPEC.md states the product rules. This document states
 how the built system is put together. Where the two disagree, SPEC.md
 wins for behavior and this document wins for structure.
 
@@ -238,7 +238,7 @@ tax, and total.
 
 1. **Structured intake (primary).** POST /api/intake/structured. The
    user's Muse posts the decoded receipt as JSON. The server recomputes
-   every line status; a subtotal that does not match the lines fails
+   every line status. A subtotal that does not match the lines fails
    reconciliation and is marked, never silently accepted.
 2. **Order text.** POST /api/intake/order-text. A pasted online order
    (Instacart, Amazon) is extracted server-side, then follows the same
@@ -255,8 +255,8 @@ tax, and total.
 - Line status: auto at confidence 0.8 or above, else unverified and into
   the review queue.
 - **Discount lines are structure, not identity.** A discount line
-  (Costco prints it as "/<item number>") attaches to its parent item —
-  named on the receipt, else the previous item line — and is always
+  (Costco prints it as "/<item number>") attaches to its parent item
+  (named on the receipt, else the previous item line) and is always
   auto-verified. It never enters the review queue, on any path.
 - Fee lines are classified once and never enter patterns or the list.
 
@@ -270,7 +270,7 @@ Three mechanisms, in order of strength.
    in the review queue. Arya never guesses a name.
 2. **Groups.** Products are grouped by an explicit group key when one is
    set, else by their normalized name. Costco re-SKUs the same product
-   under one name; the group is the product everywhere it matters —
+   under one name; the group is the product everywhere it matters:
    patterns, ledger, list. Merges and splits set the explicit key.
 3. **The Curator** (server-side reasoning) proposes merges and splits
    inside candidate clusters built in code at no cost. The model judges
@@ -303,15 +303,15 @@ world is therefore an edge job, run by the user's Muse:
 
 Each agent has a narrow job and a named limit.
 
-- **Staple judge.** Input: pattern facts only (buys, cadence, quantities
-  — computed in code). Output: STAPLE, SEASONAL, OCCASIONAL, ONE_OFF, or
+- **Staple judge.** Input: pattern facts only (buys, cadence, quantities,
+  all computed in code). Output: STAPLE, SEASONAL, OCCASIONAL, ONE_OFF, or
   NOT_CONSUMABLE per product. The verdict gates admission to the list.
   Explicit user intent always beats the judge. Unjudged and unresolved
   items stay off the list.
 - **Curator.** See §4. Proposes identity changes; never applies them.
 - **Ask Arya.** Chat over a household snapshot. Actions (add to list,
   remove from list, ran out, mark expired, never suggest, snooze) are
-  validated server-side; a list is found by a near name ("Costco" finds
+  validated server-side. A list is found by a near name ("Costco" finds
   "Costcozy"), and only a row already on a list can be removed. The
   snapshot carries receipt facts (count, last, biggest, trips per
   store), spend per store per month, pack dates as words, and the
@@ -350,8 +350,8 @@ Each agent has a narrow job and a named limit.
   email; Arya keeps its own account (named by the email, no password)
   and its own cookie (`api/supabase_auth.py`).
 - A connector token is `arya_` plus a random secret. **Only its SHA-256
-  hash is stored.** It is shown once at mint; minting a new one replaces
-  the old; it can be revoked at any time. Bearer tokens are accepted
+  hash is stored.** It is shown once at mint. Minting a new one replaces
+  the old, and it can be revoked at any time. Bearer tokens are accepted
   alongside session cookies. Demo accounts cannot mint.
 - The Muse connector (custom.arya) carries its own instruction doc:
   operations, when to file, the verification rules, the Resolver
@@ -405,7 +405,7 @@ Each agent has a narrow job and a named limit.
   arya-pilot.duckdns.org name is a permanent Caddy redirect to it.
 - Known limit: one uvicorn process on one VM. Demo sandboxes live in that
   process's memory and the JSON files have one writer, so it cannot run as
-  several processes yet; dual-mode saves mirror to Supabase inside the
+  several processes yet. Dual-mode saves mirror to Supabase inside the
   request, so a slow Supabase can slow a save. Roughly a few dozen people at
   once is the ceiling (README, Known limits). After judging: Postgres as
   master copy, session state out of memory, several processes, a cloud
@@ -460,5 +460,5 @@ memory. The store directory (`stores.json`) is platform-level.
 - Public registration is closed by default (`ARYA_REGISTRATION_OPEN`; the Ops flag overrides the env and is closed on the live site). The
   owner can open it in Settings. Every door runs on Meta models: Muse in
   chat, Spark on the Meta API in the app.
-- Forgot-password — not built. Once switched on, email code sign-in
+- Forgot-password: not built. Once switched on, email code sign-in
   (§8) lets a person in without a password.
