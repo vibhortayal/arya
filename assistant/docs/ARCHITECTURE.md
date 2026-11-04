@@ -213,8 +213,8 @@ Per-account limits are $3 heads-up, $20 monthly pause and $10 hourly freeze.
 | `ARYA_FEEDBACK_DAILY_CAP` | `5` | feedback messages per account per day |
 | `ARYA_TOKEN_GUARDS` | `on` | an API token cannot call the blocked routes (bulk model spend, groups, push, feedback, account export, Kroger aisle hints); `off` lifts the list |
 | `ARYA_DEMO_TOWN` | `0` | demo household shops at simulated stores in a simulated neighborhood (`DEMO-TOWN.md`) |
-| `ARYA_OWNER_USERNAME` | empty | the owner account: it runs Ops and health (models, limits, accounts, freezes, Ask locks, registration). The owner can also name another owner in Ops |
-| `ARYA_OPS_EMAIL`, `ARYA_ALERT_EMAIL`, `RESEND_API_KEY` | empty | email through Resend: sign-in codes, waitlist and feedback notes, and one alert per Ask lock (at most 20 a day); off until the key is set |
+| `ARYA_OWNER_USERNAME` | empty | the owner account: it runs Ops and health (models, limits, accounts, freezes, Ask locks, registration). The owner can hand the role to another account in Ops; the old owner keeps owner rights for 24 hours so a wrong pick can be undone |
+| `ARYA_OPS_EMAIL`, `ARYA_ALERT_EMAIL`, `RESEND_API_KEY` | empty | email through Resend: delete-account codes, waitlist and feedback notes, and one alert per Ask lock (at most 20 a day); off until the key is set |
 | `GOOGLE_OAUTH_CLIENT_ID`, `GOOGLE_OAUTH_CLIENT_SECRET` | empty | Arya's own Google sign-in; without both, Google goes through Supabase |
 | `ARYA_SCAN_DAILY_FRAMES` | `120` | Map my store frames per account per day |
 | `ARYA_KROGER_AISLES`, `KROGER_CLIENT_ID`, `KROGER_CLIENT_SECRET`, `ARYA_KROGER_DAILY_CALLS` | `0`, empty, empty, `800` | live Kroger aisle hint (api/kroger.py); never stored |
@@ -338,7 +338,7 @@ Each agent has a narrow job and a named limit.
   (out, expired, never, snooze) wait for a yes (`/api/chat/apply`). Demo
   sessions can chat; it is a live door under the demo's per-IP and per-visit
   caps (§10).
-- **Ask guard** (`api/ask_guard.py`). The text the person typed is checked
+- **Ask guard** (`api/ask_guard.py`). The person's latest message is checked
   against high-confidence phrases only (an override with a target, a prompt
   leak, secrets, other accounts). A hit gets a fixed refusal with no model
   call, and counts a strike. Three strikes in 24 hours pause Ask: a demo visit
