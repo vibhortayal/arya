@@ -19,7 +19,7 @@ Tap **Try it now**. A short sheet ("Hi, I'm Arya") offers **Show me every screen
 The navigation tab at the bottom is **Today, Spending, Quest, Ask, More**. **More** holds Lists, Receipts, Stores, Help and Settings.
 
 ### 2. Lists
-Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's list (the town's stores have fictional names). Due staples show under **Suggested for** the store where they are usually bought; tap one to see why. A **Muse Spark 1.3** staple judge decides which items may be suggested (about 4 in 5 of its suggestions were items I really do rebuy: precision 0.79 against my own purchase rhythm, [details](../../README.md#measured-results)).
+Tap **More**, then **Lists**. The demo has a Costcozy list and a Trader Jill's list (the town's stores have fictional names). Due staples show under **Suggested for** the store where they are usually bought; tap one to see why. A **Muse Spark 1.3** staple judge decides which items may be suggested (about 4 in 5 of its suggestions matched what my receipts show I rebuy: precision 0.79 against my own purchase rhythm, [details](../../README.md#measured-results)).
 
 **Before you shop (step 4), add "Tomato soup"** to the Trader Jill's list: type it in the add row. You will look for it with the shelf camera.
 
@@ -87,7 +87,7 @@ Read more: design decisions, what I could finish in the window and what is pendi
 ## What is not in the demo?
 
 - Imports and batch jobs are switched off in the demo (bulk receipt imports, PDF and text decode, the Curator and staple-judge batch runs).
-- Friends and the leaderboards show one account's data in the demo. Shelf-empty reports are shared between shoppers in the real app (three shoppers must report the same item at a store, and only shoppers with that item on their list see it), but a demo report reaches no one, because the demo writes to its own sandbox.
+- Friends, the Store and Global boards, and Shop-Off and Spotter reports show only your own account's data (plus labelled samples), in the real app too. Shelf-empty reports are shared between shoppers in the real app (three shoppers must report the same item at a store, and only shoppers with that item on their list see it), but a demo report reaches no one, because the demo writes to its own sandbox.
 - Open weights are used in one place: Muse Spark Open (hosted on Baseten) is the second seat of the staple judge. It sees item names only, never personal data. Glimmer is not used.
 
 Everything else it does not do yet, for the real app too: [the judges page, "What does it not do yet?"](../../JUDGES.md#what-does-it-not-do-yet).
