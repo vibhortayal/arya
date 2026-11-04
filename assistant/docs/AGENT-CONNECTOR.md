@@ -1,11 +1,11 @@
 # The agent connector (MCP)
 
 Arya does not compete with the list apps and notes you already use.
-It collects from them. The collection point is your own assistant:
-any MCP-capable agent connects to Arya once, with your account token,
-and from then on anything you capture anywhere — a note, a reminder,
-a chat message, an email receipt — can become part of your Arya list,
-and your assistant can answer from Arya's model instead of a stale
+It collects from them. The collection point is your own assistant.
+Any MCP-capable agent connects to Arya once, with your account token.
+From then on, anything you capture anywhere (a note, a reminder,
+a chat message, an email receipt) can become part of your Arya list.
+Your assistant can then answer from Arya's model instead of a stale
 note.
 
 Arya's list is the shared list: the one place the pattern engine can
@@ -14,10 +14,10 @@ source of truth.
 
 ## Connect
 
-Tested by me on my own Muse (2026-11-02): no terminal and no settings
-file. He asked the Muse agent to connect to Arya. It asked for the code, opened
-a secure connector-credentials vault for him to paste it into, and the
-connection worked. The code never goes in chat.
+I tested this on my own Muse (2026-11-02), with no terminal and no settings
+file. I asked the Muse agent to connect to Arya. It asked for the code, opened
+a secure connector-credentials vault for me to paste it into, and the
+connection worked. The code never goes in the chat.
 
 1. In Arya, open More → Settings → About Arya → Use Arya in Muse and tap "Make my
    code". Copy it. It is shown once and starts with `arya_`. A new code
@@ -35,7 +35,7 @@ connection worked. The code never goes in chat.
    and paste it into the vault again. Tap "Turn off this code" in Arya to
    switch the connection off.
 
-The token acts as your account: it is accepted on the MCP door and on
+The token acts as your account. It is accepted on the MCP door and on
 the app's routes under `/api`, but never on `/auth` (it cannot mint tokens
 or delete the account). A short list of routes is closed to tokens and
 answers 403: calls that spend model credits in bulk (chat, photo and
@@ -83,8 +83,8 @@ Every item goes on a named list. The account's list names come up front, in the 
 
 ## The showcased client
 
-Muse Spark is the reference client: in chat, "add oat milk to my
+Muse Spark is the reference client. In chat, "add oat milk to my
 list" files through `add_items`, "what am I low on?" answers from
 `get_snapshot`, and a receipt photo read in chat files through
-`file_receipt`. The protocol is the standard one — nothing in the
+`file_receipt`. The protocol is the standard one. Nothing in the
 connector is specific to a single assistant.

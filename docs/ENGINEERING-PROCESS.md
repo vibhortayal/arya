@@ -1,10 +1,10 @@
 # Engineering process: how we built Arya
 
-Arya was built in nine days (Oct 27 to Nov 4, 2026) by one person working with a team of AI agents, each with one job. This section shows how that worked and what it left behind. The pages here are the working documents themselves, lightly cleaned for the public: operator-only steps, server paths and key names are removed.
+Arya was built in nine days (Oct 27 to Nov 4, 2026) by one person working with a team of AI agents. Each agent has one job. This section shows how that worked and what it left behind. The pages here are the working documents themselves, lightly cleaned for the public. Operator-only steps, server paths and key names are removed.
 
 ## How the work moved
 
-I talk to one coordinator. The coordinator hands each piece of work to a role, and each role has its own place in the process:
+I talk to one coordinator. The coordinator hands each piece of work to a role. Each role has its own place in the process:
 
 - **Builders** open the pull requests. UI work starts with a phone-size mockup I approve first.
 - **The Tester** runs each change at phone sizes and reports PASS or what to fix.

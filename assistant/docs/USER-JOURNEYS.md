@@ -54,7 +54,7 @@ her head and forgets milk.
 | 3 | Waits a few seconds. | Muse Spark reads the lines. Code adds them up. The receipt shows a check mark and its total only if the lines match the printed total. |
 | 4 | Files the same PDF again by mistake. | "Already filed." Arya compares a fingerprint (store, date, lines, total) and does not count the trip twice. |
 | 5 | Wants one old receipt. In **Receipts**, types the store in the search box, opens **Date** and picks a range, and picks **Store A to Z** or **Highest total** in **Sort**. | A line shows how many receipts match and their total. **Clear** removes the filters. |
-| 6 | Spots a misread line on a filed receipt. Opens it, taps the line, and changes the name, quantity or price in **Fix this line**. | The line shows an "edited" tag. A new name also fixes the item on her other receipts. The printed total never changes; if the lines stop adding up, the receipt says so and no longer counts as checked. **Undo** puts the old values back. In a group, any member can fix a line, but only the person who filed the receipt can delete it. |
+| 6 | Spots a misread line on a filed receipt. Opens it, taps the line, and changes the name, quantity or price in **Fix this line**. | The line shows an "edited" tag. A new name also fixes the item on her other receipts. The printed total never changes. If the lines stop adding up, the receipt says so and no longer counts as checked. **Undo** puts the old values back. In a group, any member can fix a line, but only the person who filed the receipt can delete it. |
 | 7 | Opens **Today**. | **Running low** lists items that are due. |
 
 **Sample data: the Costco receipt, Oct 17**
@@ -139,7 +139,7 @@ ago. That is 3 days past your usual." Price lines follow in Journey 4.
 **Goal.** Get everything on the list without walking back.
 
 **Status.** Shipped. A quest needs no model. "Find it for me" needs one.
-Express, the plain-checklist mode, no longer has an entry point; its
+Express, the plain-checklist mode, no longer has an entry point. Its
 screen stays only for runs started before it was removed.
 
 | Step | What Priya does | What Arya shows |
@@ -151,7 +151,7 @@ screen stays only for runs started before it was removed.
 | 5 | Taps **Find it for me** and aims the camera at a shelf. | SAM 3.1 boxes candidates, Muse Spark checks each one, and the match lights up for one tap. |
 | 6 | Taps **I'm done shopping**, then photographs the receipt. | +50 points. The receipt is filed with the same checks as Journey 1. |
 
-**Rules.** No clock. No lives. No way to lose. Quest is optional; the
+**Rules.** No clock. No lives. No way to lose. Quest is optional. The
 list works without it.
 
 **Sample data.** "Trader Joe's · Quest", 3 items on the card: Avocados 4
@@ -166,7 +166,7 @@ ct, Pasta 1 lb x2, Hummus.
 **Goal.** Find out where milk is cheaper, and what has gone up.
 
 **Status.** Shipped. Arya uses only the household's own receipts.
-Community prices, **Deals** and **Arya Shoppers** are Planned: today the
+Community prices, **Deals** and **Arya Shoppers** are Planned. Today the
 opt-in choice is saved and nothing else is built. There are no price
 charts. Trends show as words and percent.
 
@@ -215,8 +215,8 @@ Spark never finds or guesses a price.
 
 ## Journey 5. A household with Groups
 
-**People.** Priya and her partner Arjun, each with an own account on an
-own phone.
+**People.** Priya and her partner Arjun. Each has their own account on
+their own phone.
 
 **Goal.** One shared set of lists and receipts. A clean way out.
 

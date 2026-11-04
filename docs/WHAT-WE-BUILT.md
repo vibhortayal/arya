@@ -7,14 +7,14 @@ What git cannot show is listed under "What git cannot confirm".
 ## What existed before the window
 
 - **The idea search.** By my own account it took about two days. The commits for
-  it in a separate research repo ([`vibhortayal/meta-hackathon-research`](https://github.com/vibhortayal/meta-hackathon-research)) start
-  on Oct 26 at 12:37; the 28 commits that day, to 16:51, hold candidate ideas
+  it are in a separate research repo ([`vibhortayal/meta-hackathon-research`](https://github.com/vibhortayal/meta-hackathon-research)). They start
+  on Oct 26 at 12:37. The 28 commits that day, up to 16:51, hold candidate ideas
   and a plan for spikes, with no spike results. This is before Oct 27, and I
   say so plainly.
 - **My 114 Costco receipts** (back to 2023) are my own purchase history, imported
   as data. They are not in this repo.
-- **The server.** The Oracle VM already existed for my other hobby projects;
-  setting up Arya on it began on Oct 27.
+- **The server.** The Oracle VM already existed for my other hobby projects.
+  Setting up Arya on it began on Oct 27.
 - **Nothing in the Arya repo is older than Oct 27, 15:13 ET.** Its first commit
   already holds the design documents (`SPEC.md` and `IMPLEMENTATION.md`, about
   900 lines), which I wrote before committing them.
@@ -41,20 +41,20 @@ What git cannot show is listed under "What git cannot confirm".
 | Oct 30 | teamnightshift.org registered at Cloudflare; live site moved to arya.teamnightshift.org with invite-only sign-in | |
 | Oct 31 to Nov 2 | Hardening, the navigation tab, lists, the Kroger aisle lookup, docs, "Run it yourself" | |
 
-The Wonder eval is the one the model policy cites: on the 9 Gate 0 photos (98
-hand-labeled lines) Wonder scored 97/98 (Wonder after hand adjudication; Spark on the automatic scorer, which gives Wonder 86 of 98) and Spark 92/98, with price errors 0 vs
-4, for $4.47 of model spend. Why Spark shows 92 here and 90 at Gate 0 is
+The Wonder eval is the one the model policy cites. On the 9 Gate 0 photos (98
+hand-labeled lines), Wonder scored 97/98 and Spark 92/98. The Wonder figure is after hand adjudication; Spark's is from the automatic scorer, which gives Wonder 86 of 98. Price errors were 0 for Wonder and
+4 for Spark, for $4.47 of model spend. Why Spark shows 92 here and 90 at Gate 0 is
 explained once, under the model map in [For judges](../JUDGES.md#which-model-does-which-job).
 
 ## What git cannot confirm
 
 - **Who wrote the first engine commits.** Muse Code, running Muse Wonder, wrote
   the first version of the engine with me. Git lists those commits under the author name "Spark", at 15:31 to
-  15:38 on Oct 27, and records no model or tool, so the author name alone does
+  15:38 on Oct 27. Git records no model or tool, so the author name alone does
   not show it. That is my account of it.
 - **The other "Spark" commits.** 253 of the 1,333 commits are named "Spark".
-  They come from the Meta Muse agent on my VM, which ran Muse Spark and used
-  Muse Wonder through the agent, coding in parallel with Claude. Git records the
+  They come from the Meta Muse agent on my VM. It ran Muse Spark and used
+  Muse Wonder through the agent, and it coded in parallel with Claude. Git records the
   author name only, so the name alone does not show it. That is my account of it.
 - **When the Muse Wonder spike sessions ran.** No start or end time is recorded
   for them, and the spike folders the docs mention are in neither repo. I give
@@ -71,35 +71,35 @@ Everything here is built and in the code. Ideas that are not built are on the
 
 ## Receipts you can trust
 - **A model reads, code checks.** Muse Spark reads a receipt photo first (Wonder is the backup
-  reader); plain code then checks every line
+  reader). Plain code then checks every line
   against the printed total before anything posts. *Why:* a wrong price never
   goes in silently. [`assistant/docs/MODEL-POLICY.md`](../assistant/docs/MODEL-POLICY.md), [`docs/evals/`](evals/)
 - **Returns net out** against purchases, and items bought for someone else are
   tracked but never suggested.
-- **"To check"** marks lines Arya is unsure about; **Fix this line** edits the
-  name, quantity and price with Undo, and the printed total never changes.
+- **"To check"** marks lines Arya is unsure about. **Fix this line** edits the
+  name, quantity and price, with Undo. The printed total never changes.
   The original photo is kept. *Why:* you stay in control of your record.
 - **Background reading with progress:** several receipts at once, and you can
   leave while Arya reads them.
 
 ## A list that learns
 - **Patterns from your own receipts:** how often you buy each item and what you
-  pay at each store, so the list shows what is **running low** and what to
-  **use soon**, each with a reason ("why" sheet).
-- **A staple judge with two seats:** Muse Spark decides what counts as a staple;
+  pay at each store. From that, the list shows what is **running low** and what to
+  **use soon**, each with a reason (the "why" sheet).
+- **A staple judge with two seats:** Muse Spark decides what counts as a staple.
   Muse Spark Open (open weights, hosted on Baseten) judges again from item names
   only. Disagreements are kept for review. *Why:* names advise, purchase facts
   decide. [`assistant/docs/ARCHITECTURE.md`](../assistant/docs/ARCHITECTURE.md)
 - **The Curator** proposes product merges and splits with reasons; nothing
   changes until you apply it.
-- **Named lists, and every item has a home:** adds go to the list you name, the
-  only list, or Arya asks "Which list?".
+- **Named lists, and every item has a home:** an add goes to the list you name,
+  or to the only list, or Arya asks "Which list?".
 - **Works offline (signed-in accounts):** lists and other screens show as last saved, and list edits
-  queue until you are back online. Receipts, Ask, photos, voice and sharing need a connection. Signed-in accounts keep a cached copy; the demo saves offline list changes for that visit only.
+  queue until you are back online. Receipts, Ask, photos, voice and sharing need a connection. Signed-in accounts keep a cached copy. The demo saves offline list changes for that visit only.
 
 ## Prices from your own receipts
 - Cheaper store, price trend, similar items per ounce, which store to buy each
-  item at, and the cost of food waste, with a Spending screen. *Why:* nothing
+  item at, and the cost of food waste, on a Spending screen. *Why:* nothing
   is fetched from store sites, flyers or the web, so every figure is yours.
   [`assistant/docs/ARCHITECTURE.md`](../assistant/docs/ARCHITECTURE.md)
 - Community prices and live "how busy is the store" are not live; the opt-in
@@ -118,15 +118,15 @@ Everything here is built and in the code. Ideas that are not built are on the
   receipt. [`docs/quest/GAME-DESIGN.md`](quest/GAME-DESIGN.md)
 - **Find it for me:** point the camera at a shelf; SAM 3.1 boxes candidates and
   Muse Spark checks each one.
-- **Map my store:** a guided camera scan where SAM 3.1 pixelates the people it
-  detects before anything is kept (if that fails, the frame is discarded; detection is not perfect and not scored). A store counts as mapped only where it has a usable,
-  fresh photo, so status is earned. [`docs/quest/MAP-MY-STORE.md`](quest/MAP-MY-STORE.md)
+- **Map my store:** a guided camera scan. SAM 3.1 pixelates the people it
+  detects before anything is kept. If that fails, the frame is discarded. Detection is not perfect and is not scored. A store counts as mapped only where it has a usable,
+  fresh photo, so the status is earned. [`docs/quest/MAP-MY-STORE.md`](quest/MAP-MY-STORE.md)
 - **Build a store** from three questions, practice in it, and save it.
 
 ## Groups and everyday use
 - **Groups** share lists between the people you live with, joined by a
   single-use code or an invite link. Receipts stay with whoever filed them.
-- **Daily reminders** for what is running low. Live on the hosted app; you opt in, and on iPhone the app must be added to the Home Screen first.
+- **Daily reminders** for what is running low. Live on the hosted app. You opt in, and on iPhone the app must be added to the Home Screen first.
 - **Add to Home Screen**, so it opens like an app.
 - A navigation tab (the bottom buttons) you arrange yourself.
 
@@ -159,13 +159,13 @@ Everything here is built and in the code. Ideas that are not built are on the
 
 ## In the code but switched off
 - **Use your own Meta key (unfinished, not used).** A Settings row, a Help topic,
-  an Ask answer and a sign-up door, where an account with its own key never falls
+  an Ask answer and a sign-up door. An account with its own key would never fall
   back to Arya's keys. I decided not to use it, so it is switched off
   and not part of the demo.
   [After the hackathon](ROADMAP.md)
 - **Alexa skill (built, switched off, not tested on a real device).** An Alexa
   skill that adds items to your Arya list by voice. The code is merged (#515,
   #516) behind the `ARYA_ALEXA` flag, which is off. I paused it until after the
-  hackathon, and it has not been tried on a real Echo. It is voice add only:
+  hackathon, and it has not been tried on a real Echo. It is voice add only.
   Amazon has retired its Alexa list API, so Arya cannot sync with Alexa's
   own lists.
