@@ -17,6 +17,8 @@ export type Item = {
 export type LeftEntry = Item & { how?: string; idx?: number; at?: string; swapped_for?: string };
 export type Session = {
   id: string; store: string; mode: string; state: string; driver?: string; store_id?: string | null;
+  /* Demo only: the receipt's date, when an earlier-dated receipt was accepted. */
+  demo_date_waived?: string | null;
   items: Item[]; left?: LeftEntry[];
   boss?: { group: string; name: string; reports: number } | null;
   started_at?: string | null; finished_at?: string | null;

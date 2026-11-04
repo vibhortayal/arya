@@ -139,10 +139,17 @@ def demo_lists():
     flags = {
         "demo-papertowel": {"manual": True, "list": "l-demo-costco"},
         "demo-rice": {"manual": True, "list": "l-demo-costco"},
-        "demo-avocado": {"manual": True, "list": "l-demo-tj"},
-        "demo-pasta": {"manual": True, "list": "l-demo-tj"},
+        # The Trader Joe's list is the judge's Quest list (owner,
+        # 2026-11-04): it matches the playbook's sample receipt
+        # (docs/images/sample-receipt.jpg: organic milk, 2 apples, 2
+        # bananas). Tomato soup is the item the judge finds with the
+        # shelf camera, so it is not on that receipt. Hummus stays: it is
+        # Demo Town's "out at Trader Jill's" story, so it is never bought.
         "manual-hummus": {"manual": True, "name": "Hummus", "list": "l-demo-tj", "qty_override": 10, "unit": "oz"},
-        "manual-basil": {"manual": True, "name": "Basil", "list": "l-demo-tj", "qty_override": 1, "unit": "bunch"},
+        "manual-bananas": {"manual": True, "name": "Bananas", "list": "l-demo-tj", "qty_override": 2, "unit": "ct"},
+        "manual-apples": {"manual": True, "name": "Apples", "list": "l-demo-tj", "qty_override": 2, "unit": "ct"},
+        "manual-organic-milk": {"manual": True, "name": "Organic Milk", "list": "l-demo-tj", "qty_override": 0.5, "unit": "gal"},
+        "manual-tomato-soup": {"manual": True, "name": "Tomato Soup", "list": "l-demo-tj", "qty_override": 1, "unit": "ct"},
     }
     for key, (name, q, u) in LIST_ROWS.items():
         if f"demo-{key}" in flags:

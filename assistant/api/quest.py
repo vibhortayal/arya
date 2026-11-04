@@ -374,7 +374,12 @@ def _check_receipt_is_this_trips(sess, receipt):
     household is exempt: judges replay its sample trips), and a
     receipt dated before the hunt began is refused. The date check
     is date-granular with one day of grace, because hunts carry the
-    server clock and receipts carry the store's local time."""
+    server clock and receipts carry the store's local time.
+
+    In the demo sandbox an earlier receipt is accepted (owner,
+    2026-11-04), so judges can replay the playbook's sample receipt on
+    any day: it returns that receipt's date, and the app says on screen
+    that only the demo allows it. A real account is refused as before."""
     if not state.in_sandbox():
         for other in _store()["sessions"]:
             if other["id"] != sess["id"] \
@@ -388,7 +393,10 @@ def _check_receipt_is_this_trips(sess, receipt):
     except ValueError:
         return  # an undated receipt or session: nothing to compare
     if early:
+        if state.in_sandbox():
+            return bought
         raise ValueError(f"this receipt is from {bought}, before the hunt began")
+    return None
 
 
 def attach_receipt(session_id, receipt_id):
@@ -408,7 +416,9 @@ def attach_receipt(session_id, receipt_id):
             raise ValueError(
                 f"this receipt is from {receipt.get('merchant')}; "
                 f"the hunt is at {sess.get('store')}")
-        _check_receipt_is_this_trips(sess, receipt)
+        waived = _check_receipt_is_this_trips(sess, receipt)
+    else:
+        waived = None
 
     if sess is not None and sess.get("store_id"):
         state.link_receipt_store(receipt_id, sess["store_id"])
@@ -417,6 +427,8 @@ def attach_receipt(session_id, receipt_id):
         sess["receipt_id"] = receipt_id
         sess["state"] = "done"
         sess["settled"] = True
+        if waived:
+            sess["demo_date_waived"] = waived  # demo only: the app shows why it was accepted
         if not sess["finished_at"]:
             sess["finished_at"] = _now()
     return _mutate(session_id, fn)

@@ -220,16 +220,16 @@ class TestSkill(AlexaBase):
         self.assertFalse(alexa_verify.fresh("2020-01-01T00:00:00Z"))
 
     def test_known_item_adds_now_and_says_so(self):
-        text = self.speech(self.say("AddItemIntent", {"item": "pasta"}, self.tok))
-        # Pasta is already on Trader Joe's in the demo: it says so (2026-11-03).
+        text = self.speech(self.say("AddItemIntent", {"item": "apples"}, self.tok))
+        # Apples are already on Trader Joe's in the demo: it says so (2026-11-03).
         self.assertIn("already on", text)
         self.assertIn("Trader Joe's", text)
         self.assertEqual(Spark.calls, 0)
 
     def test_named_list_by_sound_adds_now(self):
-        text = self.speech(self.say("AddItemIntent", {"item": "bananas", "list": "cost co"}, self.tok))
-        self.assertIn("Added Bananas to Costco", text)
-        self.assertEqual(self.rows()["Bananas"]["list"], "l-demo-costco")
+        text = self.speech(self.say("AddItemIntent", {"item": "pasta", "list": "cost co"}, self.tok))
+        self.assertIn("Added Pasta 1 lb to Costco", text)
+        self.assertEqual(self.rows()["Pasta 1 lb"]["list"], "l-demo-costco")
         self.assertEqual(Spark.calls, 0)
 
     def test_two_lists_and_no_list_said_asks_then_adds(self):

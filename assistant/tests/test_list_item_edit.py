@@ -28,8 +28,9 @@ class TestListItemEdit(unittest.TestCase):
     def test_demo_list_items_have_clean_names_and_separate_amounts(self):
         rows = self.rows()
         want = {"demo-papertowel": ("Paper Towels", 6, "ct"), "demo-rice": ("Jasmine Rice", 10, "lb"),
-                "demo-avocado": ("Avocados", 4, "ct"), "demo-pasta": ("Pasta", 2, "lb"),
-                "manual-hummus": ("Hummus", 10, "oz"), "manual-basil": ("Basil", 1, "bunch")}
+                "manual-bananas": ("Bananas", 2, "ct"), "manual-apples": ("Apples", 2, "ct"),
+                "manual-organic-milk": ("Organic Milk", 0.5, "gal"), "manual-tomato-soup": ("Tomato Soup", 1, "ct"),
+                "manual-hummus": ("Hummus", 10, "oz")}
         for iid, (name, qty, unit) in want.items():
             self.assertEqual((rows[iid]["name"], rows[iid]["qty"], rows[iid]["unit"]), (name, qty, unit), iid)
 

@@ -98,14 +98,16 @@ adjudication, with zero price errors.
 A snapped receipt is read live by Muse Spark in Meta's Standard mode. Use a sample receipt if you would rather not send one.
 
 **Try the sample receipt.** Download [the sample receipt photo](../images/sample-receipt.jpg)
-(India Bazaar, Nov 1, 2026; it is my own receipt). On a laptop, pick the file
-after tapping **Snap the receipt**; on a phone, save it to Photos first. A
-read takes about 10 seconds, or about 45 when Muse Wonder re-reads it. Expect
-13 lines, a subtotal of $56.63, tax $0.57 and a total of $57.20, with **Total
-checks out** and the model that read it shown. The names come back shortened.
-In three live runs on Nov 2 every price matched the printed receipt; one run
-was re-read by Muse Wonder. The receipt shows the last four digits of my card,
-which I left in. The demo reads the receipt but keeps nothing.
+(Trader Joe's, Milpitas, Nov 3, 2026; it is my own receipt). It matches the
+demo's **Trader Jill's** list: bananas, apples and organic milk are on the
+receipt. Tomato soup is the one you find with the shelf camera, and hummus is
+the item Demo Town reports out of stock, so neither is on the receipt. On a laptop, pick the file after tapping **Snap the receipt**; on a
+phone, save it to Photos first. A read takes about 10 seconds, or about 45
+when Muse Wonder re-reads it. Expect 3 lines (organic milk $4.49, 2 apples
+$2.38, 2 bananas $0.58) and a total of $7.45 with no tax. The card number,
+auth codes and cashier name are blurred. The receipt is dated before your
+trip, which a real account refuses; the demo accepts it and says so on
+screen. The demo reads the receipt but keeps nothing.
 
 ---
 
