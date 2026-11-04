@@ -248,7 +248,7 @@ Details and the VM runbook are in
 
 What you need:
 
-- **Docker.** Nothing else: no Python, no Node.
+- **Docker** (and git to clone). Nothing else: no Python, no Node.
 - **A Meta Model API key** for the AI parts: receipts, Ask, photos and voice.
   Lists, the demo household and Quest run without it.
 - **A Google Places API key** to add stores on your own account. Put it on a
