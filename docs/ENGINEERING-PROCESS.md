@@ -22,4 +22,4 @@ The order for a change is: idea, name the role, approval, mockup (UI only), pull
 - [Operations](../assistant/docs/OPS.md): how the app is watched.
 - [Scale simulation](../assistant/docs/SCALE-SIM.md): the load test.
 - [Submission draft](../assistant/docs/SUBMISSION-DRAFT.md): the portal write-up.
-- [Quest build plan](archive/quest/BUILD-PLAN.md) (archived) and [design discussion](quest/DISCUSSION.md): how the game was planned and argued out.
+- [Quest build plan](archive/quest/BUILD-PLAN.md) (archived on 2026-11-04) and [design discussion](quest/DISCUSSION.md): how the game was planned and argued out.

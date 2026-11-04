@@ -1,6 +1,6 @@
 # Who it is for, and who else is out there
 
-Companion to PITCH.md (the story) and [`docs/PRINCIPLES.md`](../PRINCIPLES.md) (why Arya exists). Originally written 2026-10-27; reworked 2026-11-02. The goal is that people use Arya and help each other.
+Companion to [`PITCH.md`](../archive/quest/PITCH.md) (the story, archived on 2026-11-04) and [`docs/PRINCIPLES.md`](../PRINCIPLES.md) (why Arya exists). Originally written 2026-10-27; reworked 2026-11-02. The goal is that people use Arya and help each other.
 
 ## Who it is for
 

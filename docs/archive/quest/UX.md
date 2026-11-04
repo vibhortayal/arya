@@ -1,4 +1,4 @@
-> **Archived on 2026-11-04 after the submission.** Kept as written; nothing here is maintained. The current documents are listed in [`docs/README.md`](../../README.md).
+> **Archived on 2026-11-04.** Kept as written; nothing here is maintained. The current documents are listed in [`docs/README.md`](../../README.md).
 
 # UX — Arya Quest
 

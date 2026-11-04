@@ -105,7 +105,7 @@ When two pages seem to say the same thing, the page in this table is the one to 
 | Read | What it holds |
 |---|---|
 | [`assistant/docs/SUBMISSION-DRAFT.md`](../assistant/docs/SUBMISSION-DRAFT.md) | Paste-ready blocks for the portal form |
-| [`docs/archive/quest/SUBMISSION.md`](archive/quest/SUBMISSION.md) | The package checklist and the IP note (archived after the submission) |
+| [`docs/archive/quest/SUBMISSION.md`](archive/quest/SUBMISSION.md) | The package checklist and the IP note. Archived on 2026-11-04. |
 | [`docs/quest/PITCH-SCRIPT.md`](quest/PITCH-SCRIPT.md) | The spoken two-minute pitch |
 | [`docs/demo-video/SCRIPT.md`](demo-video/SCRIPT.md) | The demo video narration (working copy) |
 | [`docs/MARKET.md`](MARKET.md) | Desk research on the market. Its unverified claims are marked |
@@ -113,11 +113,11 @@ When two pages seem to say the same thing, the page in this table is the one to 
 
 ## Historical (archived, kept as written)
 
-These record how Arya got its shape. They were moved to `docs/archive/` on 2026-11-04, after the submission, and carry a note saying so. Read the pages above for what is true now.
+These record how Arya got its shape. Archived on 2026-11-04: they were moved to `docs/archive/` and carry a note saying so, except `PRODUCT.md`, which the design skill reads from the repo root. Read the pages above for what is true now.
 
 | Read | What it holds |
 |---|---|
-| [`docs/archive/PRODUCT.md`](archive/PRODUCT.md) | The early product description of 2026-10-27 |
+| [`PRODUCT.md`](../PRODUCT.md) | The early product description of 2026-10-27 |
 | [`docs/archive/quest/PITCH.md`](archive/quest/PITCH.md) | The early game-first pitch |
 | [`docs/archive/quest/BUILD-PLAN.md`](archive/quest/BUILD-PLAN.md) | The build plan as of Oct 29 |
 | [`docs/archive/quest/UX.md`](archive/quest/UX.md) | Quest UX rules of Oct 27. The wireframes are the design of record |

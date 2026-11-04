@@ -35,15 +35,15 @@ camera scan maps it for every shopper after you.
 | File | What it holds |
 | --- | --- |
 | [GAME-DESIGN.md](GAME-DESIGN.md) | Rules, loop, rewards, Spotter, community |
-| [UX.md](../archive/quest/UX.md) | Sessions, flow, store view, intake (Oct 27 rules, archived; the wireframes are the design of record) |
+| [UX.md](../archive/quest/UX.md) | Sessions, flow, store view, intake. Oct 27 rules, archived on 2026-11-04; the wireframes are the design of record |
 | [wireframes.html](wireframes.html) | Clickable design of record |
 | [game-flow-prototype.html](game-flow-prototype.html) | The game flow, tap through on one phone |
 | [ARCHITECTURE.md](ARCHITECTURE.md) | Data planes and pipelines |
 | [META-PRODUCTS.md](META-PRODUCTS.md) | Each Meta product and its job |
 | [JUDGE-PLAYBOOK.md](JUDGE-PLAYBOOK.md) | An 8-minute path through the live demo |
-| [PITCH-SCRIPT.md](PITCH-SCRIPT.md) | The spoken script (the early game-first [PITCH.md](../archive/quest/PITCH.md) is archived) |
+| [PITCH-SCRIPT.md](PITCH-SCRIPT.md) | The spoken script. The early game-first [PITCH.md](../archive/quest/PITCH.md) was archived on 2026-11-04. |
 | [BUSINESS.md](BUSINESS.md) | Who it is for and who else is out there |
-| [BUILD-PLAN.md](../archive/quest/BUILD-PLAN.md), [SUBMISSION.md](../archive/quest/SUBMISSION.md) | Road to Nov 4 and the package checklist (archived after the submission) |
+| [BUILD-PLAN.md](../archive/quest/BUILD-PLAN.md), [SUBMISSION.md](../archive/quest/SUBMISSION.md) | Road to Nov 4 and the package checklist. Archived on 2026-11-04. |
 | [DISCUSSION.md](DISCUSSION.md) | My steering, in order |
 
 Current state: `STATUS.md` at the repo root. Every document in the

@@ -1,8 +1,6 @@
-> **Archived on 2026-11-04 after the submission.** Kept as written; nothing here is maintained. The current documents are listed in [`docs/README.md`](../README.md).
-
 # PRODUCT — Arya
 
-> **Early product description (2026-10-27).** The navigation tab and some details have changed since; for what is built today read the [dated build page](../WHAT-WE-BUILT.md) and [`docs/PRINCIPLES.md`](../PRINCIPLES.md).
+> **Early product description (2026-10-27).** The navigation tab and some details have changed since; for what is built today read the [dated build page](docs/WHAT-WE-BUILT.md) and [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md).
 
 Derived from my approved brief (assistant/docs/SPEC.md and a
 VISION.md that is not in this repository), 2026-10-27. Where this file and the spec disagree, the spec wins.

@@ -208,7 +208,7 @@ If a handoff gets no answer, tell the coordinator, start the next item and do no
 wait idle.
 
 ### The docs workflow (owner, 2026-11-02)
-Reader-facing docs are the README, `docs/quest/SUBMISSION`, `PITCH-SCRIPT`,
+Reader-facing docs are the README, `docs/quest/PITCH-SCRIPT`,
 `JUDGE-PLAYBOOK`, `assistant/docs/DEMO.md`, `USER-JOURNEYS.md` and the privacy
 page. A new document or a rewritten section in these goes through three roles:
 1. **Researcher** (the market research thread): finds and checks outside facts,
