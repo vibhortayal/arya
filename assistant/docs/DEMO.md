@@ -4,29 +4,54 @@ Two paths. Path A is the live presentation on my account (real
 data, 114 trips). Path B is the judge self-serve path (demo household).
 The video follows Path A beats; the narration is Path B safe.
 
-## Beats (fixed order; matches video script v4)
+## Beats (fixed order; follows the locked video script of 2026-11-04)
 
-The narration itself is `docs/demo-video/SCRIPT.md` (the owner's working copy).
+The narration itself is `docs/demo-video/SCRIPT.md` (the owner's words,
+verbatim). The timings are from the finished cut, which runs under three minutes with the two cards.
 
-1. **Why and bridge** (presenter, about 1:04). Groceries, scattered notes, no
-   shared memory. Say: "I built Arya during this hackathon. I downloaded 114
-   receipts from the Costco app, three years of my own shopping."
-2. **Proof** (my real account: Spending, Receipts, Item). Arya checked all
-   114 receipts (1,226 lines) against the printed totals, in plain code. Show egg whites in 35 of
-   114 trips, and almond flour at $13.59 in one Costco and $16.99 in another.
-   Say: "Patterns are math, not prompts." No model read those 114 as photos;
-   Spark only expands the receipt abbreviations.
-3. **One trip.** The list is already made from what you buy. Add by typing, by
-   voice or by a photo of a paper list. Start shopping: the quest walks you item
-   to item; tap Got it. At a stop, Find it for me (SAM 3.1 finds the shelf,
-   Spark checks it). Empty shelf: Not here? warns the next shopper. At checkout,
-   snap the receipt: Spark reads it first (see the [model map](../../JUDGES.md#which-model-does-which-job)) and Arya checks the math.
-4. **At home.** Today shows Use soon (the spinach). Ask Arya: "We finished the
-   yogurt." The list updates. Say: "The agent answers from the model. It does not
-   invent numbers."
-5. **Limits and close.** Honest limits: it depends on its community. The
-   developer portal is live (`/developers`, API reference, MCP connector). Do
-   not say "I have started building".
+1. **The chore** (0:00 to 0:32, animation and phone captures). Lists in
+   notes, a partner adding items over text from a different store, yogurt
+   bought twice, the toilet paper nobody bought, the empty milk shelf,
+   receipts in the trash, the cheese that went bad. Close: "You hold all of
+   it in your head, and it's still never quite right."
+2. **What Arya is** (0:32 to 0:54). One place for groceries: shared lists,
+   guided store routes, spend and usage insights, community powered alerts.
+   The idea: shoppers share where items are, what's cheaper and what's out
+   of stock, so every trip gets a little easier. (Shared prices are planned,
+   not switched on, so do not demo them.)
+3. **The engine and the proof** (0:54 to 1:20, my real account). "Using
+   Muse Wonder, I created Arya's learning engine" (Muse Code running Wonder
+   wrote the day-one engine; the receipts were imported as data and checked
+   by code, no model read the 114 as photos). On screen: egg whites in 35 of
+   114 trips, spinach up 18% since June (Price watch), the same bag of almond
+   flour at $13.59 in one Costco and $16.99 in another.
+4. **The list and Quest** (1:20 to 1:33). Arya drafts the next list from
+   what the household uses (it suggests; it never adds on its own). Add by
+   typing, speaking, or a photo of a handwritten list. Quest mode turns the
+   trip into a game.
+5. **Before the trip** (1:33 to 1:37). Today warns that eggs are out of
+   stock at my store (three test accounts tapped Not here, the 3-shopper rule).
+6. **In the store** (1:37 to 2:02). The quest guides me aisle by aisle. Find
+   it for me: point the camera at a shelf, SAM finds the item, Spark checks
+   the crop and the item lights up (see the [model map](../../JUDGES.md#which-model-does-which-job)).
+   Empty shelf: tap "Not here?" (or Can't find it, then The shelf is
+   empty), and the next shopper knows. At checkout,
+   snap the receipt: Spark reads it first, and Muse Wonder takes a second
+   look only when a check fails. "The learning engine improves with every
+   trip."
+7. **Back home** (2:02 to 2:12). Today shows Use soon: the milk. Ask Arya:
+   "I just finished the yogurt." The reply marks it out and puts it on the
+   list. Show the Ask reply only; do not cut to a list that does not show
+   yogurt.
+8. **Where it stands** (2:12 to 2:49). "Arya is soft launched": the demo is
+   open to everyone, accounts are invite-only for beta testers. Muse, the
+   Meta AI agent, talks to Arya over MCP. The developer portal is live
+   (`/developers`, API reference, MCP connector). "During the hackathon, I
+   built the first step." Close: "Humans helping humans. This is Arya."
+9. **Cards** (3 s each). Stack card: Built on Meta models (Muse Spark 1.3,
+   Muse Wonder 1.0, SAM 3.1, Muse Voice Transcribe, Muse Image, Muse Spark
+   Open, via the Meta Model API). End card: arya.teamnightshift.org, try the
+   demo with no sign-up, join the waitlist, animations by Meta AI Vibes.
 
 ## Judge path (no narration)
 
