@@ -50,7 +50,8 @@ html { color-scheme: light; }
   .markdown th, .markdown td { min-width: 9rem; }
 }
 .theme-doc-markdown { max-width: 46rem; }
-.theme-doc-markdown table, .theme-doc-markdown img, .theme-doc-markdown pre { max-width: none; }
+.theme-doc-markdown table, .theme-doc-markdown pre { max-width: none; }
+.theme-doc-markdown img { max-width: 100%; height: auto; }
 .theme-code-block .prism-code { background-color: var(--fill) !important; }
 .theme-code-block { border: 1px solid var(--line); }
 .card h3 { color: var(--acc); }
@@ -73,3 +74,46 @@ html { color-scheme: light; }
 .arya-link { display: inline-flex !important; align-items: center; gap: 0.5rem; min-height: 44px; padding: 0 0.9rem; border: 1px solid var(--line); border-radius: 999px; background: var(--fill); color: var(--ink) !important; font-weight: 600; text-decoration: none !important; }
 .arya-link:hover { border-color: var(--acc); color: var(--acc) !important; }
 .arya-link svg { flex: none; align-self: center; color: var(--acc); }
+
+/* Wide diagrams (the architecture map is 1000 px wide): scale to the column on a laptop,
+   and on a phone scroll sideways inside the page instead of widening the whole page. */
+@media (max-width: 700px) {
+  .markdown p:has(> img[width="1000"]) { overflow-x: auto; -webkit-overflow-scrolling: touch; border: 1px solid var(--line); border-radius: 14px; }
+  .markdown p:has(> img[width="1000"]) > img { max-width: none; width: 880px; }
+}
+
+/* Phone-friendly architecture map (HTML under the SVG on the Architecture page).
+   Source: site/scripts/architecture-layers.html, added by scripts/sync.mjs. Light mode only. */
+.am-wrap { margin: 1.25rem 0; border: 1px solid var(--line) !important; border-radius: 14px; padding: 0 12px 12px; background: var(--panel) !important; --ifm-alert-background-color: var(--panel); }
+.am-wrap > summary { cursor: pointer; font-weight: 700; padding: 12px 0; min-height: 44px; display: flex; align-items: center; }
+.am-layers { display: flex; flex-direction: column; gap: 6px; }
+.am-layer { display: grid; grid-template-columns: 150px 1fr; gap: 12px; align-items: start; background: #f6f6f8; border: 1px solid var(--line); border-radius: 14px; padding: 12px; }
+.am-lab b { display: block; font-size: 15px; color: var(--ink); }
+.am-lab span { display: block; font-size: 12.5px; color: var(--ink2); margin-top: 2px; line-height: 1.35; }
+.am-chips { display: grid; grid-template-columns: repeat(auto-fill, minmax(170px, 1fr)); gap: 8px; min-width: 0; }
+.am-c { border-radius: 10px; padding: 8px 10px; border: 1.5px solid; font-size: 13px; line-height: 1.35; min-width: 0; color: var(--ink); }
+.am-c b { display: block; font-size: 14px; }
+.am-c small { display: block; color: var(--ink2); font-size: 12px; margin-top: 1px; }
+.am-c code { font-size: .86em; }
+.am-app { background: #fff1ea; border-color: #d9542a; }
+.am-edge { background: #f2f2f5; border-color: #8e8e96; }
+.am-code { background: #e9f6ee; border-color: #2f8f57; }
+.am-ai { background: #eef0fb; border-color: #5b64c9; }
+.am-data { background: #fff8e1; border-color: #b8911a; }
+.am-out { background: #f4f4f6; border-color: #a0a0a8; border-style: dashed; }
+.am-down { text-align: center; color: var(--ink2); font-size: 13px; line-height: 1; margin: -1px 0; }
+.am-split { display: grid; grid-template-columns: 1fr 1fr; gap: 8px; }
+.am-split > div { min-width: 0; }
+.am-split h4 { margin: 0 0 6px; font-size: 12px; text-transform: uppercase; letter-spacing: .06em; color: var(--ink2); }
+.am-split .am-chips { grid-template-columns: repeat(auto-fill, minmax(150px, 1fr)); }
+.am-legend { display: flex; flex-wrap: wrap; gap: 12px; margin-top: 12px; font-size: 12.5px; color: var(--ink2); }
+.am-legend i { display: inline-block; width: 12px; height: 12px; border-radius: 3px; border: 1.5px solid; vertical-align: -2px; margin-right: 5px; }
+@media (max-width: 640px) {
+  .am-layer { grid-template-columns: 1fr; gap: 8px; }
+  .am-split { grid-template-columns: 1fr; }
+  .am-chips, .am-split .am-chips { grid-template-columns: 1fr 1fr; }
+}
+@media (max-width: 360px) { .am-chips, .am-split .am-chips { grid-template-columns: 1fr; } }
+
+.am-legend i.am-app { border-color: #d9542a; } .am-legend i.am-edge { border-color: #8e8e96; } .am-legend i.am-code { border-color: #2f8f57; }
+.am-legend i.am-ai { border-color: #5b64c9; } .am-legend i.am-data { border-color: #b8911a; } .am-legend i.am-out { border-color: #a0a0a8; border-style: dashed; }

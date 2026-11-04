@@ -1,167 +1,118 @@
-<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1200 1010" width="1200" height="1010" role="img" aria-labelledby="ttl">
-<title id="ttl">Arya architecture: PWA and Muse agent, Caddy, FastAPI routes, deterministic engines, Meta models, storage</title>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 1000 918" width="1000" height="918" role="img" aria-labelledby="ttl">
+<title id="ttl">Arya architecture: the app and the Muse agent talk to Caddy and one FastAPI server. Code does money and timing. Meta models read photos and answer questions. State sits in files, Postgres, or both.</title>
 <defs><marker id="h" viewBox="0 0 10 10" refX="9" refY="5" markerWidth="7" markerHeight="7" orient="auto-start-reverse"><path d="M0 0L10 5L0 10z" fill="#555"/></marker></defs>
 <style>
 text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif}
-.bg{fill:#fff} .band{fill:#f6f7f9;stroke:#d8dbe0} .bl{font-size:12px;font-weight:700;fill:#6a6f78;letter-spacing:.08em;text-transform:uppercase}
+.bg{fill:#fff} .band{fill:#f6f7f9;stroke:#d8dbe0} .bl{font-size:13px;font-weight:700;fill:#555b64}
 .b{fill:#fff;stroke:#9aa1ab} .g{fill:#e9f6ee;stroke:#2f8f57} .o{fill:#fff1ea;stroke:#e4572e} .p{fill:#eef0fb;stroke:#5b64c9} .y{fill:#fff8e1;stroke:#c9a227}
-.t{font-weight:700;fill:#1c1c1e} .s{font-size:11.5px;fill:#3c3c43} .ar{stroke:#555;stroke-width:1.5;fill:none} .al{font-size:11px;fill:#555}
-.ttl{font-size:22px;font-weight:700;fill:#1c1c1e} .sub{font-size:12.5px;fill:#555}
-@media (prefers-color-scheme:dark){.bg{fill:#0d0d0f}.band{fill:#17181b;stroke:#34363b}.bl{fill:#a0a4ab}.b{fill:#1f2024;stroke:#6b7078}.g{fill:#14291d;stroke:#3fae6c}.o{fill:#33201a;stroke:#f08060}.p{fill:#1c1f38;stroke:#8990e6}.y{fill:#2b2510;stroke:#d9b640}.t,.ttl{fill:#f2f2f7}.s,.sub,.al{fill:#c7c7cc}.ar{stroke:#aaa}#h path{fill:#aaa}}
+.t{font-weight:700;font-size:15px;fill:#1c1c1e} .s{font-size:13px;fill:#3c3c43} .ar{stroke:#555;stroke-width:1.6;fill:none} .al{font-size:12px;fill:#555}
+.ttl{font-size:24px;font-weight:700;fill:#1c1c1e} .sub{font-size:14px;fill:#555}
+@media (prefers-color-scheme:dark){.bg{fill:#0d0d0f}.band{fill:#17181b;stroke:#34363b}.bl{fill:#a0a4ab}.b{fill:#1f2024;stroke:#6b7078}.g{fill:#14291d;stroke:#3fae6c}.o{fill:#33201a;stroke:#f08060}.p{fill:#1c1f38;stroke:#8990e6}.y{fill:#2b2510;stroke:#d9b640}.t,.ttl{fill:#f2f2f4}.s,.sub,.al{fill:#c4c7cc}.ar{stroke:#9aa0a8}#h path{fill:#9aa0a8}}
 </style>
-<rect class="bg" width="1200" height="1010"/>
-<text class="ttl" x="24" y="34">Arya, as built (main, 2026-10-29)</text>
-<text class="sub" x="24" y="54">List first. One FastAPI process, plain-JS PWA, deterministic engines for money and timing, Meta models for reading and judging.</text>
-<rect class="band" x="20" y="70" width="1160" height="110" rx="14"/>
-<text class="bl" x="1164" y="92" text-anchor="end">Clients</text>
-<rect class="o" x="40" y="96" width="520" height="74" rx="10"/>
-<text class="t" x="52" y="118" font-size="14">Phone PWA (assistant/pwa, plain JS, no build step)</text>
-<text class="s" x="52" y="138">Tabs: Today · Lists · Ask · Quest · Settings.  Quest: hunt (three.js), Express, album, haul share.</text>
-<text class="s" x="52" y="154">sw.js offline shell · Web Push · Add to Home Screen · SSE live sync for groups</text>
-<rect class="p" x="580" y="96" width="280" height="74" rx="10"/>
-<text class="t" x="592" y="118" font-size="14">Muse agent (MCP connector)</text>
-<text class="s" x="592" y="138">Any MCP client reads and writes the list</text>
-<text class="s" x="592" y="154">Bearer token arya_… (SHA-256 hash stored)</text>
-<rect class="b" x="880" y="96" width="280" height="74" rx="10"/>
-<text class="t" x="892" y="118" font-size="14">Owner on the VM (cron / shell)</text>
-<text class="s" x="892" y="138">python -m api.reminders (daily push)</text>
-<text class="s" x="892" y="154">backup.sh · restore.sh · migrate_json_to_pg</text>
-<rect class="band" x="20" y="190" width="1160" height="70" rx="14"/>
-<text class="bl" x="1164" y="212" text-anchor="end">Edge · Oracle VM, Docker Compose</text>
-<rect class="b" x="40" y="214" width="360" height="40" rx="10"/>
-<text class="t" x="52" y="236" font-size="13">Caddy  ·  Let's Encrypt, CSP, HSTS, http→https</text>
-<rect class="g" x="430" y="214" width="410" height="40" rx="10"/>
-<text class="t" x="442" y="236" font-size="13">uvicorn: api.main:app  (FastAPI, one process)</text>
-<rect class="b" x="870" y="214" width="290" height="40" rx="10"/>
-<text class="t" x="882" y="236" font-size="13">arya-data volume + deploy/.env (VM only)</text>
-<line class="ar" x1="300" y1="170" x2="220" y2="214" marker-end="url(#h)"/>
-<line class="ar" x1="720" y1="170" x2="640" y2="214" marker-end="url(#h)"/>
-<line class="ar" x1="400" y1="234" x2="430" y2="234" marker-end="url(#h)"/>
-<rect class="band" x="20" y="270" width="1160" height="70" rx="14"/>
-<text class="bl" x="1164" y="292" text-anchor="end">Request plumbing</text>
-<rect class="b" x="40" y="294" width="520" height="40" rx="10"/>
-<text class="t" x="52" y="316" font-size="12.5">demo_guard: require_login, demo sandbox (memory only), door caps</text>
-<rect class="b" x="580" y="294" width="580" height="40" rx="10"/>
-<text class="t" x="592" y="316" font-size="12.5">deps: cost ledger + budget guard, new_client(), rate limits, JSON helpers</text>
-<line class="ar" x1="640" y1="254" x2="300" y2="294" marker-end="url(#h)"/>
-<rect class="band" x="20" y="350" width="1160" height="150" rx="14"/>
-<text class="bl" x="1164" y="372" text-anchor="end">Routes (assistant/api/routes, one FastAPI router per area)</text>
-<rect class="b" x="40" y="374" width="264" height="50" rx="10"/>
-<text class="t" x="52" y="396" font-size="13">auth · account</text>
-
-<text class="s" x="52" y="412">sign-in, tokens, settings, push opt-in</text>
-<rect class="b" x="320" y="374" width="264" height="50" rx="10"/>
-<text class="t" x="332" y="396" font-size="13">intake · review</text>
-
-<text class="s" x="332" y="412">photo, PDF, text, JSON; review queue</text>
-<rect class="b" x="600" y="374" width="264" height="50" rx="10"/>
-<text class="t" x="612" y="396" font-size="13">lists · items</text>
-
-<text class="s" x="612" y="412">named lists, check, judge runs, item pages</text>
-<rect class="b" x="880" y="374" width="264" height="50" rx="10"/>
-<text class="t" x="892" y="396" font-size="13">home · chat · expiry</text>
-
-<text class="s" x="892" y="412">Today, Ask Arya, expiry dates</text>
-<rect class="b" x="40" y="432" width="264" height="50" rx="10"/>
-<text class="t" x="52" y="454" font-size="13">prices</text>
-
-<text class="s" x="52" y="470">own-receipt trends, powers, insights</text>
-<rect class="b" x="320" y="432" width="264" height="50" rx="10"/>
-<text class="t" x="332" y="454" font-size="13">groups</text>
-
-<text class="s" x="332" y="470">shared home, invite, leave, live SSE</text>
-<rect class="b" x="600" y="432" width="264" height="50" rx="10"/>
-<text class="t" x="612" y="454" font-size="13">quest · receipts</text>
-
-<text class="s" x="612" y="470">hunts, haul, album, stores, shelf, map</text>
-<rect class="b" x="880" y="432" width="264" height="50" rx="10"/>
-<text class="t" x="892" y="454" font-size="13">mcp_connector</text>
-
-<text class="s" x="892" y="470">/api/mcp tool surface for Muse</text>
-<line class="ar" x1="300" y1="334" x2="300" y2="374" marker-end="url(#h)"/>
-<rect class="band" x="20" y="510" width="1160" height="140" rx="14"/>
-<text class="bl" x="1164" y="532" text-anchor="end">Core engines (deterministic code, $0)</text>
-<rect class="g" x="40" y="534" width="212" height="100" rx="10"/>
-<text class="t" x="52" y="556" font-size="13">decode + reconcile</text>
-<text class="s" x="52" y="576">Totals must match lines;</text>
-<text class="s" x="52" y="592">else review queue</text>
-<rect class="g" x="264" y="534" width="212" height="100" rx="10"/>
-<text class="t" x="276" y="556" font-size="13">ledger + patterns</text>
-<text class="s" x="276" y="576">Returns netted (FIFO),</text>
-<text class="s" x="276" y="592">cadence and price by store</text>
-<rect class="g" x="488" y="534" width="212" height="100" rx="10"/>
-<text class="t" x="500" y="556" font-size="13">list · prices · expiry</text>
-<text class="s" x="500" y="576">Self-writing list, own-receipt</text>
-<text class="s" x="500" y="592">prices, running_low rule</text>
-<rect class="g" x="712" y="534" width="212" height="100" rx="10"/>
-<text class="t" x="724" y="556" font-size="13">dictionary · groups · live</text>
-<text class="s" x="724" y="576">SKU names, shared plane,</text>
-<text class="s" x="724" y="592">SSE + Postgres NOTIFY</text>
-<rect class="g" x="936" y="534" width="212" height="100" rx="10"/>
-<text class="t" x="948" y="556" font-size="13">reminders</text>
-<text class="s" x="948" y="576">One push a day, at most</text>
-<text class="s" x="948" y="592">(flag ARYA_PUSH_REMINDERS)</text>
-<line class="ar" x1="300" y1="500" x2="300" y2="534" marker-end="url(#h)"/>
-<rect class="band" x="20" y="660" width="1160" height="120" rx="14"/>
-<text class="bl" x="1164" y="682" text-anchor="end">Model-backed agents (all calls go through api/meta_client.py)</text>
-<rect class="y" x="40" y="684" width="212" height="86" rx="10"/>
-<text class="t" x="52" y="706" font-size="13">Staple judge</text>
-<text class="s" x="52" y="726">Gates list admission;</text>
-<text class="s" x="52" y="742">second seat on Spark Open</text>
-<rect class="y" x="264" y="684" width="212" height="86" rx="10"/>
-<text class="t" x="276" y="706" font-size="13">Curator + Resolver</text>
-<text class="s" x="276" y="726">Proposes merges/splits;</text>
-<text class="s" x="276" y="742">you apply, never silent</text>
-<rect class="y" x="488" y="684" width="212" height="86" rx="10"/>
-<text class="t" x="500" y="706" font-size="13">Eyes + Ask Arya</text>
-<text class="s" x="500" y="726">Fridge photos → sightings;</text>
-<text class="s" x="500" y="742">chat over a household snapshot</text>
-<rect class="y" x="712" y="684" width="212" height="86" rx="10"/>
-<text class="t" x="724" y="706" font-size="13">Quest vision</text>
-<text class="s" x="724" y="726">Shelf scan, localizer,</text>
-<text class="s" x="724" y="742">store map, Find it for me</text>
-<rect class="y" x="936" y="684" width="212" height="86" rx="10"/>
-<text class="t" x="948" y="706" font-size="13">Photo reader</text>
-<text class="s" x="948" y="726">Wonder (90 s), then Spark;</text>
-<text class="s" x="948" y="742">switch: ARYA_PHOTO_READER</text>
-<line class="ar" x1="300" y1="634" x2="300" y2="684" marker-end="url(#h)"/>
-<rect class="band" x="20" y="790" width="1160" height="92" rx="14"/>
-<text class="bl" x="1164" y="812" text-anchor="end">Outside services</text>
-<rect class="p" x="40" y="812" width="212" height="62" rx="10"/>
-<text class="t" x="52" y="834" font-size="13">Meta Model API</text>
-<text class="s" x="52" y="854">Spark 1.3 · Wonder 1.0 · Muse Image</text>
-<text class="s" x="52" y="870">Voice transcribe · SAM 3.1</text>
-<rect class="p" x="264" y="812" width="212" height="62" rx="10"/>
-<text class="t" x="276" y="834" font-size="13">Baseten</text>
-<text class="s" x="276" y="854">Spark Open (open weights)</text>
-<text class="s" x="276" y="870">platform data only, never personal</text>
-<rect class="p" x="488" y="812" width="212" height="62" rx="10"/>
-<text class="t" x="500" y="834" font-size="13">Supabase</text>
-<text class="s" x="500" y="854">Auth (email code, Google)</text>
-<text class="s" x="500" y="870">Postgres schema arya (flagged)</text>
-<rect class="b" x="712" y="812" width="212" height="62" rx="10"/>
-<text class="t" x="724" y="834" font-size="13">Google Places</text>
-<text class="s" x="724" y="854">Store search by name,</text>
-<text class="s" x="724" y="870">address or ZIP</text>
-<rect class="b" x="936" y="812" width="212" height="62" rx="10"/>
-<text class="t" x="948" y="834" font-size="13">Web Push</text>
-<text class="s" x="948" y="854">VAPID keys,</text>
-<text class="s" x="948" y="870">pywebpush (flagged)</text>
-<line class="ar" x1="300" y1="770" x2="300" y2="812" marker-end="url(#h)"/>
-<rect class="band" x="20" y="892" width="1160" height="100" rx="14"/>
-<text class="bl" x="1164" y="914" text-anchor="end">Storage (api/state.py, one document per former file)</text>
-<rect class="b" x="40" y="916" width="360" height="64" rx="10"/>
-<text class="t" x="52" y="938" font-size="13">json (default)</text>
-<text class="s" x="52" y="958">data/users/ACCOUNT/*.json, atomic writes</text>
-<text class="s" x="52" y="974">demo household shipped read-only</text>
-<rect class="b" x="420" y="916" width="360" height="64" rx="10"/>
-<text class="t" x="432" y="938" font-size="13">dual</text>
-<text class="s" x="432" y="958">files stay the truth; every save</text>
-<text class="s" x="432" y="974">mirrors to Postgres</text>
-<rect class="g" x="800" y="916" width="360" height="64" rx="10"/>
-<text class="t" x="812" y="938" font-size="13">pg  (Supabase, DATABASE_URL)</text>
-<text class="s" x="812" y="958">arya.user_docs (owner, doc name); group plane</text>
-<text class="s" x="812" y="974">LISTEN/NOTIFY arya_group for live sync</text>
-<line class="ar" x1="600" y1="882" x2="600" y2="916" marker-end="url(#h)"/>
-<text class="al" x="606" y="903">ARYA_STORE</text>
+<rect class="bg" width="1000" height="918"/>
+<text class="ttl" x="24" y="36">Arya, as built</text>
+<text class="sub" x="24" y="60">One server. Code does the money and the timing. Meta models read photos and answer questions.</text>
+<rect class="band" x="20" y="78" width="960" height="132" rx="14"/>
+<text class="bl" x="36" y="100">1  You</text>
+<rect class="o" x="36" y="112" width="420" height="90" rx="10"/>
+<text class="t" x="50" y="136">Arya app (installable web app)</text>
+<text class="s" x="50" y="158">React + Vite. Tabs: Today · Spending · Quest · Ask · More</text>
+<text class="s" x="50" y="176">Works offline · push reminders · live group sync</text>
+<rect class="p" x="474" y="112" width="244" height="90" rx="10"/>
+<text class="t" x="488" y="136">Muse agent and Lists API</text>
+<text class="s" x="488" y="158">Reads and writes your list</text>
+<text class="s" x="488" y="176">with a token</text>
+<rect class="b" x="736" y="112" width="228" height="90" rx="10"/>
+<text class="t" x="750" y="136">Owner on the VM</text>
+<text class="s" x="750" y="158">Daily push (cron)</text>
+<text class="s" x="750" y="176">Backup and restore</text>
+<text class="s" x="750" y="194">Ops screen</text>
+<rect class="band" x="20" y="230" width="960" height="166" rx="14"/>
+<text class="bl" x="36" y="252">2  Server: one VM, Docker Compose</text>
+<rect class="b" x="36" y="264" width="200" height="116" rx="10"/>
+<text class="t" x="50" y="288">Caddy</text>
+<text class="s" x="50" y="310">HTTPS (Let’s Encrypt)</text>
+<text class="s" x="50" y="328">Security headers</text>
+<text class="s" x="50" y="346">Redirects http to https</text>
+<rect class="g" x="262" y="264" width="702" height="116" rx="10"/>
+<text class="t" x="276" y="288">FastAPI, one process (api/main.py)</text>
+<text class="s" x="276" y="310">Routes, one per area: sign-in and account · receipts and review · lists and items</text>
+<text class="s" x="276" y="328">home and Ask · prices · groups · Quest · Muse connector</text>
+<text class="s" x="276" y="346">Guards on every request: login or demo sandbox · cost ledger and budget · rate limits</text>
+<text class="s" x="276" y="364">Ask guard: refuses with no model call, 3-strike lock</text>
+<line class="ar" x1="236" y1="322" x2="262" y2="322" marker-end="url(#h)"/>
+<rect class="band" x="20" y="416" width="960" height="130" rx="14"/>
+<text class="bl" x="36" y="438">3  Code, no model, $0</text>
+<rect class="g" x="36" y="450" width="176" height="80" rx="10"/>
+<text class="t" x="50" y="474">Decode + check</text>
+<text class="s" x="50" y="496">Lines must add up</text>
+<text class="s" x="50" y="514">to the printed total</text>
+<rect class="g" x="224" y="450" width="176" height="80" rx="10"/>
+<text class="t" x="238" y="474">Ledger + patterns</text>
+<text class="s" x="238" y="496">Returns netted,</text>
+<text class="s" x="238" y="514">cadence, price by store</text>
+<rect class="g" x="412" y="450" width="176" height="80" rx="10"/>
+<text class="t" x="426" y="474">List + expiry</text>
+<text class="s" x="426" y="496">Self-writing list,</text>
+<text class="s" x="426" y="514">running-low rule</text>
+<rect class="g" x="600" y="450" width="176" height="80" rx="10"/>
+<text class="t" x="614" y="474">Groups + live sync</text>
+<text class="s" x="614" y="496">Shared home, invites,</text>
+<text class="s" x="614" y="514">live updates</text>
+<rect class="g" x="788" y="450" width="176" height="80" rx="10"/>
+<text class="t" x="802" y="474">Reminders</text>
+<text class="s" x="802" y="496">One push a day</text>
+<text class="s" x="802" y="514">at most</text>
+<rect class="band" x="20" y="566" width="960" height="148" rx="14"/>
+<text class="bl" x="36" y="588">4  Meta models and helpers (every call goes through api/meta_client.py)</text>
+<rect class="y" x="36" y="600" width="176" height="104" rx="10"/>
+<text class="t" x="50" y="624">Photo reader</text>
+<text class="s" x="50" y="646">Spark reads first.</text>
+<text class="s" x="50" y="664">Wonder re-reads only</text>
+<text class="s" x="50" y="682">a receipt the checks flag</text>
+<rect class="y" x="224" y="600" width="176" height="104" rx="10"/>
+<text class="t" x="238" y="624">Ask Arya</text>
+<text class="s" x="238" y="646">Spark answers over</text>
+<text class="s" x="238" y="664">your household snapshot</text>
+<rect class="y" x="412" y="600" width="176" height="104" rx="10"/>
+<text class="t" x="426" y="624">Staple judge</text>
+<text class="s" x="426" y="646">Gates what joins the list;</text>
+<text class="s" x="426" y="664">second seat: Spark Open</text>
+<rect class="y" x="600" y="600" width="176" height="104" rx="10"/>
+<text class="t" x="614" y="624">Quest vision</text>
+<text class="s" x="614" y="646">SAM 3.1 finds items,</text>
+<text class="s" x="614" y="664">Spark checks each crop</text>
+<rect class="y" x="788" y="600" width="176" height="104" rx="10"/>
+<text class="t" x="802" y="624">Voice and images</text>
+<text class="s" x="802" y="646">Voice to text;</text>
+<text class="s" x="802" y="664">avatar and celebration</text>
+<text class="s" x="802" y="682">characters</text>
+<rect class="band" x="20" y="734" width="960" height="168" rx="14"/>
+<text class="bl" x="36" y="756">5  Storage and outside services</text>
+<rect class="b" x="36" y="768" width="256" height="124" rx="10"/>
+<text class="t" x="50" y="792">Storage (api/state.py)</text>
+<text class="s" x="50" y="814">json: files on a Docker volume</text>
+<text class="s" x="50" y="832">dual: files, mirrored to Postgres</text>
+<text class="s" x="50" y="850">pg: Supabase Postgres</text>
+<rect class="p" x="308" y="768" width="196" height="124" rx="10"/>
+<text class="t" x="322" y="792">Sign-in</text>
+<text class="s" x="322" y="814">Email code (Supabase)</text>
+<text class="s" x="322" y="832">Google: Arya’s own sign-in,</text>
+<text class="s" x="322" y="850">or Supabase if not set up</text>
+<rect class="p" x="520" y="768" width="204" height="124" rx="10"/>
+<text class="t" x="534" y="792">Model hosts</text>
+<text class="s" x="534" y="814">Meta Model API:</text>
+<text class="s" x="534" y="832">Spark · Wonder · Image ·</text>
+<text class="s" x="534" y="850">Voice · SAM 3.1</text>
+<text class="s" x="534" y="868">Baseten: Spark Open</text>
+<rect class="b" x="740" y="768" width="224" height="124" rx="10"/>
+<text class="t" x="754" y="792">Other services</text>
+<text class="s" x="754" y="814">Google Places (store search)</text>
+<text class="s" x="754" y="832">Web Push (VAPID)</text>
+<text class="s" x="754" y="850">Resend (email codes, alerts)</text>
+<text class="s" x="754" y="868">Kroger (aisle hint, live only)</text>
+<line class="ar" x1="500" y1="210" x2="500" y2="230" marker-end="url(#h)"/>
+<line class="ar" x1="500" y1="396" x2="500" y2="416" marker-end="url(#h)"/>
+<line class="ar" x1="500" y1="546" x2="500" y2="566" marker-end="url(#h)"/>
+<line class="ar" x1="500" y1="714" x2="500" y2="734" marker-end="url(#h)"/>
 </svg>

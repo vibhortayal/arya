@@ -223,9 +223,19 @@ for (const [section, items] of Object.entries(SECTIONS)) {
     const pageDesc = DESC[route] || blurb(text.replace(/^---[\s\S]*?---\n/, '').replace(/^#\s.*\n/, ''));
     const fm = `---\nsidebar_label: ${JSON.stringify(label)}\ndescription: ${JSON.stringify(pageDesc)}\nsidebar_position: ${++order}\n` +
       `custom_edit_url: ${GH.replace('blob', 'edit')}${src}\n---\n\n`;
+    // The architecture page also gets a phone-friendly HTML version of the diagram, right after the SVG.
+    // Site only: GitHub strips this markup, and llms-full.txt keeps the plain text.
+    let pageText = text;
+    if (route === 'architecture/overview') {
+      const layers = fs.readFileSync(path.join(SITE, 'scripts', 'architecture-layers.html'), 'utf8');
+      const at = text.indexOf('![Arya architecture diagram]');
+      if (at < 0) throw new Error('architecture diagram image not found in ' + file);
+      const eol = text.indexOf('\n', at);
+      pageText = text.slice(0, at) + '**Detailed view** (wide, scrolls sideways on a phone):\n\n' + text.slice(at, eol + 1) + '\n' + layers + text.slice(eol + 1);
+    }
     const dst = path.join(OUT, 'docs', `${route}.md`);
     fs.mkdirSync(path.dirname(dst), {recursive: true});
-    fs.writeFileSync(dst, fm + text);
+    fs.writeFileSync(dst, fm + pageText);
     full.push([label, route, text]);
     llms.push([section, label, route, pageDesc]);
   }
