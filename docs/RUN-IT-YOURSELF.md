@@ -7,10 +7,17 @@ now".
 ## What do I need?
 - **Docker** with Compose (Docker Desktop, or Docker Engine and the Compose
   plugin). Nothing else: no Python, no Node.
-- **A Meta Model API key** for the AI parts. Make one at dev.meta.ai (API keys,
-  then Create API key). It starts with `LLM_`. It is optional. Without it the
-  app and the demo household open and work, but anything that reads a photo,
-  answers in Ask or listens to your voice says "This copy of Arya has no Meta key, so AI features are off".
+- **A Meta Model API key** for the AI parts: receipts, Ask, photos and voice.
+  Make one at dev.meta.ai (API keys, then Create API key). It starts with
+  `LLM_`. Without it, lists, the demo household and Quest still run, but
+  anything that reads a photo, answers in Ask or listens to your voice says
+  "This copy of Arya has no Meta key, so AI features are off".
+- **A Google Places API key** to add stores on your own account. Adding a
+  store searches the Google Places API. Without the key, the store picker says
+  "Google search is not set up" and there is no way to type a store in by
+  hand. The demo household comes with its own stores, so the demo needs no
+  Google key.
+- Everything else is optional.
 - A phone-size window. On a laptop, make the browser about 390 px wide. Camera
   and microphone steps need a phone, and a phone browser only allows the camera
   on https. On a phone reaching your computer over plain `http://` on your
@@ -50,15 +57,16 @@ own, so set a usage limit on your Meta billing page, and delete the key at Meta
 when you are done. Photo receipts: see `ARYA_PHOTO_READER` below.
 
 ## Settings (`.env`)
-Only one is required.
+Two matter: `MODEL_API_KEY` for the AI, and `GOOGLE_PLACES_API_KEY` to add
+stores on your own account. The rest are optional.
 
 | Setting | What it does | Default |
 |---|---|---|
-| `MODEL_API_KEY` | Your Meta key. Receipts, Ask, voice, notes and store scans use it | empty (AI off) |
+| `MODEL_API_KEY` | Your Meta key. Receipts, Ask, photos, voice, notes and store scans use it. Lists, the demo and Quest run without it | empty (AI off) |
 | `ARYA_STORE` | Where data is kept. `json` means files in a Docker volume | `json` |
 | `ARYA_PHOTO_READER` | `auto`: Muse Spark reads a photo first, Muse Wonder re-reads one the checks flag. Or `spark`, `wonder` | `auto` |
 | `ARYA_SPARK_TIER` | Spark runs on Meta's Standard plan | `standard` |
-| `GOOGLE_PLACES_API_KEY` | Optional. Store picker suggestions from the Google Places API. Empty means no suggestions | empty |
+| `GOOGLE_PLACES_API_KEY` | Needed to add a store on your own account: the store picker searches the Google Places API. Empty means the picker says "Google search is not set up". The demo needs no key | empty |
 | `BASETEN_API_KEY` | Optional. Muse Spark Open, the staple judge's second seat. Leave empty to skip that check | empty |
 | `ARYA_LOCAL_PORT` | Use another port if 8080 is taken | `8080` |
 
@@ -88,7 +96,7 @@ $2 a day for the demo (`ARYA_DEMO_SESSION_BUDGET_USD`,
 - Demo Town (the simulated neighborhood, labelled simulated) is on, as on the
   live demo, and registration is open, so **Start my own list** on the landing
   page makes any number of accounts. Groups are on, so two local accounts can
-  share a list. There is no waitlist, no Google and no email code. The
+  share a list. There is no waitlist, no Google sign-in and no email code. The
   `compose.yaml` here does not touch the live deploy, which uses
   `assistant/deploy/docker-compose.yml`.
 
