@@ -2475,3 +2475,6 @@ body.hunting #offlinebar { display: none !important; }
 .hiderow { display: flex; align-items: center; }
 .hiderow > .hubrow, .hiderow > .gamerow { flex: 1; min-width: 0; }
 .hiderow > .rowx { margin: 0 -4px 0 0; }
+/* A row picture that opens the same page as the row's name (Today Running low). */
+.facelink { display: flex; flex: none; }
+.nopics .facelink { display: none; }

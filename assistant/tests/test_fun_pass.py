@@ -74,8 +74,10 @@ class TestFaces(unittest.TestCase):
         # Your trips is history only now: no band (usability audit).
         self.assertNotIn('className="todayband"', src("screens/Quest.tsx"))
         today = src("screens/Today.tsx")
-        self.assertIn("const c = charFor(name);", today)
-        self.assertIn("<Face name={i.name} />", today)
+        # The face lives in rowFace.tsx; on Running low it opens the item
+        # like the name does (owner 2026-11-04).
+        self.assertIn("const c = charFor(name);", src("screens/rowFace.tsx"))
+        self.assertIn('<Face name={i.name} onOpen={() => nav.show("item"', today)
         # Faces arrive late: the hook repaints Today once the manifest loads.
         self.assertIn("useCharacters();", today)
 

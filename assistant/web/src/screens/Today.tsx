@@ -6,7 +6,8 @@ import { BOOT_WAIT_MS, clearOnSignOut, useSession, within } from "../app/session
 import { questOpened } from "../lib/questSeen";
 import { get, post, friendlyError, keepBootRead } from "../lib/api";
 import { MONTHS, asset, fmtDate, fmtShort, money } from "../lib/format";
-import { charFor, useCharacters } from "../lib/characters";
+import { useCharacters } from "../lib/characters";
+import { Face } from "./rowFace";
 import { A2hsCard } from "../ui/A2hs";
 import { OwnKeyAlert } from "../ui/OwnKey";
 import { InfoSheetFrame, WhyRows } from "../ui/Info";
@@ -34,10 +35,6 @@ import { HideX } from "./hideX";
  * helpers (not in ui/): the Expiry sheets and TipLine. The level chip (#today-level) lives on the Quest tab, not here; Today
  * only fills the avatar ring. */
 
-const Face = ({ name }: { name: unknown }) => {
-  const c = charFor(name);
-  return c ? <img className="rowface" src={asset(`assets/characters/${c}`)} alt="" /> : null;
-};
 
 /* The Still good? fold keeps its state across visits (app.js todayChecksOpen). */
 let checksOpenMem = false;
@@ -524,7 +521,7 @@ export function Today() {
                 <div className="group">
                   {lowCap.shown.map(i => (
                     <div className="row" key={i.item_id}>
-                      <Face name={i.name} />
+                      <Face name={i.name} onOpen={() => nav.show("item", { id: String(i.item_id) })} />
                       <div className="grow">
                         <a href="#" className="name item-link" data-id={i.item_id}
                           onClick={ev => { ev.preventDefault(); nav.show("item", { id: String(i.item_id) }); }}>{i.name}</a>
