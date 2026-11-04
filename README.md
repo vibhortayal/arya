@@ -33,39 +33,33 @@
 
 Arya is a grocery app that learns how you shop from your receipts and helps shoppers help each other. It puts the whole grocery chore in one place: shared lists, a guided route through the store, a clear view of your spend and usage, and out-of-stock warnings from other shoppers.
 
-**Groceries are a big part of life and one of the largest costs in the budget.** Think about what it takes today.
+**Groceries are an integral part of our lives.** Hunters and gatherers did it to survive. Think about what it takes today.
 
-You have a "Trader Jill" list in your notes. Your partner sends you items over text, and they keep their own list for the "Costcozy" store (the demo's stores have invented names). The two lists do not talk to each other. So **both of you bought yogurt, and neither bought the toilet paper that ran out.**
-
-At the store, **the milk your kids need is out of stock,** and you walk every aisle to find the rest. The receipt goes in the trash. So **you never see where the money went,** or that the same item was cheaper at another store. Then **the spinach goes bad** before anyone uses it.
+You have many lists in your notes. Your partner adds items over text while they are shopping at a different store. So **both of you bought yogurt, and neither bought the toilet paper that ran out.** Oh, and **the store shelf for the milk your kids need is empty.** The receipts end up in the trash, so **you never see how the money was spent,** or that the same item was cheaper at another store. **That cheese you bought a few weeks ago went bad** before anyone used it.
 
 > *You hold all of it in your head, and it's still never quite right.*
 
-I built Arya for this hackathon to make the grocery routine easier, so I do not have to keep it all in my head.
+I built Arya for this hackathon to manage groceries in one place: shared lists, guided store routes, spend and usage insights, and community powered alerts. The idea is simple. When shoppers share what they learn, where items are located, what's cheaper, what's out of stock, every trip gets a little easier.
 
 ---
 
-**Arya learns from my receipts.** It remembers what I share with it, so I do not start from zero every week. The list is already made from what we buy.
+**Arya is not just a chatbot on a grocery list.** Using Muse Wonder, I created Arya's learning engine to understand my household usage from my Costco receipts. Arya showed me patterns in my shopping. Arya also drafts my next list based on what we use.
 
-**I add items** by typing, by voice (**Muse Voice Transcribe**), or with a photo of a paper list (**Muse Spark** turns the photo into list items).
+**I add items** by typing, speaking, or taking a photo of a handwritten list. And Arya makes the chore more fun with **Quest mode**, which turns shopping into a game.
 
-**At the store,** if I cannot find something, I tap **Can't find it**, then **Find it for me**, and point the camera at the shelf. **SAM 3.1** marks the possible spots, **Spark** checks them, and the match lights up. If the shelf is empty, I tap **The shelf is empty**. Once three shoppers have reported the same item at a store, other shoppers who have it on their list and shop there see an alert.
+**Before heading out for my quest,** Arya warns me if an item from my list is out of stock. **In the store,** it guides me aisle by aisle. If I need help spotting an item, I point the camera at a shelf: **SAM** finds the item, **Spark** points me to it, and I move forward with my quest. If an item is out of stock, I tap **Not here**, and the next shopper knows.
 
-**At checkout** I snap the receipt. **Spark** reads it and Arya checks the math. If anything is off, **Muse Wonder** takes a second look. *Next week's list is already learning.*
+**At checkout** I snap the receipt. **Spark** reads it, and if needed, **Muse Wonder** takes a second look. And the learning engine improves with every trip.
 
----
-
-**Back home,** the spinach is about to go bad, so Arya tells me to use it first. I finish the yogurt and tell Arya we are out. *It is on the list.*
+**Back home,** Arya tells me if something from my previous trips is about to go bad. And when I use up an item, I just tell Arya we're out, and it's on the list automagically.
 
 ---
 
-**Arya is live.** The demo is open to everyone, with no sign-up. Accounts are by invite from the waitlist for now, for beta testers. *It is early.* A week is not enough to build all of this, and it gets better as more of us use it.
+**Arya is soft launched.** The demo is open to everyone, but accounts are invite-only for beta testers. I also integrated the **Meta Muse** AI agent over **MCP** to talk to Arya. A [developer portal](https://arya.teamnightshift.org/developers) is live for API integrations.
 
-**Arya is a hackathon product. With Meta's help, it could grow and reach more people. It is a platform for a problem most of us have and never solve, because other things in life come first. Arya gives that time and head space back.**
+During the hackathon, I built the first step. Arya gets wiser with every shared list, every receipt, every "Not here" tap.
 
-**The potential is bigger.** The camera that reads a shelf today could run on **Meta glasses** tomorrow. Stores could partner too, but only where that makes things better for the community. A [developer portal](https://arya.teamnightshift.org/developers) is live for API integration. AI agents like **Meta Muse** can already connect over **MCP** and talk to Arya.
-
-> **The AI does the remembering. We do the shopping, and we help each other.**
+> **Humans helping humans.**
 >
 > **This is Arya.**
 
