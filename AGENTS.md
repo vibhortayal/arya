@@ -225,9 +225,11 @@ Ops does not merge such a PR until the Editor line in the template is checked. A
 in-app Help, guide cards and Ask stay in the builder chain.
 
 **Voice (owner, 2026-11-04).** Before pushing any doc change, including a small
-fix to an open PR, do a humanizer pass and a human-voice-writer pass. Plain
-words, short sentences, no stock phrases, no em-dash chains, no filler, no hype.
-Say in the PR description that both passes were done.
+fix to an open PR, do a humanizer pass and a human-voice-writer pass (a
+humanizer pass: strip stock phrases, filler and AI tells; a human-voice-writer
+pass: read it aloud as the owner would say it). Plain words, sentences of
+natural length (no run-ons, no strings of clipped sentences), no em-dash
+chains, no hype. Say in the PR description that both passes were done.
 
 ### Ops notes
 Deploy by `git pull` on the VM only. Never rsync --delete over the VM
