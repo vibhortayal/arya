@@ -73,13 +73,13 @@ window and type `/mcp` to see the six tools.
 | Tool | What it does |
 |---|---|
 | `get_snapshot` | Running-low items, spend and returns totals, trip count, top items. |
-| `get_list` | The current shopping list, with quantities and check-offs. |
-| `add_items` | Add items by name, as a person would say them. |
+| `get_list` | The current shopping list, with quantities, check-offs and each item's list, plus the names of all lists. |
+| `add_items` | Add items by name, as a person would say them, to a named list (`list`). Returns the items added and that list after the add. |
 | `check_item` | Check an item off (or uncheck it) by name. |
 | `file_receipt` | File a receipt the agent has already read. Arya verifies the arithmetic, files the lines, and learns from them; it spends no perception tokens of its own. |
 | `get_receipts` | Recent filed receipts: merchant, date, total. |
 
-`get_list` and `add_items` work on one flat list and take no list id. The Lists API (`/api/v1`, see `docs/API.md`) is list-aware: it reads and writes each list by id.
+Every item goes on a named list. The account's list names come up front, in the `initialize` instructions and in the `add_items` description from `tools/list`, so an agent asks "which list?" once instead of learning the names from a failed add. With one list, adds go there. The Lists API (`/api/v1`, see `docs/API.md`) is list-aware: it reads and writes each list by id.
 
 ## The showcased client
 

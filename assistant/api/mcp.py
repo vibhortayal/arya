@@ -20,7 +20,39 @@ INSTRUCTIONS = ("Arya is this person's grocery list and receipt history. Use get
                 "their list (only what they added; Arya's suggestions are not included), add_items to add "
                 "by name, check_item to tick one off, get_snapshot for spending and what runs low, "
                 "get_receipts for recent receipts, and file_receipt to file a receipt you have read "
-                "(merchant, purchased_at, and lines with decoded_name and line_total).")
+                "(merchant, purchased_at, and lines with decoded_name and line_total). "
+                "Every item goes on a named list: when they have more than one list and did not say which, "
+                "ask them once, then call add_items with list. add_items returns that list as it stands "
+                "after the add, so there is no need to call get_list again.")
+
+
+def lists_line(names):
+    """This account's list names, said up front so an agent asks
+    "which list?" once instead of learning them from a failed add
+    (owner, 2026-11-04: Muse took 5-6 calls for one add)."""
+    if not names:
+        return "They have no lists yet: ask them to make one in Arya (Lists, New list) before adding."
+    if len(names) == 1:
+        return f"Their one list is {names[0]}; adds go there."
+    return "Their lists: " + ", ".join(names) + "."
+
+
+def instructions(names):
+    return INSTRUCTIONS + " " + lists_line(names)
+
+
+def tool_defs(names):
+    """TOOL_DEFS with this account's list names in add_items, so the
+    agent knows them before its first call."""
+    out = []
+    for t in TOOL_DEFS:
+        if t["name"] == "add_items":
+            t = json.loads(json.dumps(t))
+            t["description"] += " " + lists_line(names)
+            if names:
+                t["inputSchema"]["properties"]["list"]["description"] += " One of: " + ", ".join(names) + "."
+        out.append(t)
+    return out
 
 
 def result(rid, value):
@@ -60,8 +92,9 @@ TOOL_DEFS = [
         "name": "get_list",
         "annotations": READ_ONLY,
         "description": "The current shopping list: item names, "
-                       "quantities, and which items are checked off. "
-                       "Read-only.",
+                       "quantities, which list each is on, and which "
+                       "items are checked off; plus the names of all "
+                       "their lists. Read-only.",
         "inputSchema": {"type": "object", "properties": {}},
     },
     {
@@ -74,7 +107,8 @@ TOOL_DEFS = [
                        "when the user has more than one list; if you "
                        "leave it out and Arya cannot tell which list, "
                        "nothing is added and the error names the lists "
-                       "to ask the user about. Returns the items added.",
+                       "to ask the user about. Returns the items added and "
+                       "that list's items after the add.",
         "inputSchema": {
             "type": "object",
             "properties": {

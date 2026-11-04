@@ -61,7 +61,11 @@ def _mcp_get_list(args):
         if i.get("list") in lists:
             row["list"] = lists[i["list"]]
         out.append(row)
-    return {"as_of": state.as_of(), "items": out}
+    return {"as_of": state.as_of(), "lists": [l["name"] for l in state.named_lists()], "items": out}
+
+
+def _list_names():
+    return [l["name"] for l in state.named_lists()]
 
 
 def _mcp_str(v):
@@ -109,7 +113,18 @@ def _mcp_add_items(args):
     added = [_add_name_to_list(n, list_id=list_id) for n in names]
     if not added:
         raise ValueError("items must be a non-empty array of names")
-    return {"added": added}
+    # The list as it stands after the add, so the agent need not read it
+    # back with get_list (owner, 2026-11-04: fewer round trips).
+    ids = {a["item_id"] for a in added}
+    where = {state.flags().get(i, {}).get("list") for i in ids} if list_id is None else {list_id}
+    lists = {l["id"]: l["name"] for l in state.named_lists()}
+    nm = state.names()
+    now = [i for i in _on_list() if i.get("list") in where or set(i.get("also") or []) & where]
+    return {"added": added,
+            "lists": [lists[w] for w in where if w in lists],
+            "now_on_list": [{"name": i.get("name") or nm.get(i["item_id"], i["item_id"]),
+                             "checked": bool(i.get("checked")), "list": lists.get(i.get("list"), "")}
+                            for i in now]}
 
 
 def _mcp_check_item(args):
@@ -243,11 +258,11 @@ def _mcp_dispatch(msg, demo=False):
                                else mcp.DEFAULT_PROTOCOL_VERSION,
             "capabilities": {"tools": {}},
             "serverInfo": mcp.SERVER_INFO,
-            "instructions": mcp.INSTRUCTIONS})
+            "instructions": mcp.instructions(_list_names())})
     if method == "ping":
         return mcp.result(rid, {})
     if method == "tools/list":
-        return mcp.result(rid, {"tools": mcp.TOOL_DEFS})
+        return mcp.result(rid, {"tools": mcp.tool_defs(_list_names())})
     if method == "tools/call":
         name = params.get("name") if isinstance(params, dict) else None
         handler = _MCP_HANDLERS.get(name if isinstance(name, str) else "")
