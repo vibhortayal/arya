@@ -41,7 +41,7 @@ At the store, **the milk your kids need is out of stock,** and you walk every ai
 
 > *You hold all of it in your head, and it's still never quite right.*
 
-**Arya puts the whole grocery chore in one place:** **shared lists**, **a guided route through the store**, **a clear view of your spend and usage**, and **out-of-stock warnings from other shoppers**. I built Arya for this hackathon to make the grocery routine easier, so I do not have to keep it all in my head.
+I built Arya for this hackathon to make the grocery routine easier, so I do not have to keep it all in my head.
 
 ---
 
