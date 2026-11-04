@@ -14,7 +14,7 @@ An eight-minute path through the live demo. Each step says what to do, what you 
 ## The walk, eight minutes
 
 ### 1. Front door
-Tap **Try it now**. A short sheet ("Hi, I'm Arya") offers **Show me every screen · 2 min** or **Skip for now**. You land on **Today**, with a bar at the top that says the household is a demo. Today shows your next trip, store news from the simulated town (marked Simulated), what is running low (with how often you buy it and when you last did), and your lists.
+Tap **Try it now**. A short sheet ("Hi, I'm Arya") offers **Show me every screen · 2 min** or **Skip for now**. You land on **Today**, with a bar at the top that says the household is a demo. Today shows your next trip, store news from the simulated town (marked Simulated), what is running low (each with a short reason, such as how often you buy it and when you last did), and your lists.
 
 The navigation tab at the bottom is **Today, Spending, Quest, Ask, More**. **More** holds Lists, Receipts, Stores, Help and Settings.
 

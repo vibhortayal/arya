@@ -142,7 +142,7 @@ Agents: read [`AGENTS.md`](AGENTS.md) first. The spec
 
 ## Try it in one minute
 
-1. Open the demo. **Today** shows what is running low, with how often you buy it and when you last did.
+1. Open the demo. **Today** shows what is running low, each with a short reason, such as how often you buy it and when you last did.
 2. Tap **More**, then **Lists**, and open a list. Add an item by typing, with the mic, or with a photo of a handwritten note.
 3. Open **Ask** and type "We finished the Greek yogurt", then "What am I running low on?".
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
