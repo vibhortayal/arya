@@ -36,7 +36,6 @@ const SECTIONS = {
     [...quest('GAME-DESIGN').slice(0, 2), 'Quest game design'],
     [...quest('MAP-MY-STORE').slice(0, 2), 'Map my store'],
     ['assistant/docs/AGENT-CONNECTOR.md', 'guide/agent-connector', 'Use Arya in Muse'],
-    ['assistant/docs/MULTILINGUAL-ASK.md', 'guide/multilingual-ask', 'Ask in your language'],
     ['docs/GLOSSARY.md', 'glossary', 'Glossary'],
   ],
   'How it is built': [
@@ -169,7 +168,6 @@ const DESC = {
   'quest/game-design': 'The design of the Quest hunt: rules, rewards, sound, and offline behaviour.',
   'quest/map-my-store': 'How shoppers map a store aisle by aisle, and how maps merge across shoppers.',
   'guide/agent-connector': 'How to use Arya from Muse and other AI agents over MCP, with a secure vault for access.',
-  'guide/multilingual-ask': 'How Ask Arya answers in the language you write in and acts on facts in any language.',
   glossary: 'Plain-language definitions of the words Arya uses.',
   'architecture/design-decisions': 'What is built, what is known to be weak, and the plan to grow past one server.',
   'architecture/overview': 'How the app runs: the one-page map, storage, models, sync, security, and the design record.',
