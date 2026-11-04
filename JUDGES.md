@@ -7,7 +7,7 @@ This is an Indie track entry. I built it alone in the hackathon window (Oct 27 t
 ## Start here
 
 - **Demo video (3 min):** [youtu.be/PeWF66ss3oI](https://youtu.be/PeWF66ss3oI). The live demo and the guided path work without it.
-- **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a made-up household in a sandbox. The sandbox exists only for your visit. Use a phone if you can. On a laptop, make the window about 390 px wide. Camera steps need a phone. The guided path through the app takes 8 minutes. It is [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md). It comes with a [sample receipt photo](docs/images/sample-receipt.jpg), a [sample shelf photo](docs/images/sample-shelf.jpg), and an app walkthrough video (link coming).
+- **Try it, no sign-up:** https://arya.teamnightshift.org, then tap "Try it now". It opens a made-up household in a sandbox. The sandbox exists only for your visit. Use a phone if you can. On a laptop, make the window about 390 px wide. Camera steps need a phone. The guided path through the app takes 8 minutes. It is [`docs/quest/JUDGE-PLAYBOOK.md`](docs/quest/JUDGE-PLAYBOOK.md). It comes with a [sample receipt photo](docs/images/sample-receipt.jpg), a [sample shelf photo](docs/images/sample-shelf.jpg), and a walkthrough video of the same path, with voice and captions (3 min 48 s): [youtu.be/cbJflgCXV5U](https://youtu.be/cbJflgCXV5U).
 - **Everything else:** the [README](README.md) (what it is, why I built it this way, measured results, and known limits) and the [docs site](https://vibhortayal.github.io/arya/).
 
 ## How do I try it? (Demo)

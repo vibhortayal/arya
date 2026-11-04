@@ -10,6 +10,7 @@ One rule for every page: do not write the judging rubric's percentage weights in
 |---|---|---|
 | [`JUDGES.md`](../JUDGES.md) | The one page for judges: the rubric blocks, the Meta model map, proof links, what it does not do yet | 5 min |
 | [`docs/quest/JUDGE-PLAYBOOK.md`](quest/JUDGE-PLAYBOOK.md) | The eight-minute walk through the live demo, with the sample receipt and shelf photos | 8 min |
+| [Judge walkthrough video](https://youtu.be/cbJflgCXV5U) | The same path on video, with voice and captions | 4 min |
 | [`README.md`](../README.md) | What Arya is, why it is built this way, measured results, known limits, run it yourself | 10 min |
 | [`docs/WHAT-WE-BUILT.md`](WHAT-WE-BUILT.md) | What existed before the window, what was made in it and when (from git), every feature with why it matters | 5 min |
 | [`docs/TECHNICAL-DEPTH.md`](TECHNICAL-DEPTH.md) | What is built, what is known to be weak, and the plan to grow past one server | 3 min |

@@ -198,7 +198,7 @@ Also built, but switched off: an Alexa skill that sends misheard adds to Spark i
   sandbox for that visit only. Sign-up is invite only during judging. Judge
   path (about 8 minutes): https://vibhortayal.github.io/arya/docs/quest/judge-playbook/ with sample
   receipt and shelf photos for the camera steps. App walkthrough video:
-  [WALKTHROUGH VIDEO LINK, add once uploaded]
+  https://youtu.be/cbJflgCXV5U
 - Repo: https://github.com/vibhortayal/arya
 
 ## Track and team
