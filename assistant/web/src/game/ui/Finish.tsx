@@ -16,7 +16,8 @@ import { Bar, SnapButton } from "./bits";
 type Props = {
   trip: Trip; rewards: Rewards; profile: Profile;
   onDone: () => void; onRealQuest: () => void; onAgain: () => void;
-  onRoute: (notes: string[]) => void;
+  /* Sends "How was the route?" notes; the card shows only when they can go somewhere. */
+  onRoute?: (notes: string[]) => Promise<boolean>;
   /* Map my store, offered once at the end of a trip at a store not fully mapped. */
   onMap?: () => void;
   onReceipt?: () => void;
@@ -30,7 +31,7 @@ const NOTES = ["Great route", "Too much walking", "Order felt off", "A section h
 export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, onRoute, onReceipt, onMap, onSnap }: Props) {
   const lines = tally(trip);
   // At most four: the card asks, it never becomes a chore list.
-  const finds = onSnap && !trip.practice ? unmappedFinds(trip).slice(0, 4) : [];
+  const finds = onSnap && !trip.practice && !trip.layout.id.startsWith("town-") ? unmappedFinds(trip).slice(0, 4) : [];
   // section -> "busy" | "done" | why it failed
   const [snaps, setSnaps] = useState<Record<string, string>>(() => Object.fromEntries(trip.snapped.map(s => [s, "done"])));
   const snap = async (f: { section: string; item: string }, photo: File) => {
@@ -43,7 +44,7 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
   const [count, setCount] = useState(0);
   const [flipped, setFlipped] = useState(false);
   const [notes, setNotes] = useState<string[]>([]);
-  const [sent, setSent] = useState(false);
+  const [sent, setSent] = useState<null | "sending" | "ok" | "fail">(null);
   const root = useRef<HTMLDivElement>(null);
   const juice = useRef<Juice | null>(null);
   const practice = rewards.practice;
@@ -137,16 +138,17 @@ export function Finish({ trip, rewards, profile, onDone, onRealQuest, onAgain, o
             <div><span className="qg-big">{stage.after.pct}%</span><small>{trip.layout.name} mapped · {stage.after.name}{stage.after.name !== stage.before.name ? " (new!)" : ""}</small></div>
           </motion.div>
 
-          <motion.div className="qg-card" {...stagger(4)}>
+          {onRoute && <motion.div className="qg-card" {...stagger(4)}>
             <h3>How was the route?</h3>
             <div className="qg-chips">
               {NOTES.map(n => (
-                <button key={n} className={notes.includes(n) ? "on" : ""} disabled={sent} aria-pressed={notes.includes(n)} onClick={() => setNotes(x => (x.includes(n) ? x.filter(y => y !== n) : [...x, n]))}>{n}</button>
+                <button key={n} className={notes.includes(n) ? "on" : ""} disabled={sent === "sending" || sent === "ok"} aria-pressed={notes.includes(n)} onClick={() => setNotes(x => (x.includes(n) ? x.filter(y => y !== n) : [...x, n]))}>{n}</button>
               ))}
             </div>
-            {notes.length > 0 && !sent && <button className="qg-btn" onClick={() => { onRoute(notes); setSent(true); }}>Send to Arya</button>}
-            {sent && <p className="qg-small">Thanks! Two shoppers saying the same thing updates the map.</p>}
-          </motion.div>
+            {notes.length > 0 && (sent === null || sent === "fail") && <button className="qg-btn" onClick={() => { setSent("sending"); void onRoute(notes).then(ok => setSent(ok ? "ok" : "fail")); }}>{sent === "fail" ? "Try again" : "Send to Arya"}</button>}
+            {sent === "ok" && <p className="qg-small">Thanks. Arya's team reads every note.</p>}
+            {sent === "fail" && <p className="qg-small">That didn't send. Route notes need a signed-in account and a signal.</p>}
+          </motion.div>}
           {finds.length > 0 ? (
             <motion.div className="qg-card qg-mapask qg-snapcard" {...stagger(5)}>
               <h3>{trip.layout.kind === "partial" ? "Clear the fog you spotted" : "Map the shelves you found"}</h3>

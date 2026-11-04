@@ -115,9 +115,18 @@ def _fresh(rows, now):
     return [r for r in rows if (_age_s(r.get("at"), now) or TTL_S) < TTL_S]
 
 
+# Only a report that the item is gone tells other shoppers (Quest
+# review, 2026-11-04): "It's somewhere else here" or "Can't tell" is
+# not an out-of-stock alert.
+SHARED_KINDS = ("empty_shelf", "replaced")
+
+
 def add(store, item, group, kind):
     """Share one report. Returns the shared row, the account's existing
-    open row for the same store and item, or None over the daily cap."""
+    open row for the same store and item, or None over the daily cap
+    or for a kind that does not say the item is gone."""
+    if kind not in SHARED_KINDS:
+        return None
     me, now = who(), _now()
     sk, ik = _store_key(store), _item_key(group, item)
     if not sk or not ik:
@@ -194,6 +203,8 @@ def groups(store=None):
     for k in keys:
         by_item = {}
         for r in _fresh(doc.get(k, []), now):
+            if r.get("kind") not in SHARED_KINDS:
+                continue  # an older wrong-aisle row never alerts
             g = by_item.setdefault(r.get("item_key"), {"who": set(), "latest": "", "kind": None,
                                                        "oldest": r.get("at") or ""})
             g["who"].add(r.get("by"))

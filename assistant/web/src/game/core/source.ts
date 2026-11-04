@@ -23,6 +23,11 @@ export interface QuestSource {
   /* Optional trip hooks for a host that keeps its own records (the
    * Arya app: the hunt session). Practice never calls them. */
   progress?(e: { kind: "grab" | "ungrab"; item: string; instead?: string }): void;
+  /* An item the player added during the trip: the host saves it to the
+   * trip and its list, so a grab of it ticks a real row. */
+  addItem?(name: string): void;
+  /* "How was the route?" notes; false when they could not be sent. */
+  sendRoute?(store: string, notes: string[]): Promise<boolean>;
   /** Take back this trip's own shelf report for an item (Revisit again). */
   unreport?(item: string): void;
   finish?(e: { got: string[]; points: number }): Promise<void>;
@@ -39,7 +44,7 @@ export interface QuestSource {
   findIt?(e: { item: string; photo: Blob }): Promise<FindResult>;
   /* Pick a saved trip back up (Your trips › Resume): its layout, items
    * and the keys already grabbed; null when the game cannot play it. */
-  resume?(id: string): Promise<{ layout: StoreLayout; items: QuestItem[]; got: string[] } | null>;
+  resume?(id: string): Promise<{ layout: StoreLayout; items: QuestItem[]; got: string[]; empty?: string[]; subs?: Record<string, string> } | null>;
   /* Build (optional). build: Arya's pass over the store the answers
    * made (names, a cuisine's items); it answers the store it was given
    * when it cannot do better. change: one edit said in a sentence.

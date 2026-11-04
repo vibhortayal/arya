@@ -7,7 +7,7 @@ import { AnimatePresence, MotionConfig, motion } from "motion/react";
 import { motionOff } from "../lib/motion";
 import { applyTrip, played, type Profile, type Rewards } from "./core/meta";
 import { ALL_STICKERS, PRACTICE_LIST, PRACTICE_STORE, SilentSource, artFor, type QuestSource } from "./core/source";
-import { newTrip, type Trip } from "./core/trip";
+import { SCORE, newTrip, type Trip } from "./core/trip";
 import type { ShoppingList, StoreSummary } from "./core/types";
 import type { ProfileStore } from "./store";
 import { Album, Home, Pick } from "./ui/Hub";
@@ -28,7 +28,7 @@ export type Screen =
 const norm = (s: string) => s.toLowerCase().replace(/[^a-z0-9]+/g, "");
 
 /* A real trip at a store Arya has not fully mapped: worth offering Map my store. */
-export const needsMap = (t: Trip) => !t.practice && t.layout.kind !== "mapped";
+export const needsMap = (t: Trip) => !t.practice && t.layout.kind !== "mapped" && !t.layout.id.startsWith("town-"); // a Demo Town store is made up
 
 export type QuestGameProps = {
   source: QuestSource; store: ProfileStore; onExit?: () => void; now?: () => Date;
@@ -61,9 +61,13 @@ export type QuestGameProps = {
   practice?: boolean;
   /* A saved trip to pick back up (Your trips › Resume). */
   resume?: string;
+  /* A one-line problem for the player (the host's toast). */
+  onError?: (msg: string) => void;
+  /* The demo: route notes have nowhere to go, so the card is hidden. */
+  demo?: boolean;
 };
 
-export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, homePanels, homeOrder, homeHidden, onEditHome, avatar, onMapStore, findStore, onAddItems, practice, resume }: QuestGameProps) {
+export default function QuestGame({ source, store, onExit, now = () => new Date(), listId, onReceipt, onScreen, homeExtra, homePanels, homeOrder, homeHidden, onEditHome, avatar, onMapStore, findStore, onAddItems, practice, resume, onError, demo }: QuestGameProps) {
   const [screen, setScreen] = useState<Screen>({ s: "home" });
   const [profile, setProfile] = useState<Profile>(() => store.load());
   const [list, setList] = useState<ShoppingList | null>(null);
@@ -72,14 +76,20 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
   const newbie = !played(profile) && !store.flag("practiced");
   useEffect(() => { onScreen?.(screen.s); }, [screen.s, onScreen]);
 
+  // The lists, read again each time the game comes back home (Quest
+  // review: after a trip, or an add from Lists or Muse, the next trip
+  // starts from what is on the list now, not from what was).
+  const picked = useRef<string | null>(null);
   useEffect(() => {
+    if (screen.s !== "home") return;
     void source.lists().then(l => {
       setLists(l);
-      // The list asked for, else the one played last, else the first with items.
-      const last = lastList();
-      setList(l.find(x => x.id === listId) || l.find(x => x.id === last && x.items.length) || l.find(x => x.items.length) || l[0] || null);
-    });
-  }, [source, listId]);
+      // The list in play, else the one asked for, else the one played last, else the first with items.
+      const last = lastList(), keep = picked.current;
+      setList(l.find(x => x.id === keep) || l.find(x => x.id === listId) || l.find(x => x.id === last && x.items.length) || l.find(x => x.items.length) || l[0] || null);
+    }).catch(() => {});
+  }, [source, listId, screen.s]);
+  useEffect(() => { picked.current = list?.id ?? null; }, [list]);
 
   const startPractice = async () => {
     setScreen({ s: "loading" });
@@ -94,7 +104,11 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
     setScreen({ s: "loading" });
     void source.resume(resume).then(r => {
       if (!r) { setScreen({ s: "home" }); return; }
-      setScreen({ s: "play", trip: { ...newTrip(r.layout, r.items, { seed: Math.floor(Math.random() * 1e6) }), got: r.got } });
+      // The same trip as it was left: grabs (and their points), substitutes, empty shelves.
+      const t = newTrip(r.layout, r.items, { seed: Math.floor(Math.random() * 1e6) });
+      const golden = r.got.includes(t.golden || "") ? null : t.golden;
+      setScreen({ s: "play", trip: { ...t, golden, got: r.got, subs: r.subs || {},
+        reports: (r.empty || []).map(key => ({ key, kind: "empty" as const })), points: r.got.length * SCORE.item } });
     }).catch(() => setScreen({ s: "home" }));
   }, [resume]); // eslint-disable-line react-hooks/exhaustive-deps
   /* Walk a built store: practice on its own layout with the player's list (nothing is saved). */
@@ -137,8 +151,14 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
   const beginQuest = async (st: StoreSummary) => {
     if (!list?.items.length) { setScreen({ s: "home" }); return; }
     setScreen({ s: "loading" });
-    const { layout, items } = await source.open(st.id, list);
-    setScreen({ s: "play", trip: newTrip(layout, items, { seed: Math.floor(Math.random() * 1e6) }) });
+    try {
+      const { layout, items } = await source.open(st.id, list);
+      setScreen({ s: "play", trip: newTrip(layout, items, { seed: Math.floor(Math.random() * 1e6) }) });
+    } catch {
+      // No signal, or a store Arya can't open: back home, never stuck on "Opening the store…".
+      setScreen({ s: "home" });
+      onError?.(`Couldn't open ${st.name}. Check your signal and try again.`);
+    }
   };
   const finish = (trip: Trip) => {
     const r = applyTrip(profile, trip, now(), ALL_STICKERS, Math.floor(Math.random() * 1e6));
@@ -181,7 +201,7 @@ export default function QuestGame({ source, store, onExit, now = () => new Date(
               onDone={() => setScreen({ s: "home" })} onReceipt={!screen.trip.practice ? onReceipt : undefined} onRealQuest={() => setScreen({ s: "pick" })} onAgain={startPractice}
               onMap={onMapStore && needsMap(screen.trip) ? () => onMapStore({ id: screen.trip.layout.id, name: screen.trip.layout.name }) : undefined}
               onSnap={source.snap ? e => source.snap!(e) : undefined}
-              onRoute={notes => void (screen.trip.practice ? silent : source).report({ kind: "route", store: screen.trip.layout.id, notes, text: "" })} />
+              onRoute={!screen.trip.practice && !demo && source.sendRoute ? notes => source.sendRoute!(screen.trip.layout.name, notes) : undefined} />
           )}
         </motion.div>
       </AnimatePresence>

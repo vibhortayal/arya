@@ -120,7 +120,8 @@ export function applyTrip(p: Profile, trip: Trip, now: Date, allStickers: string
   const lvBefore = levelOf(p.xp).level, lvAfter = levelOf(p.xp + xp).level;
   const week = weekKey(now);
   const g0 = p.stores[trip.layout.id] || { mapped: [], trips: 0, total: trip.layout.sections.length };
-  const mappedNow = [...new Set([...g0.mapped, ...trip.layout.mapped, ...trip.scouted])];
+  // Only a kept shelf photo maps a section (earned coverage); "Found it here" spots it, nothing more.
+  const mappedNow = [...new Set([...g0.mapped, ...trip.layout.mapped, ...trip.snapped])];
   const g1: StoreGrowth = { mapped: mappedNow, trips: g0.trips + 1, total: Math.max(g0.total, trip.layout.sections.length) };
   const found = [...new Set([...p.found, ...got.map(i => i.name.toLowerCase())])];
   const bundlesDone = BUNDLES.filter(b => !p.bundles.includes(b.id) && bundleProgress(found, b).done).map(b => b.id);

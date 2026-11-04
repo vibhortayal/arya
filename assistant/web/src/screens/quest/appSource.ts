@@ -30,12 +30,12 @@ import { knownZone } from "../../game/map/classify";
 import type { Answers } from "../../game/map/answers";
 import type { MapKind, QuestItem, ShoppingList, StoreSummary } from "../../game/core/types";
 
-type PlanRow = { name: string; qty?: number; list?: string | null; also?: string[]; on_list?: boolean };
+type PlanRow = { name: string; qty?: number; note?: string; list?: string | null; also?: string[]; on_list?: boolean };
 type NamedList = { id: string; name: string; stores?: string[] };
 type StoreRow = { id: string; name: string; street?: string; city?: string; state?: string; lat?: number | null; lng?: number | null };
 type Coverage = { kind: MapKind; seen: string[]; typical?: string };
 type MapSeg = { label: string; status: "unmapped" | "mapped" | "aging" | "stale"; located?: boolean; has_photo?: boolean };
-type SessItem = { name: string; shelf_label?: string | null; checked?: boolean };
+type SessItem = { name: string; shelf_label?: string | null; checked?: boolean; instead?: string | null };
 export type Session = { id: string; store: string; store_id?: string | null; store_address?: string | null; state: string; items: SessItem[]; mode: string; shopoff_id?: string };
 
 const BASE = ["produce", "bakery", "deli", "meat", "dairy", "frozen"];
@@ -108,6 +108,9 @@ export function seenLine(c: Coverage): string {
   return n ? "Not enough of it located yet" : "Nobody has mapped it yet";
 }
 
+type AddOp = { op: "add"; name: string; listed?: boolean };
+type Op = AddOp | { op: "check"; item: string; checked: boolean; instead?: string };
+
 const area = (s: StoreRow) => [s.street, s.city].filter(Boolean).join(" · ") || "";
 
 export class AppSource implements QuestSource {
@@ -122,6 +125,12 @@ export class AppSource implements QuestSource {
   private creating: Promise<Session | null> | null = null;
   private queue: Promise<void> = Promise.resolve();
   private saved: SavedMap[] | null = null;
+  /* The list this trip came from, so an item added in the game joins it. */
+  private listId: string | null = null;
+  /* Ticks and put-backs not yet saved (a store's weak signal, Quest
+   * review 2026-11-04): each is tried 3 times, kept in order, and sent
+   * with the next one or at checkout. */
+  private outbox: Op[] = [];
 
   /* The live hunt, for the receipt step. */
   session() { return this.sess; }
@@ -132,7 +141,9 @@ export class AppSource implements QuestSource {
       get<{ list: PlanRow[] }>("/api/quest/plan"),
       get<{ lists: NamedList[] }>("/api/lists").catch(() => ({ lists: [] as NamedList[] })),
     ]);
-    const item = (r: PlanRow) => ({ name: r.name, art: charFor(r.name) || artFor(r.name) });
+    // Quantity and note ride along to the trip ("Eggs ×2" stays 2; Quest review P1).
+    const item = (r: PlanRow) => ({ name: r.name, art: charFor(r.name) || artFor(r.name),
+      ...(r.qty && r.qty > 1 ? { qty: r.qty } : {}), ...(r.note ? { note: r.note } : {}) });
     // Only what is on a list (suggestions are not shopping), and an item on two lists counts on both, as on Lists.
     const rows = (plan.list || []).filter(r => r.name && r.on_list !== false);
     const out: ShoppingList[] = [];
@@ -187,11 +198,12 @@ export class AppSource implements QuestSource {
     if (!list.items.length) throw new Error("empty list");
     const st = this.stores.get(storeId);
     const name = st?.name || storeId;
-    const body = { store_id: st ? storeId : undefined, store: name, mode: "quest", items: list.items.map(i => ({ name: i.name })) };
+    const body = { store_id: st ? storeId : undefined, store: name, mode: "quest", game: true, items: list.items.map(i => ({ name: i.name, ...(i.qty ? { qty: i.qty } : {}), ...(i.note ? { note: i.note } : {}) })) };
     // A draft gives the shelf hints; nothing is saved until the first grab.
     const out = await this.lay(storeId, name, st ? area(st) : "", st ? storeId : undefined, list,
       post<Session>("/api/quest/sessions", { ...body, draft: true }));
     this.sess = null; this.creating = null; this.pending = body;
+    this.listId = list.id; this.outbox = [];
     return out;
   }
 
@@ -199,15 +211,25 @@ export class AppSource implements QuestSource {
    * same store and items, with what was grabbed already in the cart.
    * null for anything the game does not play (Express, a Shop-Off, a
    * closed or empty trip). */
-  async resume(id: string): Promise<{ layout: ReturnType<typeof buildLayout>; items: QuestItem[]; got: string[] } | null> {
+  async resume(id: string): Promise<{ layout: ReturnType<typeof buildLayout>; items: QuestItem[]; got: string[]; empty: string[]; subs: Record<string, string> } | null> {
     const s = await get<Session>(`/api/quest/sessions/${encodeURIComponent(id)}`).catch(() => null);
     if (!s || s.mode !== "quest" || s.shopoff_id || !s.items.length || !["not_started", "playing", "paused"].includes(s.state)) return null;
     await loadCharacters();
     const list: ShoppingList = { id: "resume", name: s.store, items: s.items.map(i => ({ name: i.name, art: charFor(i.name) || artFor(i.name) })) };
     const out = await this.lay(s.store_id || s.store, s.store, s.store_address || "", s.store_id || undefined, list, Promise.resolve(s));
     this.sess = s; this.creating = null; this.pending = null;
+    this.listId = null; this.outbox = [];
     void post(`/api/quest/sessions/${s.id}/state`, { state: "playing" }).catch(() => {});
-    return { ...out, got: out.items.filter((_, i) => s.items[i]?.checked).map(it => it.key) };
+    // What the trip already said, so a resumed trip is the same trip
+    // (Quest review P2): the grabs, their substitutes, and the shelves
+    // this trip reported empty (its own open reports).
+    const reps = await get<{ reports: { session_id?: string; item: string; kind: string; state: string }[] }>(
+      `/api/quest/stores/${encodeURIComponent(s.store)}/reports`).catch(() => ({ reports: [] }));
+    const emptyNames = new Set((reps.reports || []).filter(r => r.session_id === s.id && r.state === "reported" && r.kind === "empty_shelf").map(r => r.item.toLowerCase()));
+    const subs: Record<string, string> = {};
+    out.items.forEach((it, i) => { const x = s.items[i]; if (x?.checked && x.instead) subs[it.key] = x.instead; });
+    return { ...out, got: out.items.filter((_, i) => s.items[i]?.checked).map(it => it.key),
+      empty: out.items.filter((it, i) => !s.items[i]?.checked && emptyNames.has(it.name.toLowerCase())).map(it => it.key), subs };
   }
 
   /* The store's layout and the list's items with their hints. shelf: the
@@ -340,12 +362,57 @@ export class AppSource implements QuestSource {
 
   progress(e: { kind: "grab" | "ungrab"; item: string; instead?: string }) {
     if (!this.sess && !this.pending) return;
-    this.queue = this.queue.then(async () => {
-      // The first grab saves the trip; a put-back before any grab has nothing to undo.
-      const s = e.kind === "grab" ? await this.ensure() : this.sess || await this.creating;
-      if (!s) return;
-      await post(`/api/quest/sessions/${s.id}/check`, { item: e.item, checked: e.kind === "grab", ...(e.instead ? { instead: e.instead } : {}) }).catch(() => {});
-    });
+    this.outbox.push({ op: "check", item: e.item, checked: e.kind === "grab", ...(e.instead ? { instead: e.instead } : {}) });
+    this.queue = this.queue.then(() => this.flush());
+  }
+
+  /* Send what is waiting, oldest first. The first grab saves the trip;
+   * with no trip yet (no signal), everything waits for the next try. */
+  private async flush(): Promise<void> {
+    // An add made before the trip is saved rides on the trip it creates.
+    while (this.outbox[0]?.op === "add" && !this.sess && !this.creating && this.pending) {
+      const a = this.outbox[0] as AddOp;
+      if (!(await this.toList(a))) return;
+      this.pending = { ...this.pending, items: [...((this.pending.items as { name: string }[]) || []), { name: a.name }] };
+      this.outbox.shift();
+    }
+    if (!this.outbox.length) return;
+    const grabs = this.outbox.some(x => x.op === "check" && x.checked);
+    const s = grabs ? await this.ensure() : this.sess || await this.creating;
+    if (!s) { if (!grabs) this.outbox = this.outbox.filter(x => x.op === "add"); return; }
+    while (this.outbox.length) {
+      const e = this.outbox[0];
+      const ok = e.op === "add"
+        ? (await this.toList(e)) && await sendWithRetry(() => post(`/api/quest/sessions/${s.id}/items`, { name: e.name }))
+        : await sendWithRetry(() => post(`/api/quest/sessions/${s.id}/check`, { item: e.item, checked: e.checked, ...(e.instead ? { instead: e.instead } : {}) }));
+      if (!ok) return;
+      this.outbox.shift();
+    }
+  }
+
+  /* The add's list row, once: the same item is never added twice. */
+  private async toList(a: AddOp): Promise<boolean> {
+    if (a.listed) return true;
+    const lid = this.listId;
+    a.listed = await sendWithRetry(() => post("/api/list/add", { name: a.name, ...(lid ? { list_id: lid } : {}) }));
+    return a.listed;
+  }
+
+  /* An item added during the trip: onto the trip's list (so it is
+   * ticked like the rest and stays if it isn't bought) and onto the
+   * trip itself, before any grab of it is sent. */
+  addItem(name: string) {
+    if (!this.sess && !this.pending) return;
+    this.outbox.push({ op: "add", name });
+    this.queue = this.queue.then(() => this.flush());
+  }
+
+  /* "How was the route?": a note to Arya's team (the Send feedback
+   * inbox). false when it could not be sent (the demo, no signal). */
+  async sendRoute(store: string, notes: string[]): Promise<boolean> {
+    const at = store || this.sess?.store || (this.pending as { store?: string } | null)?.store || "";
+    try { await post("/api/feedback", { kind: "idea", text: `Quest route at ${at}: ${notes.join(", ")}` }); return true; }
+    catch (err) { return err instanceof ApiError && err.status === 400; } // 400: the same note went already
   }
 
   unreport(item: string) {
@@ -367,8 +434,22 @@ export class AppSource implements QuestSource {
 
   async finish(): Promise<void> {
     await this.queue;
+    await this.flush();
     const s = await this.ensure(); if (!s) return;
     try { this.sess = await post<Session>(`/api/quest/sessions/${s.id}/state`, { state: "finished" }); } catch { /* the receipt step can still close it */ }
+  }
+}
+
+/* One call, tried up to 3 times (0.6 s, then 1.8 s apart) when the
+ * network or the server failed; a refusal (4xx) is not retried. */
+export async function sendWithRetry(call: () => Promise<unknown>, waits = [600, 1800]): Promise<boolean> {
+  for (let i = 0; ; i++) {
+    try { await call(); return true; }
+    catch (err) {
+      if (err instanceof ApiError && err.status >= 400 && err.status < 500 && err.status !== 408 && err.status !== 429) return true; // refused: nothing to retry
+      if (i >= waits.length) return false;
+      await new Promise(res => setTimeout(res, waits[i]));
+    }
   }
 }
 

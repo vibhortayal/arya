@@ -161,7 +161,7 @@ export function QuestMode() {
           </div>
         )}
         <div hidden={editing} className="qm-game">
-        {!store ? <QuestSkeleton /> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homePanels={panels} homeOrder={order} homeHidden={hidden} onEditHome={() => setEditing(true)} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} />}
+        {!store ? <QuestSkeleton /> : <QuestGame source={source} store={store} listId={listId} onReceipt={onReceipt} onScreen={onScreen} homePanels={panels} homeOrder={order} homeHidden={hidden} onEditHome={() => setEditing(true)} avatar={avatar} onMapStore={onMapStore} findStore={findStore} onAddItems={onAddItems} practice={practice} resume={resume} onError={m => toast(m)} demo={s.demo} />}
         </div>
       </Suspense>
     </div>

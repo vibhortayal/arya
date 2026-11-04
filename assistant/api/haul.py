@@ -185,8 +185,25 @@ def match(sess, lines, fixes=None):
     gm = state.group_map()
     items = [it for it in sess.get("items") or [] if it.get("checked")]
     lgroups = [_line_group(ln, gm) for ln in lines]
-    pair, claimed = {}, set()
+    pair, claimed, took = {}, set(), set()
+    # Pass 0: a Quest substitute ("Took oat milk instead", kept as
+    # 'instead') is what the receipt shows, so its line pairs with the
+    # item as a confirmed swap.
     for i, it in enumerate(items):
+        sub = (it.get("instead") or "").strip()
+        if not sub:
+            continue
+        sgroup = quest._item_key(sub)
+        for j, ln in enumerate(lines):
+            if j not in claimed and ((lgroups[j] and lgroups[j] == sgroup)
+                                     or quest._name_match(ln["_name"], sub)):
+                pair[i] = j
+                claimed.add(j)
+                took.add(i)
+                break
+    for i, it in enumerate(items):
+        if i in pair:
+            continue
         for j, ln in enumerate(lines):
             if j not in claimed and lgroups[j] and lgroups[j] == it.get("group"):
                 pair[i] = j
@@ -204,7 +221,13 @@ def match(sess, lines, fixes=None):
     for i, it in enumerate(items):
         if i in pair:
             ent = _entry(key_of(it["name"]), it["name"], _qty(it.get("qty", 1)))
-            if it.get("swapped_from"):
+            if i in took:
+                # "Oat milk · Instead of Milk", as a hunt swap reads.
+                sub = it["instead"].strip()
+                ent = _entry(key_of(sub), sub, _qty(it.get("qty", 1)))
+                ent.update(suggested=False, **{"from": it["name"]})
+                swapped.append(ent)
+            elif it.get("swapped_from"):
                 ent.update(suggested=False, **{"from": it["swapped_from"]})
                 swapped.append(ent)
             else:
@@ -290,7 +313,9 @@ def points_breakdown(sess):
 def stats(sess, items=None):
     """{items, level}: the haul's item count and the shopper's level."""
     from api import social
-    pts = sum(social.hunt_points(s) for s in social._done_sessions())
+    from api import game_profile
+    # The same level as the profile: each point counted once (P3).
+    pts = sum(social.level_points(s) for s in social._done_sessions()) + game_profile.xp()
     n = len(items) if items is not None else sum(
         1 for i in sess.get("items") or [] if i.get("checked"))
     return {"items": n, "level": social.level_for(pts)["level"]}
