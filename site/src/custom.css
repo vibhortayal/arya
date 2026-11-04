@@ -114,3 +114,6 @@ html { color-scheme: light; }
   .am-chips, .am-split .am-chips { grid-template-columns: 1fr 1fr; }
 }
 @media (max-width: 360px) { .am-chips, .am-split .am-chips { grid-template-columns: 1fr; } }
+
+.am-legend i.am-app { border-color: #d9542a; } .am-legend i.am-edge { border-color: #8e8e96; } .am-legend i.am-code { border-color: #2f8f57; }
+.am-legend i.am-ai { border-color: #5b64c9; } .am-legend i.am-data { border-color: #b8911a; } .am-legend i.am-out { border-color: #a0a0a8; border-style: dashed; }

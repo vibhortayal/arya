@@ -84,8 +84,9 @@ text{font-family:-apple-system,Segoe UI,Helvetica,Arial,sans-serif}
 <text class="s" x="614" y="664">Spark checks each crop</text>
 <rect class="y" x="788" y="600" width="176" height="104" rx="10"/>
 <text class="t" x="802" y="624">Voice and images</text>
-<text class="s" x="802" y="646">Voice transcribe</text>
-<text class="s" x="802" y="664">Muse Image</text>
+<text class="s" x="802" y="646">Voice to text;</text>
+<text class="s" x="802" y="664">avatar and celebration</text>
+<text class="s" x="802" y="682">characters</text>
 <rect class="band" x="20" y="734" width="960" height="168" rx="14"/>
 <text class="bl" x="36" y="756">5  Storage and outside services</text>
 <rect class="b" x="36" y="768" width="256" height="124" rx="10"/>
