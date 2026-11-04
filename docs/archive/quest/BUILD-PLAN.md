@@ -1,3 +1,5 @@
+> **Archived on 2026-11-04 after the submission.** Kept as written; nothing here is maintained. The current documents are listed in [`docs/README.md`](../../README.md).
+
 # Build plan
 
 Deadline: Nov 4, 2026, 9:00 PM ET. `STATUS.md` at the repo root says what

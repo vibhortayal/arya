@@ -105,21 +105,22 @@ When two pages seem to say the same thing, the page in this table is the one to 
 | Read | What it holds |
 |---|---|
 | [`assistant/docs/SUBMISSION-DRAFT.md`](../assistant/docs/SUBMISSION-DRAFT.md) | Paste-ready blocks for the portal form |
-| [`docs/quest/SUBMISSION.md`](quest/SUBMISSION.md) | The package checklist and the IP note |
+| [`docs/archive/quest/SUBMISSION.md`](archive/quest/SUBMISSION.md) | The package checklist and the IP note (archived after the submission) |
 | [`docs/quest/PITCH-SCRIPT.md`](quest/PITCH-SCRIPT.md) | The spoken two-minute pitch |
 | [`docs/demo-video/SCRIPT.md`](demo-video/SCRIPT.md) | The demo video narration (working copy) |
 | [`docs/MARKET.md`](MARKET.md) | Desk research on the market. Its unverified claims are marked |
 | [`docs/quest/BUSINESS.md`](quest/BUSINESS.md) | Who it is for, the four pillars, the Oct 27 competitor table |
 
-## Historical (kept as written, superseded in places)
+## Historical (archived, kept as written)
 
-These record how Arya got its shape. Most carry a note saying what replaced it. Read the pages above for what is true now.
+These record how Arya got its shape. They were moved to `docs/archive/` on 2026-11-04, after the submission, and carry a note saying so. Read the pages above for what is true now.
 
 | Read | What it holds |
 |---|---|
-| [`PRODUCT.md`](../PRODUCT.md) | The early product description of 2026-10-27 |
-| [`docs/quest/PITCH.md`](quest/PITCH.md) | The early game-first pitch |
-| [`docs/quest/BUILD-PLAN.md`](quest/BUILD-PLAN.md) | The build plan as of Oct 29 |
-| [`docs/quest/UX.md`](quest/UX.md) | Quest UX rules of Oct 27. The wireframes are the design of record |
+| [`docs/archive/PRODUCT.md`](archive/PRODUCT.md) | The early product description of 2026-10-27 |
+| [`docs/archive/quest/PITCH.md`](archive/quest/PITCH.md) | The early game-first pitch |
+| [`docs/archive/quest/BUILD-PLAN.md`](archive/quest/BUILD-PLAN.md) | The build plan as of Oct 29 |
+| [`docs/archive/quest/UX.md`](archive/quest/UX.md) | Quest UX rules of Oct 27. The wireframes are the design of record |
 | [`docs/quest/DISCUSSION.md`](quest/DISCUSSION.md) | The early design conversation, in order |
-| [`docs/quest/wireframes.html`](quest/wireframes.html) and the other `docs/quest/*.html` files | Clickable wireframes and prototypes |
+| [`docs/quest/wireframes.html`](quest/wireframes.html), `game-flow-prototype.html`, `map-my-store-wireframe.html` | Clickable wireframes and prototypes (still the design of record, so not archived) |
+| `docs/archive/quest/wireframes-fun-pass.html`, `wireframe-add-on-list.html`, `fun-samples/` | Design passes that have shipped, and their sample art |

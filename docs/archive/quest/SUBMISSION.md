@@ -1,3 +1,5 @@
+> **Archived on 2026-11-04 after the submission.** Kept as written; nothing here is maintained. The current documents are listed in [`docs/README.md`](../../README.md).
+
 # Submission map
 
 **Event:** Meta Global AI Developer Hackathon · Team Nightshift · Indie track (≤4, representative: Vibhor Tayal)
@@ -6,11 +8,11 @@
 
 ## Judging weights → where we win them
 
-Moved to [`/JUDGES.md`](../../JUDGES.md), the single judge-facing page (rubric blocks, Meta model map, proof links). Edit it there.
+Moved to [`/JUDGES.md`](../../../JUDGES.md), the single judge-facing page (rubric blocks, Meta model map, proof links). Edit it there.
 
 ## Demo video beats (3 minutes, list first)
 
-> Planning table from before the script was written. The narration being recorded is [`docs/demo-video/SCRIPT.md`](../demo-video/SCRIPT.md); the runbook with the presentation beats and fallbacks is [`assistant/docs/DEMO.md`](../../assistant/docs/DEMO.md). Edit those, not this table.
+> Planning table from before the script was written. The narration being recorded is [`docs/demo-video/SCRIPT.md`](../../demo-video/SCRIPT.md); the runbook with the presentation beats and fallbacks is [`assistant/docs/DEMO.md`](../../../assistant/docs/DEMO.md). Edit those, not this table.
 
 The demo household (fictional, no personal data) carries the video; one
 real receipt is read on camera. Keep one receipt already read as the

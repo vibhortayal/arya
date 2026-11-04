@@ -67,7 +67,7 @@ const SECTIONS = {
 // decision log and the other design notes) stays in the repository only; pages on
 // the site link to those files on GitHub.
 const SCRUBBED = new Set(['AGENTS.md', 'STATUS.md', 'assistant/docs/OPS.md', 'assistant/docs/SCALE-SIM.md',
-  'assistant/docs/SUBMISSION-DRAFT.md', 'docs/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md', 'docs/quest/SUBMISSION.md', 'docs/DECISIONS.md', 'docs/quest/PITCH.md']);
+  'assistant/docs/SUBMISSION-DRAFT.md', 'docs/archive/quest/BUILD-PLAN.md', 'docs/quest/DISCUSSION.md', 'docs/archive/quest/SUBMISSION.md', 'docs/DECISIONS.md', 'docs/archive/quest/PITCH.md']);
 
 // Whole sections that are operator-only and stay off the public site.
 const DROP_SECTIONS = {
