@@ -119,7 +119,8 @@ https://arya.teamnightshift.org, no account needed. Tap "Try it now" for a ficti
 | Using your own AI assistant | [`assistant/docs/AGENT-CONNECTOR.md`](assistant/docs/AGENT-CONNECTOR.md) |
 | Measured results | [`docs/evals/`](docs/evals/) |
 | Open API | https://arya.teamnightshift.org/developers, [`docs/API.md`](docs/API.md) |
-| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md), and a feature-by-feature tour: [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md) |
+| Running it on your own computer | [`docs/RUN-IT-YOURSELF.md`](docs/RUN-IT-YOURSELF.md) |
+| A feature-by-feature tour | [`docs/TRY-THE-FEATURES.md`](docs/TRY-THE-FEATURES.md) |
 | Why it exists and what it stands for | [`docs/PRINCIPLES.md`](docs/PRINCIPLES.md) |
 | What is not built yet | [`docs/ROADMAP.md`](docs/ROADMAP.md) |
 
@@ -141,7 +142,7 @@ Agents: read [`AGENTS.md`](AGENTS.md) first. The spec
 
 ## Try it in one minute
 
-1. Open the demo. **Today** shows what is running low and why.
+1. Open the demo. **Today** shows what is running low, with how often you buy it and when you last did.
 2. Tap **More**, then **Lists**, and open a list. Add an item by typing, with the mic, or with a photo of a handwritten note.
 3. Open **Ask** and type "We finished the Greek yogurt", then "What am I running low on?".
 4. Open a list and tap **Start shopping** to start a quest at that list's store.
