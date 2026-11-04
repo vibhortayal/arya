@@ -1,18 +1,18 @@
 > **Superseded 2026-11-02.** This report recommends switching receipt reading to Wonder through Nov 4. The rule now in force is in [`assistant/docs/MODEL-POLICY.md`](../../assistant/docs/MODEL-POLICY.md): Spark reads first, Wonder re-reads flagged receipts, through Nov 9. The measurements below still stand.
 
-# Spark vs Wonder on receipt decode — accuracy and latency
+# Spark vs Wonder on receipt decode: accuracy and latency
 
 **Headline: on the Gate 0 public set, Wonder reads receipts more
-accurately than Spark — and its errors are the kind the system catches,
-while Spark's worst error is the kind it cannot. Wonder costs ~9× more
-per receipt and takes ~4× longer.**
+accurately than Spark. Its errors are the kind the system catches,
+while Spark's worst error is the kind it cannot. Wonder costs about 9 times more
+per receipt and takes about 4 times longer.**
 
 One-sentence result the submission may quote: *"On the 9 public Gate 0
 receipt photos (98 hand-labeled lines), Muse Wonder 1.0 scored 97/98
 lines correct on identity+price against Spark 1.3 Standard's 92/98,
 with zero price errors and zero silent errors; Spark repeated the
-set's one known silent failure — a price rotation on Westside Market's
-receipt, read at 0.85 confidence with no check flag — while Wonder
+set's one known silent failure (a price rotation on Westside Market's
+receipt, read at 0.85 confidence with no check flag), while Wonder
 read that line correctly at 0.95."*
 
 Quotable form: **"Wonder 98.98% vs Spark 93.88% identity+price
@@ -31,7 +31,7 @@ vs Spark 8.6 s per receipt photo. Cost: $0.118 vs $0.013 per receipt."**
   loaded the way `api/decode/service.py: load_photo_prompt()` loads it,
   the same message shape as `decode_photo()`, temperature 0.1, one
   stateless call per receipt. Spark ran at the app's production
-  configuration (`muse-spark-1.3`, `reasoning_effort=low` — the
+  configuration (`muse-spark-1.3`, `reasoning_effort=low`, the
   `meta_client.chat` default). Wonder ran at its default
   (`muse-wonder-1.0`, no `reasoning_effort` sent). This compares the
   configurations the app would actually ship, and the asymmetry is
@@ -47,7 +47,7 @@ vs Spark 8.6 s per receipt photo. Cost: $0.118 vs $0.013 per receipt."**
   unmodified, on both fresh runs. Because the scorer's expansion table
   covers the abbreviations the *recorded Spark run* used, every
   automatic non-correct line in both fresh runs was then
-  **hand-adjudicated under the same written Gate 0 definition** — the
+  **hand-adjudicated under the same written Gate 0 definition**. That is the
   adjudicated column. Each ruling is listed by name below. Reporting
   only the automatic column would penalize Wonder for doing what the
   prompt instructs (expanding abbreviations); reporting only the
@@ -94,108 +94,108 @@ Per receipt (identity, adjudicated; latency s; cost $):
 
 Judge spot check (20 synthetic items, one batch call per model):
 **both models 20/20 on class and 20/20 on list admission**, including
-the foil archetype (both OCCASIONAL — the production judge's one clear
+the foil archetype (both OCCASIONAL, so the production judge's one clear
 error from the 2026-10-27 eval was not reproduced by either model on
 the clean synthetic version). Spark: 5.9 s, $0.0067 per batch. Wonder:
 12.2 s, $0.0595 per batch. The synthetic items are deliberately
 clear-cut, so this instrument has a ceiling: it shows Wonder does not
-judge *worse*; it cannot show it judges better.
+judge worse. It cannot show that Wonder judges better.
 
 ## Where the reads differ, by name
 
 ### Lines Spark got wrong that Wonder got right
 
-- **pub-05, the price rotation — all four of Spark's price errors are
+- **pub-05, the price rotation. All four of Spark's price errors are
   on this one receipt, and Wonder made none, here or anywhere.**
-  ORANGE JUICE $8.99 → Spark $3.99 (confidence 0.85, **no check
-  flag**); ROYAL GALA $5.99 → $2.99 (0.80, no flag); NAPOLITANER
-  $2.99 → $4.05 (0.50, flagged); PIZZA POCKETS $4.05 → $10.99 (0.40,
-  flagged). Wonder read all four at their true prices, 0.88–0.95
+  ORANGE JUICE $8.99 read as $3.99 (confidence 0.85, **no check
+  flag**); ROYAL GALA $5.99 as $2.99 (0.80, no flag); NAPOLITANER
+  $2.99 as $4.05 (0.50, flagged); PIZZA POCKETS $4.05 as $10.99 (0.40,
+  flagged). Wonder read all four at their true prices, 0.88 to 0.95
   confidence. The ORANGE JUICE line is the same line that was Gate
   0's one silent error in the recorded run: a rotation preserves the
   line sum, so the arithmetic check (7/7 for both models) **cannot**
   catch it. This is the most dangerous error class in the product,
-  and in this run Spark produced it twice silently (0.85 and 0.80 —
-  at the app's ≥0.8 auto threshold, both would auto-post) and Wonder
+  and in this run Spark produced it twice silently (0.85 and 0.80, at or
+  above the app's 0.8 auto threshold, so both would auto-post) and Wonder
   produced it zero times.
 - **pub-04 idx16, SNK FRT/S CHRY48** (faded dot-matrix): Spark read
-  "CHRY 8", dropping the 4 — at 0.82 confidence, unflagged, so it
+  "CHRY 8", dropping the 4, at 0.82 confidence and unflagged, so it
   would auto-post as the wrong product. Wonder read CHRY48 correctly
-  — and still flagged the line for a user check (0.58), the correct
+  and still flagged the line for a user check (0.58), the correct
   behavior on a hard line.
 
 ### Lines Wonder got wrong that Spark got right
 
 - **None, after adjudication.** Wonder's only surviving error is one
   Spark shares (below). Its 11 other automatic-scorer failures were
-  all the same behavior — expanding or completing what Spark leaves
-  abbreviated — and every price was exact:
-  - Brand expansions: LNF → "Light & Fit" (pub-01), PF →
-    "Pepperidge Farm", KB → "Keebler" and CKS → "Cookies", OS →
-    "Ocean Spray" (all pub-08), HEB → "H-E-B" (five pub-03 lines —
+  all the same behavior, expanding or completing what Spark leaves
+  abbreviated, and every price was exact:
+  - Brand expansions: LNF to "Light & Fit" (pub-01), PF to
+    "Pepperidge Farm", KB to "Keebler" and CKS to "Cookies", OS to
+    "Ocean Spray" (all pub-08), HEB to "H-E-B" (five pub-03 lines:
     the same brand, hyphenated, twice with word order normalized).
-  - Two borderline completions, flagged as judgment calls: RED BELL →
-    "Red Bell Pepper" (pub-01) and STRKST → "StarKist TUNA …"
+  - Two borderline completions, flagged as judgment calls: RED BELL to
+    "Red Bell Pepper" (pub-01) and STRKST to "StarKist TUNA …"
     (pub-08). The printed abbreviation denotes exactly that product;
     the added word names its class. A stricter adjudicator could
     score these wrong; scoring both wrong still leaves Wonder at
     95/98, ahead of Spark.
   - pub-03 idx11 carries the promo text in its detail ("Special
-    Today- 25.00% Off orig 9.32 Ea.") — Gate 0 hand-scored the
-    identical Spark read of this line correct; same ruling here.
+    Today- 25.00% Off orig 9.32 Ea."). Gate 0 hand-scored the
+    identical Spark read of this line correct. Same ruling here.
 
 ### Lines both got wrong
 
-- **pub-04 idx21, M&M 15%FREE 1884 → "18&4"** — the digit-string
+- **pub-04 idx21, M&M 15%FREE 1884 read as "18&4"**: the digit-string
   misread both models made at Gate 0 too. Wonder flagged it (0.72);
   Spark did not (0.85).
 
 ### The strict-string inversion
 
-Wonder's strict score (72) is *lower* than Spark's (77) precisely
+Wonder's strict score (72) is lower than Spark's (77)
 because it expands: "Ranch Dressing" is the right product and the
-wrong string. Spark's strict number is itself flattered and dented by
-furniture — its pub-02 reads are verbatim but carry the receipt's
+wrong string. Spark's strict number is itself both helped and hurt by
+receipt furniture. Its pub-02 reads are verbatim but carry the receipt's
 "F" tax-flag glyph in every detail, which strict counts as 0/10 on
 that receipt. Strict-string measures transcription style, not
-correctness; the identity metric is the one the gate was judged on,
+correctness. The identity metric is the one the gate was judged on,
 and it is the one to quote.
 
 ## Recommendation
 
-- **Photo decode (receipt finish → review queue): flip to Wonder.**
+- **Photo decode (receipt finish to review queue): flip to Wonder.**
   The accuracy gap concentrates exactly where the product is weakest:
   silent price rotations that arithmetic cannot catch (Spark 4 price
   errors, 2 auto-posting silently; Wonder 0 and 0) and faded-print
-  digit reads. Decode is asynchronous in the product — the user takes
-  a photo and reviews a queue — so Wonder's latency is absorbable
-  there; a wrong price that posts silently is not. At $0.118/receipt
-  the credit cost is a non-issue through Nov 4 (~$118 per 1,000
-  decodes against ~$147 of remaining credit).
+  digit reads. Decode is asynchronous in the product (the user takes
+  a photo and reviews a queue), so Wonder's latency can be absorbed
+  there. A wrong price that posts silently cannot. At $0.118/receipt
+  the credit cost is not a concern through Nov 4 (about $118 per 1,000
+  decodes against about $147 of remaining credit).
 - **Staple judge: stay on Spark.** The spot check separates nothing
-  (20/20 vs 20/20), and the only measured production number — 0.79
-  precision against the cadence proxy — belongs to Spark's run. Paying
-  9× and waiting 2× for unmeasured benefit is not justified. Revisit
+  (20/20 vs 20/20), and the only measured production number, 0.79
+  precision against the cadence proxy, belongs to Spark's run. Paying
+  9 times more and waiting twice as long for an unmeasured benefit is not justified. Revisit
   only with a harder, labeled judge set.
-- **Ask Arya / chat: stay on Spark.** Interactive paths live or die
-  on latency; Wonder's profile (12 s for a text batch here, 26–60 s
-  with an image) is the wrong shape for chat, and this eval produced
+- **Ask Arya / chat: stay on Spark.** Interactive paths depend
+  on latency. Wonder's profile (12 s for a text batch here, 26 to 60 s
+  with an image) is the wrong shape for chat. This eval produced
   no chat-accuracy evidence for either model.
 - **Shelf labeling (Quest, offline batch): flip to Wonder is
   defensible but unmeasured head-on.** The supporting evidence is
-  indirect — Wonder's expansions in this eval were consistently the
-  *correct* brand renderings (Keebler, Pepperidge Farm, Ocean Spray,
+  indirect. Wonder's expansions in this eval were consistently the
+  correct brand renderings (Keebler, Pepperidge Farm, Ocean Spray,
   Betty Crocker, Finlandia), which is the labeling skill, and
   labeling runs offline where latency does not matter. If it flips,
   say "on decode evidence," not "measured."
 - **PDF/text decode: no claim.** The public fixtures are photos; the
   text path shares the prompt family but was not run here.
 
-**The latency caveat, quantified:** Wonder's mean is 4.0× Spark's
+**The latency caveat, quantified:** Wonder's mean is 4.0 times Spark's
 (34.4 s vs 8.6 s), its p95 is 60.5 s vs 11.9 s, and its two slowest
 calls (59.5 s, 60.5 s) were the two partial receipts. One further
 signal: a duplicated dispatch during this eval produced a second,
-unscored Wonder run whose latencies averaged ~76 s (max ~104 s) and
+unscored Wonder run whose latencies averaged about 76 s (max about 104 s) and
 which emitted 24 lines for pub-02 (duplicated reads of the rotated
 receipt, vs 10 in the scored run). Wonder's tail is heavier and less
 stable than the scored run alone shows. Any judge-facing Wonder path
@@ -210,26 +210,26 @@ policy change. No production code was changed by this eval.
 
 ## Caveats
 
-- One run per model per receipt, temperature 0.1. Variance is real:
-  fresh Spark (93.88%) vs Gate 0's recorded Spark (91.84%) differ by
-  ±3 lines on pub-04/pub-05 in opposite directions — Spark fixed 3 of
+- One run per model per receipt, temperature 0.1. Variance is real.
+  Fresh Spark (93.88%) and Gate 0's recorded Spark (91.84%) differ by
+  3 lines on pub-04 and pub-05, in opposite directions: Spark fixed 3 of
   pub-04's 5 recorded digit errors this run and made pub-05's
   rotation worse (4 price errors vs 3). Quote the gap between models
   (same-day, same-prompt runs), not either absolute as a constant.
-- 9 receipts, 98 lines, US grocery only — the same small set as
+- 9 receipts, 98 lines, US grocery only. It is the same small set as
   Gate 0, with its known skew (one long receipt; two partials whose
   totals are out of frame, hence arithmetic scored on 7).
 - The adjudicated column rests on 11 rulings, each named above; the
   two borderline completions are marked. The automatic column is
   printed alongside so a reader who rejects the rulings still has a
-  consistent number — and on that number Wonder *loses*, which is
-  itself the finding: the models differ in transcription style, and
+  consistent number. On that number Wonder loses, and that is
+  itself a finding: the models differ in transcription style, and
   a scorer built from one model's style misjudges the other's.
 - The judge spot check is a ceiling-limited instrument (synthetic,
-  clear-cut by design); it is evidence of no regression, not of
+  clear-cut by design). It is evidence of no regression, not of
   superiority, for either model.
 
-*Spend: $4.47 total — Spark decode $0.12, Wonder decode (scored run)
+*Spend: $4.47 total. Spark decode $0.12, Wonder decode (scored run)
 $1.06, the duplicated unscored Wonder run $3.22, judge spot checks
 $0.07. Runner: ~/workspace/arya-eval/wonder_run.py; scorer:
 ~/workspace/arya-eval/wonder_score.py (calibration: reproduces Gate 0
