@@ -15,7 +15,7 @@ I built Arya as one well-defended single-server app on purpose: the window was f
 
 ## What do I know is weak?
 
-From my own architecture audit of 2026-11-01, the findings that still hold, each tied to a phase of the [scalability design](SCALABILITY-DESIGN.md).
+From my own architecture audit of 2026-11-01, the findings that still hold, each tied to a phase of the [scalability design](SCALABILITY-DESIGN.md). Two audit items are already closed: `/health` reports the running commit, and the photo reader is Spark first (see the [model map](../JUDGES.md#which-model-does-which-job)), which took the cost pressure off receipt batches.
 
 | What | Why it matters | Fixed in |
 |---|---|---|
@@ -32,8 +32,18 @@ From my own architecture audit of 2026-11-01, the findings that still hold, each
 | Tests run in CI only on demand (my choice, to keep the loop fast) | A broken merge can reach the server unless someone runs the suite | Not a scaling item; revisit after judging |
 | Concurrency rules are by convention (each writer must remember the lock) | Easy to get wrong as more people touch the code | Phase 2 |
 
-Two audit items are closed: `/health` now reports the running commit, and the photo reader is now Spark first (see the [model map](../JUDGES.md#which-model-does-which-job)), which took the cost pressure off receipt batches.
-
 ## What is the plan to grow it?
 
-[Scalability design](SCALABILITY-DESIGN.md) has nine phases, each switched on by settings, each with a rollback and a number to measure: baseline metrics and a live load test; a short-lived cache and the mirror off the request path; Postgres as the master copy with versioned updates; shared state for sessions and demo visits; several processes; a job queue; a model gateway with concurrency caps and spend reservation; object storage for photos; then a cloud provider. Versioned writes come before a second process, and nothing runs before judging ends. It is a plan, not a promise.
+[Scalability design](SCALABILITY-DESIGN.md) has nine phases, each switched on by settings, each with a rollback and a number to measure:
+
+1. Baseline metrics and a live load test.
+2. A short-lived cache, and the Postgres mirror off the request path.
+3. Postgres as the master copy, with versioned updates.
+4. Shared state for sessions and demo visits.
+5. Several processes.
+6. A job queue.
+7. A model gateway with concurrency caps and spend reservation.
+8. Object storage for photos.
+9. A cloud provider.
+
+Versioned writes come before a second process, and nothing runs before judging ends. It is a plan, not a promise.
