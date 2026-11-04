@@ -229,7 +229,13 @@ fix to an open PR, do a humanizer pass and a human-voice-writer pass (a
 humanizer pass: strip stock phrases, filler and AI tells; a human-voice-writer
 pass: read it aloud as the owner would say it). Plain words, sentences of
 natural length (no run-ons, no strings of clipped sentences), no em-dash
-chains, no hype. Say in the PR description that both passes were done.
+chains, no hype. Watch for AI vocabulary ("delve", "pivotal", "showcase"),
+lists of three, "not just X, it's Y", trailing "-ing" phrases, "serves as" for
+"is", and a closing line that sounds hopeful. Checklist: the 24 patterns at
+oneaway.io/skills/humanizer and the features listed at
+mcpmarket.com/tools/skills/human-voice-writer (reference only, nothing to
+install). Say in the PR description that both passes were done and which
+checklist you used.
 
 ### Ops notes
 Deploy by `git pull` on the VM only. Never rsync --delete over the VM
