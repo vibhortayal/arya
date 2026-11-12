@@ -158,6 +158,15 @@
     "useElsewhere": "Use Arya elsewhere",
     "behind": "Behind Arya",
     "builtBy": "Built by",
+    "sourceLead": "The code is on",
+    "intro": "I'm Vibhor Tayal. I built Arya for my own household first, then for the Meta Global AI Developer Hackathon. Lists in different notes, the same yogurt bought twice, receipts in the trash: I wanted all of it in one place.",
+    "freeTitle": "It's free.",
+    "freeBody": "Arya costs you nothing. There are no ads, nothing to buy, and I don't sell your data. The AI reading does cost money to run, and Keeping Arya running shows you what it costs.",
+    "wipTitle": "It's a work in progress.",
+    "wipBody": "I built the first version and I'm still improving it. It was tested with US receipts, dollars and stores first, and what isn't live yet is marked that way. Expect some rough edges.",
+    "whyTitle": "Why it's built this way.",
+    "whyBody": "A model reads your receipt, then plain code checks every line before anything is saved. Your receipts and lists stay yours. Tell me what works and what doesn't, it shapes what I build next.",
+    "feedbackSub": "What worked, what didn't, what you want next",
     "builtOnMetaModelsSam": "Built on Meta models: SAM 3.1 finds the shelves, Muse Spark reads lists, receipts and labels the shelves, Muse Wonder re-reads a receipt the checks flag, Muse Voice Transcribe takes dictation, and Muse Image drew the characters that cheer each grab."
   },
   "ai": {
@@ -1814,7 +1823,7 @@
     "aboutArya": "About Arya",
     "helpTourSub": "Replay the Tour: a stop on every screen",
     "helpGuideSub": "Swipe through cards on each part of Arya",
-    "aboutAryaSub": "Powers, Muse and other AI apps, running costs, install",
+    "aboutAryaSub": "Who built Arya and why, powers, Muse and other AI apps, running costs, install",
     "shopMode": "When I start shopping",
     "shopModeSub": "What Start shopping opens.",
     "shopModeQuest": "Start a Quest",
@@ -3999,6 +4008,17 @@
         "n1": "More is always on the navigation tab. Help, Settings and every place not on it are in More.",
         "n2": "The navigation tab starts as Today, Spending, Quest, Ask and More. Reset to default brings it back.",
         "cta": "Customize navigation tab"
+      },
+      "about": {
+        "title": "Who built Arya, and why",
+        "sub": "Free, and still being built",
+        "body": "Arya is free to use. There are no ads and nothing to buy. It is a work in progress, and the About Arya page says who built it and why.",
+        "s1": "Open Settings, then About Arya.",
+        "s2": "Read the note at the top.",
+        "s3": "Tap Send feedback to tell the builder what to fix or add.",
+        "n1": "Running Arya costs money for the AI reading. Keeping Arya running, on the same page, shows what it costs.",
+        "n2": "What is not live yet is marked that way in the app.",
+        "cta": "Open About Arya"
       },
       "install": {
         "title": "Put Arya on your Home Screen",

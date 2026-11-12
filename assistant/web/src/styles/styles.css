@@ -2482,3 +2482,5 @@ body.hunting #offlinebar { display: none !important; }
 .month-row.tap, .row.tap { cursor: pointer; }
 .month-row.tap:active, .row.tap:active { background: var(--fill); }
 .rcfilter .rcstore { width: 100%; margin-top: 8px; min-height: 44px; font-size: 15px; font-weight: 600; padding: 9px 12px; }
+.aboutstory { padding-bottom: 6px; }
+.aboutstory p { margin: 0 0 12px; }
