@@ -7,3 +7,5 @@ Owner: a page that tells people who built Arya and why, like agents.teamnightshi
 - Help topic "Who built Arya, and why" (opens About Arya); the Settings row subtitle and `arya_features.md` match.
 
 Tests: vitest green (607); the one `window.scrollTo` jsdom error is also on main. Python suite not run here (no dependencies installed). Checked at 390x844 in the dev server with a mocked demo session.
+
+Owner follow-up (20:53Z): added a "How it's built" note about Agentic Team (links to agents.teamnightshift.org) and X and Instagram links. Khelo stays out. Help topic and `arya_features.md` match. vitest green (607).
