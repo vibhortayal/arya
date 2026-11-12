@@ -1,6 +1,6 @@
 # Arya documentation index
 
-Every document in this repository, grouped by who reads it. Each fact has one home, and other pages link to it. The docs site (https://vibhortayal.github.io/arya/) is built from the same files, so nothing here is copied.
+Every document in this repository, grouped by who reads it. Each fact has one home, and other pages link to it. The docs site (https://docs.arya.teamnightshift.org/) is built from the same files, so nothing here is copied.
 
 One rule for every page: do not write the judging rubric's percentage weights in any doc or on the docs site. Name the rubric area (Demo, Impact, Meta AI tooling, Technical depth) without a number. The one-line description of Arya lives in the README, "What is Arya"; copy it, do not reword it.
 
