@@ -19,6 +19,16 @@ export function About() {
     <>
       <p><a href="#" id="pfa-back" onClick={ev => { ev.preventDefault(); nav.back("profile"); }}><span aria-hidden="true">‹ </span>{t("common.back")}</a></p>
       <h1 className="largetitle" style={{ fontSize: 28 }}>{t("settings.aboutArya")}</h1>
+      <div className="group pad aboutstory" id="about-story">
+        <p className="nomargin">{t("about.intro")}</p>
+        <p><strong>{t("about.freeTitle")}</strong> {t("about.freeBody")}</p>
+        <p><strong>{t("about.wipTitle")}</strong> {t("about.wipBody")}</p>
+        <p><strong>{t("about.whyTitle")}</strong> {t("about.whyBody")}</p>
+        <p className="nomargin"><strong>{t("about.teamTitle")}</strong> {t("about.teamBody")}{" "}<a href="https://agents.teamnightshift.org/" target="_blank" rel="noopener">Agentic Team</a>.</p>
+      </div>
+      <div className="group">
+        {row("btn-about-feedback", "feedback", t("feedback.featureRequestContactUs"), t("about.feedbackSub"))}
+      </div>
       <h3 className="sect">{t("about.whatAryaCanDo")}</h3>
       <div className="group">
         {row("btn-powers", "powers", t("common.aryaSPowers"), t("settings.whatAryaCanDoAnd"))}
@@ -33,7 +43,8 @@ export function About() {
       <div className="group">
         {row("btn-usage", "usage", t("usage.title"), t("settings.usageSub"))}
         <div className="pad aboutcredit">
-          <p className="nomargin">{t("about.builtBy")}{" "}<a href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener">Vibhor Tayal</a>.</p>
+          <p className="nomargin">{t("about.builtBy")}{" "}<a href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener">Vibhor Tayal</a>. {t("about.sourceLead")}{" "}<a href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener">GitHub</a>.</p>
+          <p className="nomargin" style={{ marginTop: 8 }}>{t("about.findMe")}{" "}<a href="https://x.com/VibTayal" target="_blank" rel="noopener">X</a>{" · "}<a href="https://www.instagram.com/v_do_stuff" target="_blank" rel="noopener">Instagram</a></p>
           <p className="muted" style={{ marginTop: 8 }}>{t("about.builtOnMetaModelsSam")}</p>
         </div>
       </div>

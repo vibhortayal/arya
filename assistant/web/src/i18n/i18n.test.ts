@@ -18,7 +18,7 @@ const ALLOWED: Record<string, string[]> = {
   // The brand on the sign-in screen.
   "screens/Login.tsx": ["Arya"],
   // The author's name on About.
-  "screens/About.tsx": ["Vibhor Tayal"],
+  "screens/About.tsx": ["Vibhor Tayal", "GitHub", "Agentic Team", "Instagram"],
   // The owner's profiles on the end-of-demo sheet: site names and addresses.
   "ui/EndOfDemo.tsx": ["LinkedIn", "GitHub"],
 };
