@@ -1823,7 +1823,7 @@
     "currencyAndLanguageSub": "Prices, and the language Ask replies in",
     "signedInAsUser": "Signed in as {{user}}",
     "arya": "Arya",
-    "aboutArya": "About Arya",
+    "aboutArya": "About",
     "helpTourSub": "Replay the Tour: a stop on every screen",
     "helpGuideSub": "Swipe through cards on each part of Arya",
     "aboutAryaSub": "Who built Arya and why, powers, Muse and other AI apps, running costs, install",
@@ -3374,7 +3374,7 @@
         "title": "Know where it's cheaper",
         "body": "From your own receipts, Arya tells you whether your organic olive oil is cheaper at Trader Jill's or at Safeday.",
         "s1": "Add receipts from two stores.",
-        "s2": "Open Settings › About Arya › Arya's powers › Compare your stores.",
+        "s2": "Open Settings › About › Arya's powers › Compare your stores.",
         "s3": "Arya shows which store is cheaper per item."
       },
       "usesoon": {
@@ -3382,7 +3382,7 @@
         "title": "Reduce food waste",
         "body": "Snap the date on a pack, or pick a use-by date for fresh food. Arya nudges you to use it in time, so less food ends up in the bin.",
         "s1": "After a receipt, Today asks until each item is dated or removed. Or tell Ask the date: \"milk use by Nov 4\".",
-        "s2": "By hand: Settings › About Arya › Arya's powers › Use soon › Add a date, then Take a photo of the date on the pack.",
+        "s2": "By hand: Settings › About › Arya's powers › Use soon › Add a date, then Take a photo of the date on the pack.",
         "s3": "Check the item and the date, then tap Looks right, track it.",
         "s4": "Arya reminds you what to use before it expires. When Today asks Still good?, tap Still good, Used it or It expired. Switch on Remind me in Settings, Preferences."
       },
@@ -3451,7 +3451,7 @@
         "kicker": "Powers",
         "title": "See what Arya can do",
         "body": "Powers is one list of everything Arya does for you. It also shows features you can switch on.",
-        "s1": "Tap More, then Settings, then About Arya, then Arya's powers. Or open Help.",
+        "s1": "Tap More, then Settings, then About, then Arya's powers. Or open Help.",
         "s2": "Tap the i next to a power to learn how it works.",
         "s3": "Under \"You choose to turn on\", see what you can switch on yourself."
       },
@@ -3462,7 +3462,7 @@
         "s1": "Tap More, then Settings. Tap Display for text size and spacing.",
         "s2": "Under Preferences, choose your currency and language, and switch on Remind me.",
         "s3": "Under Account, tap Export my data to get a copy of everything. Delete my account erases it all; we email you a code to confirm, or ask for your password if you have one.",
-        "s4": "Open About Arya, then \"Use Arya in Muse\", to talk to your list from Muse or another AI app."
+        "s4": "Open About, then \"Use Arya in Muse\", to talk to your list from Muse or another AI app."
       }
     },
     "replayTour": "Replay the tour"
@@ -3501,7 +3501,7 @@
     "sub": "Read and write your own lists and receipts from a script or another app. Export anytime.",
     "getCode": "Get your code",
     "step1": "Get your code",
-    "step1Body": "In Arya, open Settings, then About Arya, then Use Arya in Muse, then Make my code. It shows once. A new code replaces the old one.",
+    "step1Body": "In Arya, open Settings, then About, then Use Arya in Muse, then Make my code. It shows once. A new code replaces the old one.",
     "sameCode": "The same code works for the Lists API and the agent connector.",
     "step2": "Make your first call",
     "answersJson": "Replies with your lists",
@@ -3545,7 +3545,7 @@
     "youGetBack": "You get back",
     "authLead": "One header, one code.",
     "authBody1": "Send your code as",
-    "authBody2": "on every call. It reaches only your own account. Lost it or leaked it? Make a new code in Settings › About Arya and the old one stops working at once.",
+    "authBody2": "on every call. It reaches only your own account. Lost it or leaked it? Make a new code in Settings › About and the old one stops working at once.",
     "endpointsLead": "Every one answers JSON.",
     "openRef": "Open the interactive reference",
     "endpointsLead2": "to try them from the browser.",
@@ -3910,8 +3910,8 @@
         "body": "Prices come from your own receipts. Sharing prices with other shoppers is not switched on yet; turning it on only records your choice.",
         "s1": "Add receipts from two stores.",
         "s2": "Look at the cards \"Cheaper elsewhere\" and \"Price watch\" on Today.",
-        "s3": "Open Settings, then About Arya, then Arya's powers, for Compare your stores and Price trends.",
-        "n1": "Community prices are not live yet. Turning them on (Settings, About Arya, Arya's powers, Community prices) only records your choice.",
+        "s3": "Open Settings, then About, then Arya's powers, for Compare your stores and Price trends.",
+        "n1": "Community prices are not live yet. Turning them on (Settings, About, Arya's powers, Community prices) only records your choice.",
         "n2": "Arya never uses store sites, flyers or web prices.",
         "cta": "Open Arya's powers"
       },
@@ -3970,13 +3970,13 @@
         "title": "When to double-check Arya",
         "sub": "Where Arya uses AI and can be wrong",
         "body": "Arya uses AI to read photos, receipts and voice and to answer questions. It can be wrong.",
-        "s1": "Open Settings, then About Arya.",
+        "s1": "Open Settings, then About.",
         "s2": "Tap How Arya uses AI.",
         "s3": "Read where AI is used and what to check.",
         "n1": "Always check an expiry date on the pack yourself. If food looks or smells off, do not eat it.",
         "n2": "You confirm photo and receipt reads before they are saved.",
         "n3": "Most of what you send to Arya is read by Muse Spark. Receipt photos are read by Muse Spark first too; Muse Wonder re-reads only a receipt the checks flag.",
-        "cta": "Open About Arya"
+        "cta": "Open About"
       },
       "usesoon": {
         "title": "Use soon",
@@ -3984,7 +3984,7 @@
         "body": "Add a date to food. Arya reminds you to use it before it goes bad.",
         "s1": "After a receipt, Today asks for dates. × removes an item; the card stays until each is dated or removed.",
         "s2": "Or tell Ask the date, such as \"milk use by Nov 4\". Arya tracks it under Use soon; it is not a shopping list.",
-        "s3": "By hand: Settings, About Arya, Arya's powers, Use soon, Add a date, then Take a photo of the date on the pack.",
+        "s3": "By hand: Settings, About, Arya's powers, Use soon, Add a date, then Take a photo of the date on the pack.",
         "s4": "Check the item and the date, then tap Looks right, track it.",
         "n1": "Today shows a \"Use soon\" card and a \"Still good?\" check. Still good? asks about fresh food only in the days after it usually turns, from the receipt date, and never about food bought over a month ago. Answer Still good, Used it (you finished it, so it is not food waste: it moves to your suggestions, and Undo puts it back) or It expired (counts as food waste). Anything already on one of your lists is not asked about.",
         "n2": "Ask Arya knows these dates too: ask \"What goes bad this week?\"",
@@ -4015,14 +4015,14 @@
       "about": {
         "title": "Who built Arya, and why",
         "sub": "Free, and still being built",
-        "body": "Arya is free to use. There are no ads and nothing to buy. It is a work in progress, and the About Arya page says who built it and why.",
-        "s1": "Open Settings, then About Arya.",
+        "body": "Arya is free to use. There are no ads and nothing to buy. It is a work in progress, and the About page says who built it and why.",
+        "s1": "Open Settings, then About.",
         "s2": "Read the note at the top.",
         "s3": "Tap Send feedback to tell the builder what to fix or add.",
         "n1": "Running Arya costs money for the AI reading. Keeping Arya running, on the same page, shows what it costs.",
         "n2": "What is not live yet is marked that way in the app.",
         "n3": "A team of AI agents, Agentic Team, plans, writes and checks the code, and the builder decides what gets built.",
-        "cta": "Open About Arya"
+        "cta": "Open About"
       },
       "install": {
         "title": "Put Arya on your Home Screen",
@@ -4031,9 +4031,9 @@
         "s1": "iPhone: tap Share, then Add to Home Screen. Leave Open as Web App on, then tap Add.",
         "s2": "Android: tap Install if Arya offers it. Or tap the menu ⋮ at the top right, then Add to Home screen or Install app.",
         "s3": "Open Arya from your Home Screen and sign in there.",
-        "n1": "On the sign-in page, Add Arya to your Home Screen shows the steps. In the app it is in Settings, About Arya.",
+        "n1": "On the sign-in page, Add Arya to your Home Screen shows the steps. In the app it is in Settings, About.",
         "n2": "Once Arya runs from your Home Screen, these steps no longer show.",
-        "cta": "Open About Arya"
+        "cta": "Open About"
       },
       "reminders": {
         "title": "Get reminders",
@@ -4050,7 +4050,7 @@
         "title": "Use Arya in Muse",
         "sub": "Talk to your lists from Meta's AI agent",
         "body": "Connect Muse, Meta's AI agent, to Arya. Then Muse can read your list, add items and say what is running low.",
-        "s1": "Open Settings, then About Arya, then Use Arya in Muse. Tap Make my code and copy it.",
+        "s1": "Open Settings, then About, then Use Arya in Muse. Tap Make my code and copy it.",
         "s2": "In Muse, say \"Connect to Arya at https://arya.teamnightshift.org/api/mcp\".",
         "s3": "When Muse asks, paste your code into its secure box, not in the chat.",
         "s4": "Ask Muse \"What is on my Arya list?\"",

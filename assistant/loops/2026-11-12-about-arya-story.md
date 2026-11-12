@@ -9,3 +9,5 @@ Owner: a page that tells people who built Arya and why, like agents.teamnightshi
 Tests: vitest green (607); the one `window.scrollTo` jsdom error is also on main. Python suite not run here (no dependencies installed). Checked at 390x844 in the dev server with a mocked demo session.
 
 Owner follow-up (20:53Z): added a "How it's built" note about Agentic Team (links to agents.teamnightshift.org) and X and Instagram links. Khelo stays out. Help topic and `arya_features.md` match. vitest green (607).
+
+Owner (21:04Z): "About Arya" is now just "About" in the app (Settings row, page title, Help topics, Ask knowledge), since the app is already Arya. Docs that still say "About Arya" (USER-JOURNEYS, STATUS and others) belong to the Doc maintainer.
