@@ -9,7 +9,7 @@
 </p>
 
 <p align="center">
-  <a href="https://vibhortayal.github.io/arya/"><strong>Read the docs site</strong></a>
+  <a href="https://docs.arya.teamnightshift.org/"><strong>Read the docs site</strong></a>
   (a good place to start) &nbsp;|&nbsp;
   <a href="https://arya.teamnightshift.org"><strong>Open the live demo</strong></a>
   (tap "Try it now", no sign-up) &nbsp;|&nbsp;

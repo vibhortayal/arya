@@ -17,14 +17,14 @@ npm run serve        # http://localhost:3000
 
 ## Publish to GitHub Pages (no GitHub Actions)
 
-The site is served from the `gh-pages` branch ("Deploy from a branch" in the repo's Pages settings). URL: https://vibhortayal.github.io/arya/
+The site is served from the `gh-pages` branch ("Deploy from a branch" in the repo's Pages settings). URL: https://docs.arya.teamnightshift.org/ (the old https://vibhortayal.github.io/arya/ address redirects to it).
 
 ```
 cd site
-DOCS_BASE_URL=/arya/ DOCS_URL=https://vibhortayal.github.io npm run build
-cd build && touch .nojekyll
+DOCS_BASE_URL=/ DOCS_URL=https://docs.arya.teamnightshift.org npm run build
+cd build && touch .nojekyll && echo docs.arya.teamnightshift.org > CNAME
 git init -b gh-pages && git add -A && git commit -m "Publish docs"
 git push -f https://github.com/vibhortayal/arya.git gh-pages
 ```
 
-Run it from a clean checkout of main. Nothing in the app, the VM or a deploy is touched. Refresh the API spec with `npm run spec` (needs the Python deps in `assistant/api/requirements.txt`).
+The `CNAME` file keeps the custom domain set; a publish without it switches the domain off. Run it from a clean checkout of main. Nothing in the app, the VM or a deploy is touched. Refresh the API spec with `npm run spec` (needs the Python deps in `assistant/api/requirements.txt`).
