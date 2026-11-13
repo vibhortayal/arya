@@ -4,6 +4,9 @@
 export const DEV_PATH = "/developers";
 export const isDevelopersPath = (path: string) => path.replace(/\/+$/, "") === DEV_PATH;
 
+export const ABOUT_PATH = "/about";
+export const isAboutPath = (path: string) => path.replace(/\/+$/, "") === ABOUT_PATH;
+
 /* An invite link (/?join=CODE). The code is also kept on this phone for
  * two days, so it survives signing in (a Google sign-in or an email code
  * can come back to a plain address) and opens Join after sign-in

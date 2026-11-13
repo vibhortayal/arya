@@ -13,7 +13,7 @@ import { get } from "./lib/api";
 import { startQueue } from "./lib/scanQueue";
 import { isOffline, isSlowOnly, subscribeOffline } from "./lib/offline";
 import { useTown } from "./lib/town";
-import { appLinkPending, forgetAppLink, forgetJoinCode, isDevelopersPath, joinCodeFromUrl, LINK_RESUME, stashAppLink, stashJoinCode } from "./lib/paths";
+import { appLinkPending, forgetAppLink, forgetJoinCode, isAboutPath, isDevelopersPath, joinCodeFromUrl, LINK_RESUME, stashAppLink, stashJoinCode } from "./lib/paths";
 
 // Keep an invite code from the address before sign-in can drop it.
 stashJoinCode();
@@ -23,6 +23,7 @@ import { OwnKeyRoute } from "./ui/OwnKey";
 import { ListPickHost } from "./ui/ListPick";
 import { Login } from "./screens/Login";
 // The public developer page and Join a group load only when opened (#17).
+const PublicAbout = lazy(() => import("./screens/PublicAbout").then(m => ({ default: m.PublicAbout })));
 const Developers = lazy(() => import("./screens/Developers").then(m => ({ default: m.Developers })));
 import { SCREENS, preloadTabScreens } from "./screens/registry";
 import { openGuide } from "./ui/Guide";
@@ -47,6 +48,7 @@ function Root() {
   // takes over in the same frame.
   useLayoutEffect(() => { if (s.ready) document.getElementById("boot")?.remove(); }, [s.ready]);
   /* The public developer page needs no account, so it comes first. */
+  if (isAboutPath(location.pathname)) return <Suspense fallback={null}><PublicAbout /></Suspense>;
   if (isDevelopersPath(location.pathname)) return <Suspense fallback={null}><Developers /></Suspense>;
   if (!s.ready) return null;
   if (!s.user) return <Login />;

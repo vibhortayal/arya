@@ -163,11 +163,14 @@ def _legal_redirect(request: Request):
     return RedirectResponse(request.url.path + "/", status_code=301)
 
 
+@app.get("/about", include_in_schema=False)
+@app.get("/about/", include_in_schema=False)
 @app.get("/developers", include_in_schema=False)
 @app.get("/developers/", include_in_schema=False)
 def _developers_page():
-    """The public developer page is a screen of the React app: the shell
-    answers /developers and the app shows it before sign-in."""
+    """The public developer page and the public About page are screens of
+    the React app: the shell answers /developers and /about and the app
+    shows them before sign-in."""
     index = os.path.join(_WEB, "index.html")
     if not os.path.isfile(index):
         return JSONResponse({"detail": "the app is not built"}, status_code=404)

@@ -158,6 +158,7 @@
     "useElsewhere": "Use Arya elsewhere",
     "behind": "Behind Arya",
     "builtBy": "Built by",
+    "tryArya": "Try Arya",
     "sourceLead": "The code is on",
     "intro": "I'm Vibhor Tayal. I built Arya for my own household first, then for the Meta Global AI Developer Hackathon. Lists in different notes, the same yogurt bought twice, receipts in the trash: I wanted all of it in one place.",
     "freeTitle": "It's free.",
@@ -4021,6 +4022,7 @@
         "s3": "Tap Send feedback to tell the builder what to fix or add.",
         "n1": "Running Arya costs money for the AI reading. Keeping Arya running, on the same page, shows what it costs.",
         "n2": "What is not live yet is marked that way in the app.",
+        "n4": "You can read the same note without signing in: tap About at the bottom of the sign-in page.",
         "n3": "A team of AI agents, Agentic Team, plans, writes and checks the code, and the builder decides what gets built.",
         "cta": "Open About"
       },
