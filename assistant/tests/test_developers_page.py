@@ -22,7 +22,7 @@ class TestDevelopersPage(unittest.TestCase):
     def test_serves_the_shell_without_signing_in(self):
         with open(os.path.join(self.web, "index.html"), "w") as fh:
             fh.write("<!doctype html><div id=root></div>")
-        for path in ("/developers", "/developers/"):
+        for path in ("/developers", "/developers/", "/about", "/about/"):
             r = self.c.get(path, follow_redirects=True)
             assert r.status_code == 200, path
             assert 'id=root' in r.text

@@ -198,7 +198,7 @@ export function Login() {
             )}
           </p>
           <A2hsLandCard />
-          <p className="landnote"><a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a> · <a href="/terms/#ai">{t("ai.footer")}</a> · <a href="/developers">{t("landing.developers")}</a></p>
+          <p className="landnote"><a href="/about">{t("settings.aboutArya")}</a> · <a href="/privacy/">{t("landing.privacy")}</a> · <a href="/terms/">{t("landing.terms")}</a> · <a href="/terms/#ai">{t("ai.footer")}</a> · <a href="/developers">{t("landing.developers")}</a></p>
         </div>
       </main>
 
