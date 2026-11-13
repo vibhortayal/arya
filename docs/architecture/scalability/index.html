@@ -1,0 +1,435 @@
+<!doctype html>
+<html lang="en" dir="ltr" class="docs-wrapper plugin-docs plugin-id-default docs-version-current docs-doc-page docs-doc-id-architecture/scalability" data-has-hydrated="false">
+<head>
+<meta charset="UTF-8">
+<meta name="generator" content="Docusaurus v3.9.2">
+<title data-rh="true">Scalability design | Arya docs</title><meta data-rh="true" name="viewport" content="width=device-width,initial-scale=1"><meta data-rh="true" name="twitter:card" content="summary_large_image"><meta data-rh="true" property="og:image" content="https://docs.arya.teamnightshift.org/repo/docs/images/social-preview.png"><meta data-rh="true" name="twitter:image" content="https://docs.arya.teamnightshift.org/repo/docs/images/social-preview.png"><meta data-rh="true" property="og:url" content="https://docs.arya.teamnightshift.org/docs/architecture/scalability"><meta data-rh="true" property="og:locale" content="en"><meta data-rh="true" name="docusaurus_locale" content="en"><meta data-rh="true" name="docsearch:language" content="en"><meta data-rh="true" name="docusaurus_version" content="current"><meta data-rh="true" name="docusaurus_tag" content="docs-default-current"><meta data-rh="true" name="docsearch:version" content="current"><meta data-rh="true" name="docsearch:docusaurus_tag" content="docs-default-current"><meta data-rh="true" property="og:title" content="Scalability design | Arya docs"><meta data-rh="true" name="description" content="A nine-phase plan for growing beyond one process, with rollback and a measure for each phase."><meta data-rh="true" property="og:description" content="A nine-phase plan for growing beyond one process, with rollback and a measure for each phase."><link data-rh="true" rel="icon" href="/repo/assistant/pwa/icons/favicon-48.png"><link data-rh="true" rel="canonical" href="https://docs.arya.teamnightshift.org/docs/architecture/scalability"><link data-rh="true" rel="alternate" href="https://docs.arya.teamnightshift.org/docs/architecture/scalability" hreflang="en"><link data-rh="true" rel="alternate" href="https://docs.arya.teamnightshift.org/docs/architecture/scalability" hreflang="x-default"><script data-rh="true" type="application/ld+json">{"@context":"https://schema.org","@type":"BreadcrumbList","itemListElement":[{"@type":"ListItem","position":1,"name":"Scalability design","item":"https://docs.arya.teamnightshift.org/docs/architecture/scalability"}]}</script><link rel="stylesheet" href="/assets/css/styles.b62ace9e.css">
+<script src="/assets/js/runtime~main.81ff8860.js" defer="defer"></script>
+<script src="/assets/js/main.03023676.js" defer="defer"></script>
+</head>
+<body class="navigation-with-keyboard">
+<svg style="display: none;"><defs>
+<symbol id="theme-svg-external-link" viewBox="0 0 24 24"><path fill="currentColor" d="M21 13v10h-21v-19h12v2h-10v15h17v-8h2zm3-12h-10.988l4.035 4-6.977 7.07 2.828 2.828 6.977-7.07 4.125 4.172v-11z"/></symbol>
+</defs></svg>
+<script>document.documentElement.setAttribute("data-theme","light"),document.documentElement.setAttribute("data-theme-choice","light"),function(){try{const c=new URLSearchParams(window.location.search).entries();for(var[t,e]of c)if(t.startsWith("docusaurus-data-")){var a=t.replace("docusaurus-data-","data-");document.documentElement.setAttribute(a,e)}}catch(t){}}()</script><div id="__docusaurus"><link rel="preload" as="image" href="/repo/assistant/pwa/icons/icon-192.png"><div role="region" aria-label="Skip to main content"><a class="skipToContent_fXgn" href="#__docusaurus_skipToContent_fallback">Skip to main content</a></div><nav aria-label="Main" class="theme-layout-navbar navbar navbar--fixed-top"><div class="navbar__inner"><div class="theme-layout-navbar-left navbar__items"><button aria-label="Toggle navigation bar" aria-expanded="false" class="navbar__toggle clean-btn" type="button"><svg width="30" height="30" viewBox="0 0 30 30" aria-hidden="true"><path stroke="currentColor" stroke-linecap="round" stroke-miterlimit="10" stroke-width="2" d="M4 7h22M4 15h22M4 23h22"></path></svg></button><a class="navbar__brand" href="/"><div class="navbar__logo"><img src="/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--light_rzkv" height="28" width="28"><img src="/repo/assistant/pwa/icons/icon-192.png" alt="Arya basket icon" class="themedComponent__dKv themedComponent--dark_mMAk" height="28" width="28"></div><b class="navbar__title text--truncate">Arya</b></a><a class="navbar__item navbar__link" href="/docs/intro">Docs</a><a class="navbar__item navbar__link" href="/docs/guide/user-journeys">Using Arya</a><a class="navbar__item navbar__link" href="/api-reference">API reference</a></div><div class="theme-layout-navbar-right navbar__items navbar__items--right"><a href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">GitHub<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><a href="https://arya.teamnightshift.org" target="_blank" rel="noopener noreferrer" class="navbar__item navbar__link">Open Arya<svg width="13.5" height="13.5" aria-label="(opens in new tab)" class="iconExternalLink_nPIU"><use href="#theme-svg-external-link"></use></svg></a><div class="navbarSearchContainer_Bca1"><div class="navbar__search searchBarContainer_NW3z" dir="ltr"><input placeholder="Search" aria-label="Search" class="navbar__search-input searchInput_YFbd" value=""><div class="loadingRing_RJI3 searchBarLoadingRing_YnHq"><div></div><div></div><div></div><div></div></div></div></div></div></div><div role="presentation" class="navbar-sidebar__backdrop"></div></nav><div id="__docusaurus_skipToContent_fallback" class="theme-layout-main main-wrapper mainWrapper_z2l0"><div class="docsWrapper_hBAB"><button aria-label="Scroll back to top" class="clean-btn theme-back-to-top-button backToTopButton_sjWU" type="button"></button><div class="docRoot_UBD9"><aside class="theme-doc-sidebar-container docSidebarContainer_YfHR"><div class="sidebarViewport_aRkj"><div class="sidebar_njMd"><nav aria-label="Docs sidebar" class="menu thin-scrollbar menu_SIkG"><ul class="theme-doc-sidebar-menu menu__list"><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="true" href="/docs/judges"><span title="Start here" class="categoryLinkLabel_W154">Start here</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/judges"><span title="For judges" class="linkLabel_WmDU">For judges</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/quest/judge-playbook"><span title="8-minute demo path" class="linkLabel_WmDU">8-minute demo path</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/intro"><span title="What is Arya" class="linkLabel_WmDU">What is Arya</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/what-we-built"><span title="Built in the hackathon window" class="linkLabel_WmDU">Built in the hackathon window</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/principles"><span title="Why Arya exists" class="linkLabel_WmDU">Why Arya exists</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/guide/user-journeys"><span title="Using Arya" class="categoryLinkLabel_W154">Using Arya</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret menu__link--active" role="button" aria-expanded="true" href="/docs/architecture/design-decisions"><span title="How it is built" class="categoryLinkLabel_W154">How it is built</span></a></div><ul class="menu__list"><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/architecture/design-decisions"><span title="Design decisions and what is next" class="linkLabel_WmDU">Design decisions and what is next</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/architecture/overview"><span title="Architecture" class="linkLabel_WmDU">Architecture</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link menu__link--active" aria-current="page" tabindex="0" href="/docs/architecture/scalability"><span title="Scalability design" class="linkLabel_WmDU">Scalability design</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/architecture/model-policy"><span title="Model policy" class="linkLabel_WmDU">Model policy</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/quest/meta-products"><span title="Meta products in the code" class="linkLabel_WmDU">Meta products in the code</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/architecture/models"><span title="Meta models used and not used" class="linkLabel_WmDU">Meta models used and not used</span></a></li><li class="theme-doc-sidebar-item-link theme-doc-sidebar-item-link-level-2 menu__list-item"><a class="menu__link" tabindex="0" href="/docs/internal/"><span title="How we built it" class="linkLabel_WmDU">How we built it</span></a></li></ul></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/evals/"><span title="Evidence" class="categoryLinkLabel_W154">Evidence</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/run-it-yourself"><span title="Developers" class="categoryLinkLabel_W154">Developers</span></a></div></li><li class="theme-doc-sidebar-item-category theme-doc-sidebar-item-category-level-1 menu__list-item menu__list-item--collapsed"><div class="menu__list-item-collapsible"><a class="categoryLink_byQd menu__link menu__link--sublist menu__link--sublist-caret" role="button" aria-expanded="false" href="/docs/roadmap"><span title="After the hackathon" class="categoryLinkLabel_W154">After the hackathon</span></a></div></li></ul></nav></div></div></aside><main class="docMainContainer_TBSr"><div class="container padding-top--md padding-bottom--lg"><div class="row"><div class="col docItemCol_VOVn"><div class="docItemContainer_Djhp"><article><nav class="theme-doc-breadcrumbs breadcrumbsContainer_Z_bl" aria-label="Breadcrumbs"><ul class="breadcrumbs"><li class="breadcrumbs__item"><a aria-label="Home page" class="breadcrumbs__link" href="/"><svg viewBox="0 0 24 24" class="breadcrumbHomeIcon_YNFT"><path d="M10 19v-5h4v5c0 .55.45 1 1 1h3c.55 0 1-.45 1-1v-7h1.7c.46 0 .68-.57.33-.87L12.67 3.6c-.38-.34-.96-.34-1.34 0l-8.36 7.53c-.34.3-.13.87.33.87H5v7c0 .55.45 1 1 1h3c.55 0 1-.45 1-1z" fill="currentColor"></path></svg></a></li><li class="breadcrumbs__item"><span class="breadcrumbs__link">How it is built</span></li><li class="breadcrumbs__item breadcrumbs__item--active"><span class="breadcrumbs__link">Scalability design</span></li></ul></nav><div class="tocCollapsible_ETCw theme-doc-toc-mobile tocMobile_ITEo"><button type="button" class="clean-btn tocCollapsibleButton_TO0P">On this page</button></div><div class="theme-doc-markdown markdown"><header><h1>Scalability design</h1></header>
+<p>Status: a plan, not shipped. Nothing on this page is built unless it says
+&quot;today&quot;. Written 2026-11-02 against <code>main</code> after #489. It extends the
+one-line plan in <a class="" href="/docs/roadmap"><code>ROADMAP.md</code></a> (&quot;Scale out as the community
+grows&quot;) and the Known limits entry in the <a href="https://github.com/vibhortayal/arya/blob/main/README.md#what-are-the-known-limits" target="_blank" rel="noopener noreferrer" class="">README</a>.
+Where this page says more, it does not contradict them. No provider, dates
+or costs are named. Each phase is chosen when the number of shoppers asks
+for it.</p>
+<p>One idea shapes every choice here: Arya is a community app that grows
+with its users. The design keeps one codebase and one set of product rules
+(<code>assistant/docs/SPEC.md</code>). The operator turns each phase on with
+settings, one at a time, with a way back.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="1-what-runs-today">1. What runs today<a href="#1-what-runs-today" class="hash-link" aria-label="Direct link to 1. What runs today" title="Direct link to 1. What runs today" translate="no">​</a></h2>
+<p>One container, one process, one VM, as recorded in
+<a class="" href="/docs/architecture/overview"><code>assistant/docs/ARCHITECTURE.md</code></a> sections
+0.5, 0.10 and 11.</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">phone (PWA)  --https--&gt;  CDN / DNS proxy  ---&gt;  Caddy (TLS)  ---&gt;  uvicorn, 1 process</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                                                   |  FastAPI routes</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                                                   |  engines ($0 code)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                                                   |  model client</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                                                   v</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      data volume (JSON per account, photos, caches)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      Postgres on Supabase (mirror, ARYA_STORE=dual)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      Meta Model API, Baseten (model calls)</span><br></span></code></pre></div></div>
+<p>Where state lives today, and why each one matters for scale:</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>State</th><th>Where it lives today</th><th>Shared across processes?</th></tr></thead><tbody><tr><td>Account documents (receipts, lists, flags, quest, ...)</td><td>JSON files under <code>data/users/&lt;account&gt;/</code>, mirrored to <code>arya.user_docs</code> in Postgres (<code>dual</code>)</td><td>No: file locks are per process, mirror is write-only</td></tr><tr><td>Group documents</td><td><code>data/groups/&lt;id&gt;/</code>, same mirror</td><td>No</td></tr><tr><td>Sign-in sessions</td><td><code>sessions.json</code> plus a parsed copy in process memory</td><td>Through the file only</td></tr><tr><td>Demo sessions and sandboxes</td><td>Process memory (<code>auth._demo_sessions</code>, <code>demo_guard._demo_sandboxes</code>)</td><td>No</td></tr><tr><td>Rate-limit and door buckets</td><td>Process memory (<code>api/deps.py</code>, <code>api/demo_guard.py</code>)</td><td>No</td></tr><tr><td>Cost ledger</td><td>JSON lines file, scanned whole for &quot;spent today&quot;</td><td>Through the file only</td></tr><tr><td>Receipt originals, shelf frames, map images</td><td>Files on the data volume (<code>storemap_img.json</code> is rewritten per photo)</td><td>No</td></tr><tr><td>Receipt and scan jobs</td><td>One worker thread per process, pending list in a file</td><td>No</td></tr><tr><td>Group live sync</td><td>Postgres <code>NOTIFY arya_group</code> (one listener thread per process)</td><td>Yes, when <code>DATABASE_URL</code> is set</td></tr><tr><td>Push reminders</td><td>A daily cron line on the VM</td><td>n/a</td></tr></tbody></table>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="11-bottlenecks-in-the-order-they-will-bite">1.1 Bottlenecks, in the order they will bite<a href="#11-bottlenecks-in-the-order-they-will-bite" class="hash-link" aria-label="Direct link to 1.1 Bottlenecks, in the order they will bite" title="Direct link to 1.1 Bottlenecks, in the order they will bite" translate="no">​</a></h3>
+<p>Measured numbers are from the read-only performance pass of 2026-11-02 on a
+development machine with a 117-receipt account, not the live server (the
+README says the same). The ordering below is a judgment, not a measurement.</p>
+<ol>
+<li class=""><strong>One process, one GIL.</strong> The Today payload is computed in Python on each
+read (the derived list, ledger and patterns are rebuilt from receipts, with
+a per-request memo only). Alone it takes about 65 ms. With 10 people at
+once the median is about 1.1 s, and with 30 about 4 s. Threads share the
+interpreter, so more threads do not help. The fix is more processes,
+which the next three items block.</li>
+<li class=""><strong>Process memory holds visitor state.</strong> Demo sessions, demo sandboxes
+and rate-limit buckets live in the process. A second process would not
+see a demo visitor&#x27;s session. A restart drops every demo visit.</li>
+<li class=""><strong>Files have one writer.</strong> <code>_file_lock</code> is a process-local lock. Two
+processes writing the same account&#x27;s <code>lists.json</code> would race. Dual mode
+mirrors the whole document, so the mirror carries no version and
+cannot detect a lost update. <code>pg</code> mode (not live) is a whole-document
+read-modify-write with the same process-local locks.</li>
+<li class=""><strong>Saves wait for the mirror.</strong> In <code>dual</code> mode each save upserts the whole
+document to Postgres inside the request thread (connect timeout 5 s, one
+retry). A slow database slows every tick on a list.</li>
+<li class=""><strong>Model calls share the request thread pool.</strong> Reads of receipts, Ask and
+shelf scans run in the default thread pool beside sync routes. A burst of
+receipt reads can starve plain page loads, and provider rate limits are
+handled per call, not per app.</li>
+<li class=""><strong>Big blobs rewrite on every change.</strong> <code>storemap_img.json</code> is rewritten per
+mapping photo; receipt originals live on one disk; the nightly backup
+is on the same disk unless <code>ARYA_BACKUP_REMOTE</code> is set.</li>
+<li class=""><strong>No shared cache.</strong> The Today payload is recomputed per request. The
+per-request memo saves repeat work inside one request only.</li>
+<li class=""><strong>Observability is logs and <code>/health</code>.</strong> There is a cost ledger and an ops
+digest, but no request timing, no queue depth and no alert.</li>
+</ol>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="2-target-architecture">2. Target architecture<a href="#2-target-architecture" class="hash-link" aria-label="Direct link to 2. Target architecture" title="Direct link to 2. Target architecture" translate="no">​</a></h2>
+<p>The target is plain on purpose: stateless app processes behind a load
+balancer, one database as the master copy, one shared store for short-lived
+state, one queue for background work, and one object store for files. Every box
+below is a role, not a product.</p>
+<div class="language-text codeBlockContainer_Ckt0 theme-code-block" style="--prism-color:#393A34;--prism-background-color:#f6f8fa"><div class="codeBlockContent_QJqH"><pre tabindex="0" class="prism-code language-text codeBlock_bY9V thin-scrollbar" style="color:#393A34;background-color:#f6f8fa"><code class="codeBlockLines_e6Vv"><span class="token-line" style="color:#393A34"><span class="token plain">phone (PWA) --&gt; CDN / edge cache (static shell, images)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                     |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                     v</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">              load balancer (TLS, health checks, sticky nothing)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                     |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        +------------+------------+------------+</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        |            |            |            |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">     app proc     app proc     app proc     app proc      (N identical, stateless)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        |            |            |            |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        +-----+------+-----+------+-----+------+</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">              |            |            |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">              v            v            v</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        Postgres        shared        queue        object storage</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        (master copy,   key-value     (jobs,       (receipt originals,</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        per-doc         store         reminders,   shelf frames, map</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        versions,       (sessions,    model calls) images; private</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        LISTEN/NOTIFY)  demo boxes,                buckets, signed URLs)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                        rate buckets,</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                        hot cache)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      v</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                 worker procs (same image, no HTTP)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      v</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                             model gateway (one place for</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                             concurrency, retries, provider</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                             rate limits, cost ledger rows)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      |</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                                      v</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">                          Meta Model API, Baseten (unchanged)</span><br></span><span class="token-line" style="color:#393A34"><span class="token plain" style="display:inline-block"></span><br></span><span class="token-line" style="color:#393A34"><span class="token plain">        metrics + logs + traces from every box --&gt; one dashboard, a few alerts</span><br></span></code></pre></div></div>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="21-stateless-app-processes">2.1 Stateless app processes<a href="#21-stateless-app-processes" class="hash-link" aria-label="Direct link to 2.1 Stateless app processes" title="Direct link to 2.1 Stateless app processes" translate="no">​</a></h3>
+<ul>
+<li class="">Same container image as today, started with N processes behind the load
+balancer. A process keeps nothing between requests except read caches it
+can lose. Any process can serve any request, so a crash or a deploy takes
+one process out, not the site.</li>
+<li class="">Health check stays <code>/health</code>; the load balancer stops sending to a process
+that fails it. Rolling deploys replace processes one at a time, and the
+in-memory demo state no longer matters because it has moved out (2.3).</li>
+<li class="">Code change: none to routes. The seams already exist: <code>state._load/_save</code>,
+<code>auth.new_session/session_info</code>, <code>demo_guard._demo_sandbox</code>, <code>deps</code> rate
+buckets, <code>receiptjobs</code>/<code>scanjobs</code> queues, <code>live.changed</code>. Each gets a
+shared backend behind the same function names.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="22-postgres-as-the-master-copy">2.2 Postgres as the master copy<a href="#22-postgres-as-the-master-copy" class="hash-link" aria-label="Direct link to 2.2 Postgres as the master copy" title="Direct link to 2.2 Postgres as the master copy" translate="no">​</a></h3>
+<p>Today Postgres mirrors files (<code>dual</code>). The target makes it the only writer
+path (<code>pg</code>), with these additions that <code>pgstore.py</code> does not have yet:</p>
+<ul>
+<li class=""><strong>A version per document.</strong> <code>user_docs</code> gains a <code>version</code> integer. A save
+sends the version it read, and the update is <code>where version = $read</code>. Zero rows
+means someone else saved first. The request then re-reads, re-applies and
+retries a few times, then fails plainly. This replaces the process-local
+file lock and is the one change that makes several processes safe.</li>
+<li class=""><strong>Connection pool.</strong> One pool per process with a small cap, instead of one
+connection per thread. Timeouts short, so a slow database degrades a
+request, never hangs a worker.</li>
+<li class=""><strong>Rows for the things that are not documents.</strong> Sessions, the cost ledger,
+job state and the pending lists become ordinary tables, so &quot;spent today&quot; is
+one indexed <code>sum</code>, not a whole-file scan. Stockout reports, friends and
+store maps can follow later (stage 2 in
+<code>assistant/loops/2026-10-28-supabase-seam.md</code>); they
+can stay as documents for a long time.</li>
+<li class=""><strong>Group live sync</strong> keeps <code>LISTEN/NOTIFY</code>; with N processes each holds one
+listener, which is already how <code>live.py</code> is written.</li>
+</ul>
+<p>Migration from JSON, in order, each step reversible:</p>
+<ol>
+<li class="">Keep <code>dual</code>. Add <code>version</code> with a default of 0 and the versioned update
+path behind a flag; files remain the truth. Nothing observable changes.</li>
+<li class="">Re-run <code>assistant/tools/migrate_json_to_pg.py</code>, compare every document (it reports
+mismatches), and fix any drift. Back up both sides (<code>backup.sh</code> already
+dumps the schema when <code>ARYA_BACKUP_DATABASE_URL</code> is set).</li>
+<li class="">Flip <code>ARYA_STORE=pg</code> on one process while the others stay on <code>dual</code>
+reads only if the versioned path is on. Otherwise flip the whole site in a
+quiet hour. Keep writing files for a while as a shadow copy (a new
+<code>pg+shadow</code> mode, or the same <code>dual</code> logic with Postgres first and the file
+second) so rollback is a flag flip, not a restore.</li>
+<li class="">Stop the shadow file writes once a full backup cycle has passed with no
+mismatch. From here the files are a backup format, not a store.</li>
+</ol>
+<p>Rollback at any step: set <code>ARYA_STORE</code> back one mode and redeploy. Before
+step 4 the files are current; after step 4 rollback means restore the
+latest file export from the database (a small export tool is part of the
+phase, see 4).</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="23-session-and-demo-state-in-a-shared-store">2.3 Session and demo state in a shared store<a href="#23-session-and-demo-state-in-a-shared-store" class="hash-link" aria-label="Direct link to 2.3 Session and demo state in a shared store" title="Direct link to 2.3 Session and demo state in a shared store" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Sign-in sessions</strong> move to a table or the key-value store, keyed by the
+token hash, with the expiry as a TTL. <code>session_info</code> reads one key. The
+parsed-file cache (<code>_SESSIONS_SEEN</code>) goes away; a short per-process cache
+with a TTL of seconds is fine.</li>
+<li class=""><strong>Demo sessions and sandboxes</strong> move to the key-value store with a TTL of
+one visit (hours), keyed by the demo cookie. The sandbox overlay is already
+a dict keyed by file path with a 2 MB cap, so it serialises as one value
+per visit. Reads load the overlay once per request; writes save it back at
+the end of the request. This is the change that lets a demo visit survive a
+deploy and lets two processes serve one visitor.</li>
+<li class=""><strong>Rate-limit and door buckets</strong> move to the same store with atomic
+increments and TTLs, so a cap of &quot;240 door hits per IP per hour&quot; holds
+across processes.</li>
+<li class="">Keep the in-process path as the fallback when no shared store is set, so
+a laptop run (<code>compose.yaml</code>) and the tests stay as they are.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="24-background-jobs-and-reminders">2.4 Background jobs and reminders<a href="#24-background-jobs-and-reminders" class="hash-link" aria-label="Direct link to 2.4 Background jobs and reminders" title="Direct link to 2.4 Background jobs and reminders" translate="no">​</a></h3>
+<ul>
+<li class="">Today: one worker thread per process for receipt batches and store scans,
+with a pending list in a file, and a cron line for reminders.</li>
+<li class="">Target: a queue with named job types (<code>receipt.read</code>, <code>scan.read</code>,
+<code>reminders.daily</code>, <code>backup.nightly</code>, <code>export.account</code>) and worker processes
+that run the same code as today&#x27;s thread loops. A job carries the account,
+a lease and a retry count. A crashed worker&#x27;s lease expires and another
+worker picks the job up. Idempotency keys (the job id plus the frame
+number, which <code>receiptjobs</code> already uses) make a retry safe.</li>
+<li class="">Reminders become a scheduled job that enqueues one <code>reminders.account</code> job
+per opted-in account. A slow push to one phone then does not delay the rest,
+and the cron line on the VM goes away.</li>
+<li class="">The &quot;Your receipts are ready&quot; and &quot;Your map is ready&quot; cards keep polling
+the job list exactly as now; only the producer of that list changes.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="25-model-calls-one-gateway-queued-rate-limited">2.5 Model calls: one gateway, queued, rate-limited<a href="#25-model-calls-one-gateway-queued-rate-limited" class="hash-link" aria-label="Direct link to 2.5 Model calls: one gateway, queued, rate-limited" title="Direct link to 2.5 Model calls: one gateway, queued, rate-limited" translate="no">​</a></h3>
+<ul>
+<li class="">Every model call already goes through <code>api/meta_client.py</code> (and
+<code>open_client.py</code> for the open model). The target puts a small gateway
+behind those two modules: a per-model concurrency cap, a per-provider
+token-bucket for the published request limits, retries with backoff on
+429 and 5xx, and a timeout per job kind (Wonder re-reads are long, Ask is
+short).</li>
+<li class="">Interactive calls (Ask, a single receipt from the camera) keep a reserved
+share of the concurrency so a batch upload never blocks a question.</li>
+<li class="">Batch calls (bulk receipt reads, scans, judge runs, dictionary enrichment)
+go through the queue (2.4) and the gateway&#x27;s batch share.</li>
+<li class="">Budgets stay as they are in policy (<code>ARYA_DAILY_BUDGET_USD</code>, demo buckets,
+per-account limits); their counters move to the database (2.2) so they hold
+across processes. A <strong>spend reservation</strong> is taken before the call and
+settled after, so two processes cannot both spend the last dollar.</li>
+<li class="">The ledger row per call stays the audit record; the gateway writes it.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="26-caching">2.6 Caching<a href="#26-caching" class="hash-link" aria-label="Direct link to 2.6 Caching" title="Direct link to 2.6 Caching" translate="no">​</a></h3>
+<p>Three layers, each safe to lose:</p>
+<ol>
+<li class=""><strong>Edge.</strong> The built shell and static images already carry immutable
+cache headers; the CDN serves them. Nothing under <code>/api/</code> is cached at
+the edge.</li>
+<li class=""><strong>Shared hot cache.</strong> The Today payload per account (and per group plane)
+is cached in the key-value store for a few seconds and dropped on any
+save to that account or group (<code>save_at</code> is the one choke point, so the
+invalidation is one line). The same for the price facts and the derived
+list. This is the cheapest win on bottleneck 1 and needs no process
+change; the per-request memo stays as the last layer.</li>
+<li class=""><strong>Per-process.</strong> Short TTL caches for sessions and settings.</li>
+</ol>
+<p>Rule: cache derived data only. Receipts, lists and flags are read from the
+master copy, never from a cache, on a write path.</p>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="27-object-storage-for-photos">2.7 Object storage for photos<a href="#27-object-storage-for-photos" class="hash-link" aria-label="Direct link to 2.7 Object storage for photos" title="Direct link to 2.7 Object storage for photos" translate="no">​</a></h3>
+<ul>
+<li class="">Receipt originals, shelf frames and map images move to a private bucket,
+one key per account and file (<code>users/&lt;account&gt;/receipts/&lt;id&gt;.&lt;ext&gt;</code>),
+with signed, short-lived URLs for &quot;View receipt&quot;. The database row keeps
+the key, the size and a content hash.</li>
+<li class=""><code>storemap_img.json</code> stops being one rewritten blob: each image is its own
+object and the map document keeps keys only.</li>
+<li class="">Uploads keep going through the API (the people-scrubbing step must run
+before anything is stored, as today); the API streams the result to the
+bucket. Deletion of an account deletes its prefix.</li>
+<li class="">Backups: the bucket has versioning or a nightly copy to a second bucket;
+the database dump is the other half. <code>restore.sh</code> restores the volume
+today and would restore the dump plus point at the bucket.</li>
+</ul>
+<h3 class="anchor anchorTargetStickyNavbar_zFqj" id="28-observability">2.8 Observability<a href="#28-observability" class="hash-link" aria-label="Direct link to 2.8 Observability" title="Direct link to 2.8 Observability" translate="no">​</a></h3>
+<ul>
+<li class=""><strong>Metrics per process:</strong> request count and latency by route (p50, p95),
+in-flight requests, thread pool queue length, database pool wait, cache
+hit rate, queue depth and job age by type, model calls by model with
+latency, error and 429 counts, spend per bucket. Exposed on a
+<code>/metrics</code> endpoint the load balancer does not route to the public.</li>
+<li class=""><strong>Logs:</strong> one JSON line per request with a request id, account hash (not
+the name), route, status, duration and the job id when one applies. The
+same id goes into model calls and ledger rows.</li>
+<li class=""><strong>Traces:</strong> optional; a request id in logs covers most of what a trace
+would, until there are several services.</li>
+<li class=""><strong>Alerts, few and plain:</strong> <code>/health</code> red for a few minutes; p95 of
+<code>/api/today</code> above a line; queue age above a line; model error rate above
+a line; daily spend near the ceiling. The existing ops digest
+(<code>harness/ops.py</code>) becomes a reader of the same metrics.</li>
+<li class=""><strong>Privacy:</strong> no receipt content, no names and no photos in logs or
+metrics; the people-scrubbing and personal-data rules in <code>meta_client</code>
+stay the boundary.</li>
+</ul>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="3-phased-migration-plan">3. Phased migration plan<a href="#3-phased-migration-plan" class="hash-link" aria-label="Direct link to 3. Phased migration plan" title="Direct link to 3. Phased migration plan" translate="no">​</a></h2>
+<p>Each phase is turned on by settings on the current image, has a
+measurement that says whether it worked, and has a rollback that is a flag
+flip or a redeploy of the previous image. Phases go in this order because
+each one removes the blocker for the next. None has a date.</p>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Phase</th><th>What changes</th><th>Blocker it removes</th><th>Rollback</th><th>What to measure</th></tr></thead><tbody><tr><td>0. Baseline</td><td>Add request timing and a <code>/metrics</code> endpoint; run the Today load script against the live site in a quiet hour; set <code>ARYA_BACKUP_REMOTE</code> and prove one restore off the VM</td><td>Nothing is known about the live ceiling</td><td>Remove the endpoint</td><td>p50 and p95 of <code>/api/today</code> at 1, 10, 30 concurrent on the live server; restore time</td></tr><tr><td>1. Hot cache</td><td>Today, price facts and derived list cached per plane for a few seconds, invalidated on save; mirror writes moved off the request path (a background queue in-process, with a circuit breaker on failure)</td><td>Bottlenecks 1 (partly), 4 and 7</td><td>Flag off the cache; flag off the async mirror</td><td>Same load test: median at 10 and 30 concurrent; cache hit rate; save latency with the mirror slow or down</td></tr><tr><td>2. Postgres master</td><td><code>version</code> column and versioned updates; connection pool; sessions and ledger as tables; <code>pg</code> with shadow file writes; then shadow off</td><td>Bottleneck 3 and the one-writer rule</td><td><code>ARYA_STORE</code> back one mode; restore from files until shadow is off</td><td>Mismatch count from the migration check (must be 0); lost-update retries per hour; database pool wait</td></tr><tr><td>3. Shared short-lived state</td><td>Demo sessions, sandboxes and rate buckets in a shared key-value store, with the in-process path as fallback</td><td>Bottleneck 2</td><td>Unset the store address; the process path returns</td><td>A demo visit survives a deploy; door caps hold across two processes</td></tr><tr><td>4. Several processes</td><td>Start N processes behind the load balancer on the same VM first, then on more than one machine; rolling deploys</td><td>Bottleneck 1</td><td>N back to 1</td><td>p50 at 30 concurrent falls in step with N; zero demo visits dropped during a deploy</td></tr><tr><td>5. Queue and workers</td><td>Receipt, scan and reminder jobs on the queue; worker processes; cron line retired</td><td>Bottleneck 5 (partly)</td><td><code>ARYA_*_JOBS_INLINE</code> style flags back to the thread loop</td><td>Job age p95; retries; jobs lost on a worker restart (must be 0)</td></tr><tr><td>6. Model gateway</td><td>Concurrency caps, provider rate buckets, spend reservation, interactive reserve</td><td>Bottleneck 5</td><td>Caps to unlimited; reservation off</td><td>429s per hour; Ask latency while a batch runs; spend over the ceiling (must be 0)</td></tr><tr><td>7. Object storage</td><td>Originals, frames and map images in a bucket; <code>storemap_img.json</code> split</td><td>Bottleneck 6</td><td>Keep files on the volume until the copy is verified; read from the volume on a bucket miss</td><td>Bytes on the volume; map save latency; signed-URL errors</td></tr><tr><td>8. Cloud provider</td><td>Move the whole set (processes, database, store, queue, bucket) to a provider with managed versions of each; the VM becomes a fallback until a full week passes</td><td>Hardware ceiling</td><td>DNS back to the VM</td><td>Same dashboard, same alerts, same load test</td></tr></tbody></table>
+<p>Phases 0 and 1 can happen on the current VM with no new service.
+Phase 2 uses the database that already exists. Phase 3 is the first new
+service. From phase 4 on, the choice of provider matters, and the design
+above lets any of them fit.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="4-risks-and-how-the-plan-answers-them">4. Risks and how the plan answers them<a href="#4-risks-and-how-the-plan-answers-them" class="hash-link" aria-label="Direct link to 4. Risks and how the plan answers them" title="Direct link to 4. Risks and how the plan answers them" translate="no">​</a></h2>
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+<table><thead><tr><th>Risk</th><th>Answer</th></tr></thead><tbody><tr><td>Lost updates when two processes save one document</td><td>Versioned updates (2.2) before any second process (phase 2 before 4). Never the other order.</td></tr><tr><td>A migration that silently drops a document</td><td>The migration tool already counts mismatches; phase 2 requires zero before <code>pg</code>, and shadow file writes keep a second copy.</td></tr><tr><td>Demo visits dropped during judging</td><td>Not a risk here: no phase runs before judging ends. Later, phase 3 removes it.</td></tr><tr><td>Cost spike from more processes</td><td>The budgets are per app, not per process, once counters live in the database (phase 2) and a reservation exists (phase 6). Until then, run one process.</td></tr><tr><td>Privacy rules weaken as state moves</td><td>Each move keeps the same boundary: scrub before store, hashes not names in sessions and logs, personal data only to Meta Standard mode as recorded in <code>AGENTS.md</code>. A phase that touches photos (7) needs a privacy review first.</td></tr><tr><td>Vendor lock-in</td><td>Every box is a role with a plain interface (SQL, key-value with TTL, a queue with leases, object keys with signed URLs). Nothing uses a provider-only feature.</td></tr><tr><td>More moving parts than one person can run</td><td>Each phase stays optional and off by default; a laptop run and the tests keep the in-process path. The dashboard and alerts (2.8) come in phase 0, before anything else.</td></tr><tr><td>Reads stay slow because the engines are Python</td><td>The hot cache (phase 1) and N processes (phase 4) are the first answers. Precomputing the derived state on save instead of on read is a later option the memo design already allows.</td></tr></tbody></table>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="5-what-stays-the-same">5. What stays the same<a href="#5-what-stays-the-same" class="hash-link" aria-label="Direct link to 5. What stays the same" title="Direct link to 5. What stays the same" translate="no">​</a></h2>
+<p>The product rules, the engines in code at $0, the one model client, the
+cost policy, the privacy boundary, the PWA, the connector and the API. A
+shopper would not see a phase happen, except that Today loads as fast with
+hundreds of neighbours as it does alone today.</p>
+<h2 class="anchor anchorTargetStickyNavbar_zFqj" id="6-related-pages">6. Related pages<a href="#6-related-pages" class="hash-link" aria-label="Direct link to 6. Related pages" title="Direct link to 6. Related pages" translate="no">​</a></h2>
+<ul>
+<li class=""><a class="" href="/docs/roadmap"><code>ROADMAP.md</code></a>: the one-line plan this page expands.</li>
+<li class=""><a href="https://github.com/vibhortayal/arya/blob/main/README.md#what-are-the-known-limits" target="_blank" rel="noopener noreferrer" class=""><code>../README.md#what-are-the-known-limits</code></a>: the limit as
+judges read it.</li>
+<li class=""><a class="" href="/docs/architecture/overview"><code>../assistant/docs/ARCHITECTURE.md</code></a>:
+what runs today, section by section.</li>
+<li class=""><a href="https://github.com/vibhortayal/arya/blob/main/assistant/docs/SCALE-SIM.md" target="_blank" rel="noopener noreferrer" class=""><code>../assistant/docs/SCALE-SIM.md</code></a>: the
+simulator and its earlier findings.</li>
+<li class=""><code>assistant/docs/OPS.md</code>: the runbook that each phase updates.</li>
+</ul></div><footer class="theme-doc-footer docusaurus-mt-lg"><div class="row margin-top--sm theme-doc-footer-edit-meta-row"><div class="col noPrint_WFHX"><a href="https://github.com/vibhortayal/arya/edit/main/docs/SCALABILITY-DESIGN.md" target="_blank" rel="noopener noreferrer" class="theme-edit-this-page"><svg fill="currentColor" height="20" width="20" viewBox="0 0 40 40" class="iconEdit_Z9Sw" aria-hidden="true"><g><path d="m34.5 11.7l-3 3.1-6.3-6.3 3.1-3q0.5-0.5 1.2-0.5t1.1 0.5l3.9 3.9q0.5 0.4 0.5 1.1t-0.5 1.2z m-29.5 17.1l18.4-18.5 6.3 6.3-18.4 18.4h-6.3v-6.2z"></path></g></svg>Edit this page</a></div><div class="col lastUpdated_JAkA"></div></div></footer></article><nav class="docusaurus-mt-lg pagination-nav" aria-label="Docs pages"><a class="pagination-nav__link pagination-nav__link--prev" href="/docs/architecture/overview"><div class="pagination-nav__sublabel">Previous</div><div class="pagination-nav__label">Architecture</div></a><a class="pagination-nav__link pagination-nav__link--next" href="/docs/architecture/model-policy"><div class="pagination-nav__sublabel">Next</div><div class="pagination-nav__label">Model policy</div></a></nav></div></div><div class="col col--3"><div class="tableOfContents_bqdL thin-scrollbar theme-doc-toc-desktop"><ul class="table-of-contents table-of-contents__left-border"><li><a href="#1-what-runs-today" class="table-of-contents__link toc-highlight">1. What runs today</a><ul><li><a href="#11-bottlenecks-in-the-order-they-will-bite" class="table-of-contents__link toc-highlight">1.1 Bottlenecks, in the order they will bite</a></li></ul></li><li><a href="#2-target-architecture" class="table-of-contents__link toc-highlight">2. Target architecture</a><ul><li><a href="#21-stateless-app-processes" class="table-of-contents__link toc-highlight">2.1 Stateless app processes</a></li><li><a href="#22-postgres-as-the-master-copy" class="table-of-contents__link toc-highlight">2.2 Postgres as the master copy</a></li><li><a href="#23-session-and-demo-state-in-a-shared-store" class="table-of-contents__link toc-highlight">2.3 Session and demo state in a shared store</a></li><li><a href="#24-background-jobs-and-reminders" class="table-of-contents__link toc-highlight">2.4 Background jobs and reminders</a></li><li><a href="#25-model-calls-one-gateway-queued-rate-limited" class="table-of-contents__link toc-highlight">2.5 Model calls: one gateway, queued, rate-limited</a></li><li><a href="#26-caching" class="table-of-contents__link toc-highlight">2.6 Caching</a></li><li><a href="#27-object-storage-for-photos" class="table-of-contents__link toc-highlight">2.7 Object storage for photos</a></li><li><a href="#28-observability" class="table-of-contents__link toc-highlight">2.8 Observability</a></li></ul></li><li><a href="#3-phased-migration-plan" class="table-of-contents__link toc-highlight">3. Phased migration plan</a></li><li><a href="#4-risks-and-how-the-plan-answers-them" class="table-of-contents__link toc-highlight">4. Risks and how the plan answers them</a></li><li><a href="#5-what-stays-the-same" class="table-of-contents__link toc-highlight">5. What stays the same</a></li><li><a href="#6-related-pages" class="table-of-contents__link toc-highlight">6. Related pages</a></li></ul></div></div></div></div></main></div></div></div><footer class="theme-layout-footer footer"><div class="container container-fluid"><div class="row footer__links"><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Links and contact</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/arya" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>Arya on GitHub</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://github.com/vibhortayal/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"/></svg><span>GitHub profile</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://www.linkedin.com/in/vibhortayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path d="M16 8a6 6 0 0 1 6 6v7h-4v-7a2 2 0 0 0-2-2 2 2 0 0 0-2 2v7h-4v-7a6 6 0 0 1 6-6z"/><rect x="2" y="9" width="4" height="12"/><circle cx="4" cy="4" r="2"/></svg><span>LinkedIn</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://x.com/VibTayal" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><path fill="currentColor" stroke="none" d="M18.244 2.25h3.308l-7.227 8.26 8.502 11.24H16.17l-5.214-6.817L4.99 21.75H1.68l7.73-8.835L1.254 2.25H8.08l4.713 6.231zm-1.161 17.52h1.833L7.084 4.126H5.117z"/></svg><span>X (@VibTayal)</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="https://vibhortayal.github.io/" target="_blank" rel="noopener"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><circle cx="12" cy="12" r="10"/><path d="M2 12h20M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"/></svg><span>Website</span></a></li><li class="footer__item"><a class="footer__link-item arya-link" href="mailto:support@teamnightshift.org"><svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-10 6L2 7"/></svg><span>Email</span></a></li></ul></div><div class="theme-layout-footer-column col footer__col"><div class="footer__title">Read these docs as plain text</div><ul class="footer__items clean-list"><li class="footer__item"><a class="footer__link-item" href="/llms.txt">Short index (llms.txt)</a></li><li class="footer__item"><a class="footer__link-item" href="/llms-full.txt">Everything in one file (llms-full.txt)</a></li></ul></div></div><div class="footer__bottom text--center"><div class="footer__copyright">Docs are generated from the repository Markdown.</div></div></div></footer></div>
+</body>
+</html>
