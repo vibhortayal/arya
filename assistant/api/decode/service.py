@@ -16,6 +16,17 @@ from datetime import datetime
 from api.meta_client import MODELS, parse_json, spark_model
 
 
+def assume_date(receipt):
+    """A receipt whose date could not be read is filed under today's date
+    and marked date_assumed, so one blurry date never loses the receipt
+    (owner, 2026-11-16). The person can fix the date afterwards."""
+    if not receipt.get("purchased_at"):
+        from datetime import date
+        receipt["purchased_at"] = date.today().isoformat()
+        receipt["date_assumed"] = True
+    return receipt
+
+
 def _iso_day(v):
     """Normalize a source date to ISO YYYY-MM-DD for the store.
 

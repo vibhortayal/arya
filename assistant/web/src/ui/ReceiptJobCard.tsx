@@ -67,6 +67,8 @@ export function ReceiptJobCard({ sending, onChange, onCheck, tick }:
     <div className="group pad" id="rc-job">
       <p className="nomargin"><strong>{t("receiptJob.done", { count: job.done })}</strong></p>
       <p className="muted small nomargin">{t("receiptJob.summary", { filed: job.filed, dup: job.duplicate, failed: job.failed })}</p>
+      {job.trip && job.trip.list_only.length ? <p className="small nomargin">{t("lists.trip.listOnly", { names: job.trip.list_only.join(", ") })}</p> : null}
+      {job.trip && job.trip.receipt_only.length ? <p className="small nomargin">{t("lists.trip.receiptOnly", { names: job.trip.receipt_only.join(", ") })}</p> : null}
       {job.failures.slice(0, 5).map(f => <p key={f.name} className="muted small nomargin">{f.name}: {noKeyMessage(f.reason) || f.reason}</p>)}
       {job.failed > 5 && <p className="muted small nomargin">{t("receipts.failedMore", { n: job.failed - 5 })}</p>}
       <p className="nomargin" style={{ marginTop: 8 }}>

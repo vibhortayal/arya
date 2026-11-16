@@ -91,13 +91,16 @@ class TestRoutes(unittest.TestCase):
         r = self.c.post("/api/intake/order-text", json={"text": "x" * 40})
         self.assertEqual(r.status_code, 502)
 
-    def test_undated_receipt_refused(self):
+    def test_undated_receipt_is_filed_under_today(self):
         _Client.answer = json.dumps({"store": "Costco", "lines": [
             {"product": "Eggs", "price": 5.0, "confidence": 0.9}], "subtotal": 5.0})
         r = self.c.post("/decode/photo", content=b"\xff\xd8fakejpeg",
                         headers={"Content-Type": "image/jpeg"})
-        self.assertEqual(r.status_code, 422)
-        self.assertIn("date", r.json()["detail"])
+        self.assertEqual(r.status_code, 200)
+        from datetime import date
+        rec = r.json()["receipt"]
+        self.assertEqual(rec["purchased_at"], date.today().isoformat())
+        self.assertTrue(rec["date_assumed"])
 
     def test_parallel_flag_writes_keep_both_fields(self):
         from api import state
