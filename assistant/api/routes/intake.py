@@ -9,7 +9,7 @@ from fastapi.concurrency import run_in_threadpool
 
 from api import own_key
 from api import state, stores
-from api.decode.service import (decode_order_text, decode_photo, decode_scanned_pdf, decode_text, expand_costco_names,
+from api.decode.service import (assume_date, decode_order_text, decode_photo, decode_scanned_pdf, decode_text, expand_costco_names,
                                 extract_pdf_text, normalize_costco_json)
 from api.demo_guard import _is_demo
 from api.deps import _budget_guard, _json_body, _json_obj, new_client
@@ -78,12 +78,10 @@ async def decode_text_route(req: Request):
 
 
 def _need_receipt_date(receipt):
-    """state.add_receipts refuses a receipt with no date, so say so
-    here instead of answering "added" with an id that was never
-    filed (a hunt finish then failed with "no such receipt")."""
-    if not receipt.get("purchased_at"):
-        raise HTTPException(422, "could not read the date on this receipt — "
-                            "retake the photo with the date in view")
+    """state.add_receipts refuses a receipt with no date. A receipt whose
+    date could not be read is filed under today's date and flagged
+    date_assumed instead of failing (owner, 2026-11-16)."""
+    assume_date(receipt)
 
 
 @router.post("/api/intake/order-text")

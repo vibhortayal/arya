@@ -16,10 +16,11 @@ _MEDIA = ("application/pdf",)
 
 @router.post("/api/receipts/jobs")
 async def receipt_job_create(req: Request):
-    """Open a batch: {count}."""
+    """Open a batch: {count, trip?: {names}}. trip is the shopping trip's
+    list item names, so the filed receipt is checked against the list."""
     body = await _json_obj(req)
     try:
-        return receiptjobs.create(body.get("count"))
+        return receiptjobs.create(body.get("count"), body.get("trip"))
     except PermissionError as e:
         raise HTTPException(403, str(e))
     except ValueError as e:
@@ -73,3 +74,15 @@ def receipt_job_seen(job_id: str):
         return receiptjobs.mark_seen(job_id)
     except KeyError:
         raise HTTPException(404, "no such batch")
+
+
+@router.post("/api/receipts/{receipt_id}/trip-check")
+async def receipt_trip_check(receipt_id: str, req: Request):
+    """{names}: how a filed receipt lines up with a list's item names.
+    Used when the receipt was read on screen (the demo)."""
+    from api import state, tripcheck
+    body = await _json_obj(req)
+    rec = next((r for r in state.receipts() if r["receipt_id"] == receipt_id), None)
+    if rec is None:
+        raise HTTPException(404, "no such receipt")
+    return tripcheck.check(rec, body.get("names") or [])

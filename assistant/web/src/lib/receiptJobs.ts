@@ -4,10 +4,15 @@ import { fitPhoto } from "./photo";
 /* Background receipt reading (api/receiptjobs.py): the phone sends the
  * pictures and PDFs up first, the server reads them while the app is
  * closed. */
+/* How a trip's receipt lined up with the list: quiet is true when every
+ * list item has a receipt line and nothing extra was bought. */
+export type TripResult = { merchant?: string | null; lines: number; matched: number; list_only: string[]; receipt_only: string[]; quiet: boolean; receipt_id?: string; date_assumed?: boolean };
+
 export type ReceiptJob = {
   id: string; status: "uploading" | "queued" | "reading" | "paused" | "ready" | "failed";
   total: number; received: number; done: number; filed: number; duplicate: number; failed: number;
   failures: { name: string; reason: string }[]; reason?: string | null; seen: boolean; at: string;
+  trip?: TripResult | null;
 };
 
 const isPdf = (f: File) => f.type === "application/pdf" || /\.pdf$/i.test(f.name || "");
@@ -17,8 +22,8 @@ const mediaOf = (f: File) => isPdf(f) ? "application/pdf" : (f.type || "image/jp
  * file that cannot be sent is listed in `unsent` with the reason. Throws
  * when the batch cannot be opened (the caller then reads in the browser,
  * as before). */
-export async function sendBatch(files: File[], onProgress: (sent: number) => void) {
-  const job = await post<ReceiptJob>("/api/receipts/jobs", { count: files.length });
+export async function sendBatch(files: File[], onProgress: (sent: number) => void, trip?: { names: string[] }) {
+  const job = await post<ReceiptJob>("/api/receipts/jobs", trip ? { count: files.length, trip } : { count: files.length });
   const unsent: { name: string; reason: string }[] = [];
   let sent = 0;
   for (let i = 0; i < files.length; i++) {

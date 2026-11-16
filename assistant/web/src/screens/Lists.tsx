@@ -9,11 +9,12 @@ import { Sheet } from "../ui/Sheet";
 import { SuggestDrop, lastSegment, replaceLast, useSuggest } from "../ui/Suggest";
 import { HeadsUp, StoreNotice, storeTrouble, TownChip, TownItemSheet } from "../ui/Town";
 import { useTown } from "../lib/town";
-import { decode, isPdfFile } from "../ui/AddReceiptSheet";
+import { decode } from "../ui/AddReceiptSheet";
+import { sendBatch, type ReceiptJob, type TripResult } from "../lib/receiptJobs";
 import { IconCheck, IconMic, IconMore, IconPen, IconSearch, IconSpark } from "../ui/icons";
 import { get, noKeyMessage, post } from "../lib/api";
 import { SYNCED } from "../lib/listQueue";
-import { asset, fmtDate, keepUnit, lineSavings, money, qtyTag } from "../lib/format";
+import { asset, fmtDate, keepUnit, money, qtyTag } from "../lib/format";
 import { charFor, useCharacters } from "../lib/characters";
 import { startCapture, transcribeBlob, voiceSupported, type Capture } from "../lib/recorder";
 import { ListeningCard } from "../ui/Listening";
@@ -253,7 +254,11 @@ export function Lists() {
   const closeCard = () => setInCard(c => { if (c && c.url) URL.revokeObjectURL(c.url); return null; });
   const failCard = (title: string, body: string, retry: "photo" | "mic", file?: File) =>
     setInCard({ kind: "unclear", title, body, retry, url: file ? URL.createObjectURL(file) : undefined });
-  const [receiptFile, setReceiptFile] = useState<File | null>(null);
+  /* A receipt being read: sent, read in the background (or on screen in the
+   * demo), then filed. From Done shopping it also carries the list's names,
+   * so the answer is "all match" or what is missing or extra. */
+  type Trip = { phase: "sending" | "reading" | "done" | "error"; jobId?: string; onScreen?: boolean; names?: string[]; result?: TripResult | null; merchant?: string | null; error?: string; assumed?: boolean; dup?: boolean };
+  const [trip, setTrip] = useState<Trip | null>(null);
   const field = useRef<HTMLInputElement>(null);
   const smart = useRef<HTMLDivElement>(null);
   const alive = useRef(true);
@@ -801,7 +806,6 @@ export function Lists() {
     const f = ev.target.files?.[0];
     const input = ev.target;
     if (!f) return;
-    setReceiptFile(null);
     closeCard();
     setStatus(t("lists.readingPhoto"));
     try {
@@ -820,7 +824,7 @@ export function Lists() {
           reloadQuiet();
         }
       }
-      else if (out.kind === "receipt") setReceiptFile(f);
+      else if (out.kind === "receipt") void readReceipt(f);
       else if (out.kind === "item") setInCard({ kind: "item", name: out.item, sure: !!out.confident, url: URL.createObjectURL(f) });
       else if (out.kind === "unclear" || !out.added) failCard(t("lists.input.cantTell"), out.reason || t("lists.input.cantTellBody"), "photo", f);
       else {
@@ -849,25 +853,69 @@ export function Lists() {
     if (how === "photo") document.getElementById("add-photo")?.click(); else void mic();
   };
   const cardType = () => { closeCard(); requestAnimationFrame(() => field.current?.focus()); };
-  /* app.js fileReceiptPhoto, for the camera's receipt offer. */
-  const fileReceipt = async () => {
-    const f = receiptFile;
-    setReceiptFile(null);
-    if (!f) return;
+  /* A receipt photo: sent up and read in the background, so the person can
+   * leave the screen. With names (the list at the end of a trip) the filed
+   * receipt is matched to the list. The demo files nothing for later, so it
+   * reads on screen. */
+  const readReceipt = async (f: File, names?: string[]) => {
     if (!f.size) { toast(t("common.receiptFile.empty")); return; }
-    setStatus(t("common.receiptFile.reading"));
+    setStatus("");
+    setTrip({ phase: "sending", names });
+    let sent: Awaited<ReturnType<typeof sendBatch>> | null = null;
+    try { sent = await sendBatch([f], () => {}, names ? { names } : undefined); } catch { sent = null; }
+    if (sent) {
+      if (sent.unsent.length) setTrip({ phase: "error", names, error: sent.unsent[0].reason });
+      else setTrip({ phase: "reading", jobId: sent.job.id, names });
+      return;
+    }
+    setTrip({ phase: "reading", onScreen: true, names });
     try {
       const out = await decode(f);
       const rec = out.receipt || {};
-      setStatus("");
-      if (out.demo) { setStatus(t("common.receiptFile.demo")); return; }
-      if (out.duplicate) { toast(t("common.receiptFile.duplicate", { merchant: rec.merchant || t("common.receiptFile.thatReceipt"), date: fmtDate(rec.purchased_at) })); return; }
-      const saved = lineSavings(rec.lines || []);
-      toast(t(saved ? "common.receiptFile.filedSaved" : "common.receiptFile.filed", { merchant: rec.merchant || t("common.receiptFile.theReceipt"), n: (rec.lines || []).length, amount: money(saved) }));
+      let result: TripResult | null = null;
+      if (names && rec.receipt_id && !out.duplicate) result = await post<TripResult>(`/api/receipts/${encodeURIComponent(rec.receipt_id)}/trip-check`, { names }).catch(() => null);
+      setTrip({ phase: "done", names, result, merchant: rec.merchant, dup: !!out.duplicate, assumed: !!rec.date_assumed });
     } catch (e) {
-      setStatus("");
-      toast(t(isPdfFile(f) ? "common.receiptFile.couldNotReadFile" : "common.receiptFile.couldNotReadPhoto", { error: errMsg(e) }));
+      setTrip({ phase: "error", names, error: errMsg(e) });
     }
+  };
+  /* The trip's receipt is read in the background: poll until the batch is
+   * filed, then show how it lined up with the list. */
+  useEffect(() => {
+    if (!trip || trip.phase !== "reading" || !trip.jobId) return;
+    let live = true, timer: ReturnType<typeof setTimeout> | undefined;
+    const load = async () => {
+      try {
+        const d = await get<{ jobs: ReceiptJob[] }>("/api/receipts/jobs");
+        const j = d.jobs.find(x => x.id === trip.jobId);
+        if (!live) return;
+        if (j && j.status === "ready") {
+          post(`/api/receipts/jobs/${j.id}/seen`).catch(() => {});
+          if (j.failed) setTrip({ phase: "error", names: trip.names, error: (j.failures[0] && j.failures[0].reason) || "" });
+          else setTrip({ phase: "done", names: trip.names, result: j.trip || null, merchant: j.trip && j.trip.merchant, dup: j.duplicate > 0, assumed: !!(j.trip && j.trip.date_assumed) });
+          return;
+        }
+        if (j && j.status === "paused") { setTrip({ phase: "error", names: trip.names, error: noKeyMessage(j.reason) || j.reason || "" }); return; }
+      } catch { /* try again */ }
+      if (live) timer = setTimeout(load, 3000);
+    };
+    timer = setTimeout(load, 1500);
+    return () => { live = false; if (timer) clearTimeout(timer); };
+  }, [trip && trip.phase, trip && trip.jobId]); // eslint-disable-line react-hooks/exhaustive-deps
+  /* Step three of Done shopping: once the receipt is filed, offer to clear. */
+  useEffect(() => {
+    if (trip && trip.phase === "done" && trip.names && done.length) setDoneStep("clear");
+  }, [trip && trip.phase]); // eslint-disable-line react-hooks/exhaustive-deps
+  const onTripPhoto = (ev: React.ChangeEvent<HTMLInputElement>) => {
+    const f = ev.target.files?.[0];
+    const input = ev.target;
+    if (!f) return;
+    // The photo is chosen: Done shopping closes and the trip ends; the clear question waits for the receipt.
+    setDoneStep(null);
+    setShopping(null);
+    if (shopMode === "list") patchShop({ list_trip: true }).catch(() => {});
+    void readReceipt(f, [...done, ...open].map(i => i.name));
+    input.value = "";
   };
 
   /* ---- Start shopping ---- */
@@ -1145,7 +1193,7 @@ export function Lists() {
             </button>
           </div>
           <p className="subtitle" id="lp-sub">
-            {selEff ? t("lists.nSelected", { n: selEff.size }) : [open.length ? t("lists.nToGet", { n: open.length }) : t("lists.nothingToGet"), ...((here && here.stores) || [])].join(" · ")}
+            {selEff ? t("lists.nSelected", { n: selEff.size }) : [open.length && done.length ? t("lists.nTickedLeft", { done: done.length, left: open.length }) : open.length ? t("lists.nToGet", { n: open.length }) : done.length ? t("lists.allTicked", { n: done.length }) : t("lists.nothingToGet"), ...((here && here.stores) || [])].join(" · ")}
           </p>
 
           {town && !selEff ? <HeadsUp town={town} itemIds={open.map(i => i.item_id)} listStores={listStores} /> : null}
@@ -1214,12 +1262,21 @@ export function Lists() {
                 {inCard.kind === "item" ? <p className="muted nomargin" style={{ fontSize: 13, marginTop: 8 }}>{t("lists.input.notRight")} <button className="linkbtn" type="button" data-ic="again" onClick={() => cardRetry("photo")}>{t("lists.input.tryAgain")}</button></p> : null}
               </div>
             ) : null}
-            <div id="add-receipt-offer">
-              {receiptFile ? <>
-                <p className="nomargin" style={{ marginTop: 10 }}>{t("lists.thisLooksLikeAReceipt")}</p>
-                <p style={{ marginBottom: 0 }}><button className="btn primary" id="add-file-receipt" type="button" onClick={fileReceipt}>{t("lists.fileItAsAReceipt")}</button></p>
-              </> : null}
-            </div>
+            {trip ? (
+              <div id="add-receipt-offer" className="tripstrip" role="status" aria-live="polite">
+                {trip.phase === "sending" ? <p className="nomargin"><strong>{t("lists.trip.sending")}</strong></p> : null}
+                {trip.phase === "reading" ? <><p className="nomargin"><strong>{t("lists.trip.reading")}</strong></p>
+                  <p className="muted small nomargin">{trip.onScreen ? t("lists.trip.stay") : t("lists.trip.canLeave")}</p></> : null}
+                {trip.phase === "error" ? <><p className="nomargin"><strong>{t("lists.trip.error")}</strong></p>
+                  {trip.error ? <p className="muted small nomargin">{noKeyMessage(trip.error) || trip.error}</p> : null}</> : null}
+                {trip.phase === "done" ? <>
+                  <p className="nomargin"><strong>{trip.dup ? t("lists.trip.duplicate") : trip.result && trip.result.quiet ? t("lists.trip.filedMatch", { merchant: trip.merchant || t("common.receiptFile.theReceipt"), n: trip.result.matched }) : t("lists.trip.filed", { merchant: trip.merchant || t("common.receiptFile.theReceipt") })}</strong></p>
+                  {trip.result && trip.result.list_only.length ? <p className="small nomargin">{t("lists.trip.listOnly", { names: trip.result.list_only.join(", ") })}</p> : null}
+                  {trip.result && trip.result.receipt_only.length ? <p className="small nomargin">{t("lists.trip.receiptOnly", { names: trip.result.receipt_only.join(", ") })}</p> : null}
+                  {trip.assumed ? <p className="muted small nomargin">{t("lists.trip.assumedDate")}</p> : null}
+                </> : null}
+                {trip.phase === "done" || trip.phase === "error" ? <p style={{ margin: "8px 0 0" }}><button className="linkbtn" type="button" data-trip-dismiss onClick={() => setTrip(null)}>{t("common.dismiss")}</button></p> : null}
+              </div>) : null}
           </div>
           <div id="list-answer">{ask.node}</div>
 
@@ -1320,7 +1377,8 @@ export function Lists() {
         <div className="donesheet">
           <h3 id="done-title" className="largetitle" style={{ fontSize: 22, margin: "0 0 4px" }}>{t("lists.doneTitle")}</h3>
           <p className="sub">{t("lists.doneSummary", { done: done.length, left: open.length })}</p>
-          <button className="btn primary wide" id="done-receipt" type="button" onClick={() => { setDoneStep("clear"); document.getElementById("add-photo")?.click(); }}>{t("lists.addReceipt")}</button>
+          <button className="btn primary wide" id="done-receipt" type="button" onClick={() => document.getElementById("done-photo")?.click()}>{t("lists.addReceipt")}</button>
+          <input type="file" id="done-photo" accept="image/*,application/pdf" hidden onChange={onTripPhoto} />
           {/* The demo has no paper receipt: a sample one, as Use soon has a sample date (retest 2026-10-31 #16). */}
           {demo ? <button className="btn wide" id="done-sample" type="button" onClick={() => guard(async () => {
             const r = await post<{ merchant: string; lines: number; total: number }>("/api/list/sample-receipt",

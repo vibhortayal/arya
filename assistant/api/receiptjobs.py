@@ -88,7 +88,7 @@ def public(job):
             "filed": counts["filed"], "duplicate": counts["duplicate"],
             "failed": counts["failed"], "failures": bad[:20],
             "reason": job.get("reason"), "seen": job.get("seen", False),
-            "at": job["at"]}
+            "at": job["at"], "trip": (job.get("trip") or {}).get("result")}
 
 
 def jobs():
@@ -120,7 +120,7 @@ def _drop_files(job_id):
     shutil.rmtree(_dir(job_id), ignore_errors=True)
 
 
-def create(count):
+def create(count, trip=None):
     if state.in_sandbox():
         raise PermissionError("the demo household files nothing")
     try:
@@ -133,6 +133,9 @@ def create(count):
         raise ValueError(f"{MAX_FILES} receipts at a time at most; add the rest in another batch")
     job = {"id": uuid.uuid4().hex[:16], "total": count, "files": {},
            "status": "uploading", "reason": None, "seen": False, "at": _now()}
+    if trip and isinstance(trip.get("names"), list):
+        # A trip receipt: the list's item names, to check the receipt against.
+        job["trip"] = {"names": [str(n)[:120] for n in trip["names"][:300]]}
     with state.file_lock(JOBS_FILE):
         doc = _load()
         _prune(doc)
@@ -263,14 +266,18 @@ def file_one(body, media):
     except RuntimeError as e:
         logging.getLogger("arya.input").warning("input failure: receipt job model error (%s)", str(e)[:120])
         raise HTTPException(502, safe_detail(e))
-    if not receipt.get("purchased_at"):
-        raise HTTPException(422, "could not read the date on this receipt")
+    from api.decode.service import assume_date
+    if not receipt.get("lines"):
+        # Nothing on it reads as a purchase: say so, rather than file an empty receipt.
+        raise HTTPException(422, "This doesn't look like a receipt. It may be the wrong picture.")
+    assume_date(receipt)
     if state.find_duplicate(receipt) is not None:
         return "duplicate"
     stores.resolve_merchants([receipt.get("merchant")])
     added = state.add_receipts([receipt], media={receipt["receipt_id"]: (body, media)})
     if not added:
         return "duplicate"
+    _last.receipt = receipt
     state.judge_pending(new_client())
     return "filed"
 
@@ -294,6 +301,7 @@ def _run(job_id):
                 _mark(job_id, key, "failed", "the file was lost before it was read")
                 continue
             try:
+                _last.receipt = None
                 outcome = file_one(body, f["media"])
             except HTTPException as e:
                 if e.status_code in SYSTEMIC:
@@ -309,8 +317,32 @@ def _run(job_id):
                 _forget(job_id, n)
                 continue
             _mark(job_id, key, outcome, None)
+            _trip_check(job_id, outcome)
             _forget(job_id, n)
         _finish(job_id)
+
+
+_last = threading.local()
+
+
+def _trip_check(job_id, outcome):
+    """A trip receipt that was filed is matched to the list's names; the
+    result rides on the job for the app to show (silent when all match)."""
+    rec = getattr(_last, "receipt", None)
+    if outcome != "filed" or not rec:
+        return
+    def go(j):
+        trip = j.get("trip")
+        if trip is None or "result" in trip:
+            return
+        from api import tripcheck
+        try:
+            trip["result"] = dict(tripcheck.check(rec, trip["names"]),
+                                  receipt_id=rec.get("receipt_id"),
+                                  date_assumed=bool(rec.get("date_assumed")))
+        except Exception:
+            log.exception("trip check %s", job_id)
+    _update(job_id, go)
 
 
 def _mark(job_id, key, status, reason):
